@@ -1,5 +1,5 @@
 // API Service for JSON Server Integration
-const API_BASE_URL = 'http://localhost:3001';
+const API_BASE_URL = (import.meta.env.VITE_API_URL as string) || 'http://localhost:3001';
 
 // Generic fetch wrapper with error handling
 async function apiRequest<T>(endpoint: string, options?: RequestInit): Promise<T> {
