@@ -1,8 +1,22 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-// Initialize the Google GenAI client with the API key from environment variables.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Lazy-load the AI client to prevent crashing if the API key is missing in production environments.
+let aiInstance: any = null;
+const getAI = () => {
+  if (aiInstance) return aiInstance;
+
+  // Check both process.env (Vite define) and import.meta.env
+  const apiKey = (process.env.GEMINI_API_KEY) || (import.meta as any).env?.VITE_GEMINI_API_KEY;
+
+  if (!apiKey || apiKey === 'undefined') {
+    console.error("CRITICAL: GEMINI_API_KEY is not defined. Neural Node functions will be disabled.");
+    return null;
+  }
+
+  aiInstance = new GoogleGenAI({ apiKey: apiKey });
+  return aiInstance;
+};
 
 /**
  * Ask the AI tutor a question based on the provided context.
@@ -17,6 +31,9 @@ export const askTutor = async (question: string, context?: string, customContext
                  Tu aides les apprenants à combler le fossé entre la théorie abstraite de la blockchain et l'implémentation pratique.
                  
                  CONTEXTE (Module Actuel) : ${context || 'Apprentissage Web3 Général'}`;
+
+    const ai = getAI();
+    if (!ai) throw new Error("AI client not initialized");
 
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
@@ -82,6 +99,9 @@ export const evaluateModule = async (
 
     const finalPrompt = customPrompt ? `${customPrompt}\n\n${basePrompt}` : basePrompt;
 
+    const ai = getAI();
+    if (!ai) throw new Error("AI client not initialized");
+
     const response = await ai.models.generateContent({
       // Use gemini-3-pro-preview for complex reasoning tasks like technical audit.
       model: 'gemini-3-pro-preview',
@@ -138,6 +158,9 @@ export const generateModuleContent = async (adminPrompt: string, moduleTitle: st
                  2. Objectives: Une liste de 3-5 objectifs d'apprentissage.
                  3. Assessment: Un prompt pour l'audit final (ce que l'apprenant doit expliquer).
                  4. EvaluationCriteria: Instructions pour l'IA qui corrigera (quels détails techniques sont requis).`;
+
+    const ai = getAI();
+    if (!ai) throw new Error("AI client not initialized");
 
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
