@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ChevronRight, Lock, CheckCircle2, Circle, MessageSquare, BookOpen, Target, Sparkles, Send, Zap, ArrowRight, ShieldCheck, Users } from 'lucide-react';
+import { ChevronRight, Lock, CheckCircle2, Circle, MessageSquare, BookOpen, Target, Sparkles, Send, Zap, ArrowRight, ShieldCheck, Users, X } from 'lucide-react';
 import { Course, Module } from '../types';
 import { askTutor, evaluateModule } from '../services/geminiService';
 
@@ -395,17 +395,17 @@ const CourseView: React.FC<CourseViewProps> = ({ course, onModuleComplete, onBac
 
       {/* Notes Modal */}
       {isNotesOpen && (
-        <div className="fixed inset-y-0 right-0 w-full max-w-md border-l p-8 shadow-2xl z-50 transform transition-all duration-300 ease-in-out flex flex-col" style={{ backgroundColor: 'var(--glass-bg)', borderColor: 'var(--border-color)', backdropFilter: 'blur(24px)' }}>
+        <div className="fixed inset-y-0 right-0 w-full max-w-md border-l p-8 shadow-2xl z-[70] transform transition-all duration-300 ease-in-out flex flex-col" style={{ backgroundColor: 'var(--glass-bg)', borderColor: 'var(--border-color)', backdropFilter: 'blur(24px)' }}>
           <div className="flex items-center justify-between mb-8">
             <h3 className="text-xl font-bold flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
               <BookOpen className="w-5 h-5 text-blue-500" /> Mes Notes
             </h3>
             <button
               onClick={() => setIsNotesOpen(false)}
-              className="hover:text-blue-500 p-2 rounded-full transition-colors"
-              style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-secondary)' }}
+              className="hover:text-white p-2 rounded-xl transition-all duration-300 border hover:border-red-500/50 hover:bg-red-500/10 group"
+              style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
             >
-              ✕
+              <X className="w-5 h-5 group-hover:scale-110 transition-transform" />
             </button>
           </div>
           <textarea
@@ -423,7 +423,7 @@ const CourseView: React.FC<CourseViewProps> = ({ course, onModuleComplete, onBac
 
       {/* Tutor Modal */}
       {isChatOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-all duration-500">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[70] flex items-center justify-center p-4 transition-all duration-500">
           <div className="border border-blue-500/20 w-full max-w-2xl h-[80vh] rounded-[48px] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
             <header className="p-8 border-b flex items-center justify-between transition-colors duration-500" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
               <div className="flex items-center space-x-5">
@@ -437,10 +437,10 @@ const CourseView: React.FC<CourseViewProps> = ({ course, onModuleComplete, onBac
               </div>
               <button
                 onClick={() => setIsChatOpen(false)}
-                className="hover:text-blue-500 p-3 rounded-full transition-all"
-                style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-secondary)' }}
+                className="hover:text-white p-2 rounded-xl transition-all duration-300 border hover:border-red-500/50 hover:bg-red-500/10 group"
+                style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
               >
-                ✕
+                <X className="w-5 h-5 group-hover:scale-110 transition-transform" />
               </button>
             </header>
 
