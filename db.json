@@ -1,0 +1,990 @@
+{
+    "courses": [
+        {
+            "id": "c1",
+            "title": "Fondamentaux d'Ethereum",
+            "category": "blockchain",
+            "progress": 65,
+            "status": "published",
+            "version": "1.0",
+            "image": "https://images.unsplash.com/photo-1622790698141-94e30457ef12?q=80&w=2072&auto=format&fit=crop",
+            "modules": [
+                {
+                    "id": "m1",
+                    "title": "Contrats Intelligents : Logique Déterministe",
+                    "description": "Maîtriser la machine à états de Solidity et les principes d'immuabilité.",
+                    "duration": "45 mins",
+                    "isLocked": false,
+                    "status": "completed",
+                    "content": "Les contrats intelligents sont des protocoles autonomes résidant sur un registre distribué. Ils sont immuables et déterministes.",
+                    "objectives": [
+                        "Storage vs Memory",
+                        "Gas Mechanics",
+                        "Oracles Basics"
+                    ],
+                    "score": 92,
+                    "llmConfig": {
+                        "tutorContext": "Agis comme un expert en Solidity. Concentre-toi sur les concepts fondamentaux.",
+                        "strictness": "medium",
+                        "style": "didactic",
+                        "depth": "detailed",
+                        "evaluationPrompt": "Évalue la compréhension des concepts de base de Solidity."
+                    }
+                },
+                {
+                    "id": "m2",
+                    "title": "Exploration Profonde de l'EVM",
+                    "description": "Analyse de l'architecture stack-based et de l'exécution des Opcodes.",
+                    "duration": "1.5 heures",
+                    "isLocked": false,
+                    "status": "in-progress",
+                    "content": "L'EVM est une machine virtuelle quasi-Turing complète. Elle utilise une pile de 256 bits.",
+                    "objectives": [
+                        "Opcode Execution",
+                        "Stack management",
+                        "Memory Expansion"
+                    ],
+                    "prerequisites": [
+                        "m1"
+                    ],
+                    "llmConfig": {
+                        "tutorContext": "Expert en architecture EVM. Utilise des analogies techniques.",
+                        "strictness": "high",
+                        "style": "socratic",
+                        "depth": "expert"
+                    }
+                },
+                {
+                    "id": "m3",
+                    "title": "Audit & Sécurité Avancée",
+                    "description": "Techniques d'analyse statique et dynamique pour la sécurité.",
+                    "duration": "2 heures",
+                    "isLocked": true,
+                    "status": "not-started",
+                    "content": "L'audit de sécurité est crucial pour éviter les exploits.",
+                    "objectives": [
+                        "Reentrancy",
+                        "Front-running",
+                        "Integer Overflow"
+                    ],
+                    "prerequisites": [
+                        "m1",
+                        "m2"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "c2",
+            "title": "Sécurité des Protocoles DeFi",
+            "category": "security",
+            "progress": 0,
+            "status": "published",
+            "version": "1.2",
+            "image": "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?q=80&w=2000&auto=format&fit=crop",
+            "modules": [
+                {
+                    "id": "m21",
+                    "title": "Vecteurs d'attaque Flash Loan",
+                    "description": "Comprendre et prévenir la manipulation d'oracles de prix.",
+                    "duration": "3 heures",
+                    "isLocked": false,
+                    "status": "not-started",
+                    "content": "Les Flash Loans permettent d'emprunter des millions sans collatéral...",
+                    "objectives": [
+                        "Price Oracle Manipulation",
+                        "Arbitrage Exploits"
+                    ],
+                    "llmConfig": {
+                        "tutorContext": "Expert en sécurité DeFi. Focus sur les attaques réelles.",
+                        "strictness": "high",
+                        "style": "socratic",
+                        "depth": "expert"
+                    }
+                },
+                {
+                    "id": "m22",
+                    "title": "Analyse de Reentrancy",
+                    "description": "Comprendre et détecter les vulnérabilités de réentrance.",
+                    "duration": "2 heures",
+                    "isLocked": false,
+                    "status": "not-started",
+                    "content": "La reentrancy est l'une des vulnérabilités les plus dangereuses dans les smart contracts.",
+                    "objectives": [
+                        "Pattern Check-Effects-Interactions",
+                        "ReentrancyGuard",
+                        "Cas pratiques"
+                    ],
+                    "prerequisites": [
+                        "m21"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "c3",
+            "title": "Architecture ZK-Rollups",
+            "category": "blockchain",
+            "progress": 0,
+            "status": "published",
+            "version": "2.0",
+            "image": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop",
+            "modules": [
+                {
+                    "id": "m31",
+                    "title": "Introduction aux Zero-Knowledge Proofs",
+                    "description": "Comprendre les fondamentaux des preuves à divulgation nulle.",
+                    "duration": "2.5 heures",
+                    "isLocked": false,
+                    "status": "not-started",
+                    "content": "Les ZK-Proofs permettent de prouver la connaissance d'une information sans la révéler.",
+                    "objectives": [
+                        "zk-SNARKs",
+                        "zk-STARKs",
+                        "Circuits arithmétiques"
+                    ],
+                    "llmConfig": {
+                        "tutorContext": "Expert en cryptographie. Simplifie les concepts mathématiques complexes.",
+                        "strictness": "medium",
+                        "style": "didactic",
+                        "depth": "detailed"
+                    }
+                },
+                {
+                    "id": "m32",
+                    "title": "Optimistic vs ZK Rollups",
+                    "description": "Comparaison des différentes solutions de scalabilité Layer 2.",
+                    "duration": "1.5 heures",
+                    "isLocked": false,
+                    "status": "not-started",
+                    "content": "Les rollups sont la solution privilégiée pour scaler Ethereum.",
+                    "objectives": [
+                        "Fraud Proofs",
+                        "Validity Proofs",
+                        "Trade-offs"
+                    ],
+                    "prerequisites": [
+                        "m31"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "c4",
+            "title": "Développement de dApps Avancées",
+            "category": "blockchain",
+            "progress": 0,
+            "status": "draft",
+            "version": "0.8",
+            "image": "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=2072&auto=format&fit=crop",
+            "modules": [
+                {
+                    "id": "m41",
+                    "title": "Architecture Frontend Web3",
+                    "description": "Intégration de React avec ethers.js et wagmi.",
+                    "duration": "3 heures",
+                    "isLocked": false,
+                    "status": "not-started",
+                    "content": "Construire des interfaces utilisateur modernes pour les dApps.",
+                    "objectives": [
+                        "Wallet Connection",
+                        "Transaction Signing",
+                        "Event Listening"
+                    ]
+                },
+                {
+                    "id": "m42",
+                    "title": "Indexation avec The Graph",
+                    "description": "Créer et déployer des subgraphs pour indexer les données blockchain.",
+                    "duration": "2 heures",
+                    "isLocked": false,
+                    "status": "not-started",
+                    "content": "The Graph permet d'indexer et de requêter efficacement les données blockchain.",
+                    "objectives": [
+                        "GraphQL Schema",
+                        "Mappings",
+                        "Deployment"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "c5",
+            "title": "Tokenomics & Gouvernance",
+            "category": "blockchain",
+            "progress": 0,
+            "status": "published",
+            "version": "1.5",
+            "image": "https://images.unsplash.com/photo-1621761191319-c6fb62004040?q=80&w=2072&auto=format&fit=crop",
+            "modules": [
+                {
+                    "id": "m51",
+                    "title": "Design de Token Economics",
+                    "description": "Créer des modèles économiques durables pour les protocoles.",
+                    "duration": "2.5 heures",
+                    "isLocked": false,
+                    "status": "not-started",
+                    "content": "La tokenomics définit les incitations et la viabilité à long terme d'un protocole.",
+                    "objectives": [
+                        "Supply Models",
+                        "Incentive Mechanisms",
+                        "Value Accrual"
+                    ],
+                    "llmConfig": {
+                        "tutorContext": "Expert en économie des tokens. Utilise des exemples de protocoles réels.",
+                        "strictness": "medium",
+                        "style": "didactic",
+                        "depth": "detailed"
+                    }
+                },
+                {
+                    "id": "m52",
+                    "title": "Systèmes de Gouvernance On-Chain",
+                    "description": "Implémenter des mécanismes de vote et de proposition.",
+                    "duration": "2 heures",
+                    "isLocked": false,
+                    "status": "not-started",
+                    "content": "La gouvernance décentralisée permet aux communautés de contrôler les protocoles.",
+                    "objectives": [
+                        "Governor Contracts",
+                        "Timelock",
+                        "Delegation"
+                    ],
+                    "prerequisites": [
+                        "m51"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "c6",
+            "title": "Testing & Déploiement Professionnel",
+            "category": "security",
+            "progress": 0,
+            "status": "published",
+            "version": "1.0",
+            "image": "https://images.unsplash.com/photo-1516116216624-53e697fedbea?q=80&w=2072&auto=format&fit=crop",
+            "modules": [
+                {
+                    "id": "m61",
+                    "title": "Tests Unitaires avec Foundry",
+                    "description": "Maîtriser le framework de test Foundry pour Solidity.",
+                    "duration": "2 heures",
+                    "isLocked": false,
+                    "status": "not-started",
+                    "content": "Foundry offre des tests rapides et puissants en Solidity natif.",
+                    "objectives": [
+                        "Fuzz Testing",
+                        "Invariant Testing",
+                        "Gas Profiling"
+                    ]
+                },
+                {
+                    "id": "m62",
+                    "title": "CI/CD pour Smart Contracts",
+                    "description": "Automatiser les tests et déploiements avec GitHub Actions.",
+                    "duration": "1.5 heures",
+                    "isLocked": false,
+                    "status": "not-started",
+                    "content": "L'intégration continue garantit la qualité du code à chaque commit.",
+                    "objectives": [
+                        "GitHub Actions",
+                        "Automated Testing",
+                        "Deployment Scripts"
+                    ],
+                    "prerequisites": [
+                        "m61"
+                    ]
+                }
+            ]
+        }
+    ],
+    "students": [
+        {
+            "id": "s1",
+            "name": "Alice Smith",
+            "email": "alice.smith@example.com",
+            "progress": 85,
+            "score": 92,
+            "lastActive": "2h ago",
+            "status": "active",
+            "blockedModule": null,
+            "joinedDate": "2024-01-05",
+            "enrolledCourses": [
+                "c1",
+                "c3"
+            ],
+            "completedModules": [
+                "m1",
+                "m2"
+            ],
+            "skills": [
+                {
+                    "skill": "Solidity",
+                    "value": 90
+                },
+                {
+                    "skill": "Security",
+                    "value": 85
+                },
+                {
+                    "skill": "DeFi",
+                    "value": 75
+                },
+                {
+                    "skill": "Testing",
+                    "value": 80
+                },
+                {
+                    "skill": "ZK Proofs",
+                    "value": 65
+                }
+            ]
+        },
+        {
+            "id": "s2",
+            "name": "Bob Johnson",
+            "email": "bob.j@example.com",
+            "progress": 42,
+            "score": 78,
+            "lastActive": "5m ago",
+            "status": "at-risk",
+            "blockedModule": "Smart Contract Security",
+            "joinedDate": "2024-01-12",
+            "enrolledCourses": [
+                "c1",
+                "c2"
+            ],
+            "completedModules": [
+                "m1"
+            ],
+            "skills": [
+                {
+                    "skill": "Solidity",
+                    "value": 80
+                },
+                {
+                    "skill": "Security",
+                    "value": 45
+                },
+                {
+                    "skill": "DeFi",
+                    "value": 60
+                },
+                {
+                    "skill": "Testing",
+                    "value": 70
+                }
+            ],
+            "strengths": [
+                "Architecture EVM",
+                "Gas Optimization"
+            ],
+            "weaknesses": [
+                "Security Audits",
+                "Reentrancy Attacks"
+            ]
+        },
+        {
+            "id": "s3",
+            "name": "Charlie Brown",
+            "email": "charlie.b@example.com",
+            "progress": 15,
+            "score": 65,
+            "lastActive": "1d ago",
+            "status": "struggling",
+            "blockedModule": "EVM Basics",
+            "joinedDate": "2024-01-20",
+            "enrolledCourses": [
+                "c1"
+            ],
+            "completedModules": [],
+            "skills": [
+                {
+                    "skill": "Solidity",
+                    "value": 50
+                },
+                {
+                    "skill": "Security",
+                    "value": 30
+                },
+                {
+                    "skill": "DeFi",
+                    "value": 40
+                },
+                {
+                    "skill": "Testing",
+                    "value": 45
+                }
+            ]
+        },
+        {
+            "id": "s4",
+            "name": "Diana Ross",
+            "email": "diana.r@example.com",
+            "progress": 95,
+            "score": 98,
+            "lastActive": "Just now",
+            "status": "active",
+            "blockedModule": null,
+            "joinedDate": "2023-12-01",
+            "enrolledCourses": [
+                "c1",
+                "c2",
+                "c3",
+                "c5"
+            ],
+            "completedModules": [
+                "m1",
+                "m2",
+                "m21",
+                "m22"
+            ],
+            "skills": [
+                {
+                    "skill": "Solidity",
+                    "value": 95
+                },
+                {
+                    "skill": "Security",
+                    "value": 98
+                },
+                {
+                    "skill": "DeFi",
+                    "value": 90
+                },
+                {
+                    "skill": "Testing",
+                    "value": 92
+                },
+                {
+                    "skill": "ZK Proofs",
+                    "value": 85
+                }
+            ]
+        },
+        {
+            "id": "s5",
+            "name": "Eva Martinez",
+            "email": "eva.m@example.com",
+            "progress": 68,
+            "score": 85,
+            "lastActive": "30m ago",
+            "status": "active",
+            "blockedModule": null,
+            "joinedDate": "2024-01-08",
+            "enrolledCourses": [
+                "c1",
+                "c4",
+                "c6"
+            ],
+            "completedModules": [
+                "m1",
+                "m2"
+            ],
+            "skills": [
+                {
+                    "skill": "Solidity",
+                    "value": 85
+                },
+                {
+                    "skill": "Security",
+                    "value": 70
+                },
+                {
+                    "skill": "DeFi",
+                    "value": 65
+                },
+                {
+                    "skill": "Testing",
+                    "value": 88
+                }
+            ]
+        },
+        {
+            "id": "s6",
+            "name": "Frank Chen",
+            "email": "frank.c@example.com",
+            "progress": 55,
+            "score": 82,
+            "lastActive": "1h ago",
+            "status": "active",
+            "blockedModule": null,
+            "joinedDate": "2024-01-15",
+            "enrolledCourses": [
+                "c1",
+                "c2",
+                "c5"
+            ],
+            "completedModules": [
+                "m1"
+            ],
+            "skills": [
+                {
+                    "skill": "Solidity",
+                    "value": 82
+                },
+                {
+                    "skill": "Security",
+                    "value": 75
+                },
+                {
+                    "skill": "DeFi",
+                    "value": 80
+                },
+                {
+                    "skill": "Testing",
+                    "value": 70
+                }
+            ]
+        },
+        {
+            "id": "s7",
+            "name": "Grace Lee",
+            "email": "grace.l@example.com",
+            "progress": 28,
+            "score": 72,
+            "lastActive": "3h ago",
+            "status": "at-risk",
+            "blockedModule": "Exploration Profonde de l'EVM",
+            "joinedDate": "2024-01-18",
+            "enrolledCourses": [
+                "c1"
+            ],
+            "completedModules": [
+                "m1"
+            ],
+            "skills": [
+                {
+                    "skill": "Solidity",
+                    "value": 75
+                },
+                {
+                    "skill": "Security",
+                    "value": 60
+                },
+                {
+                    "skill": "DeFi",
+                    "value": 55
+                },
+                {
+                    "skill": "Testing",
+                    "value": 65
+                }
+            ],
+            "strengths": [
+                "Smart Contract Basics"
+            ],
+            "weaknesses": [
+                "EVM Architecture",
+                "Low-level Operations"
+            ]
+        },
+        {
+            "id": "s8",
+            "name": "Henry Wilson",
+            "email": "henry.w@example.com",
+            "progress": 78,
+            "score": 88,
+            "lastActive": "15m ago",
+            "status": "active",
+            "blockedModule": null,
+            "joinedDate": "2023-12-15",
+            "enrolledCourses": [
+                "c1",
+                "c3",
+                "c6"
+            ],
+            "completedModules": [
+                "m1",
+                "m2",
+                "m3"
+            ],
+            "skills": [
+                {
+                    "skill": "Solidity",
+                    "value": 88
+                },
+                {
+                    "skill": "Security",
+                    "value": 90
+                },
+                {
+                    "skill": "DeFi",
+                    "value": 70
+                },
+                {
+                    "skill": "Testing",
+                    "value": 85
+                },
+                {
+                    "skill": "ZK Proofs",
+                    "value": 60
+                }
+            ]
+        },
+        {
+            "id": "s9",
+            "name": "Iris Patel",
+            "email": "iris.p@example.com",
+            "progress": 35,
+            "score": 76,
+            "lastActive": "2d ago",
+            "status": "struggling",
+            "blockedModule": "Vecteurs d'attaque Flash Loan",
+            "joinedDate": "2024-01-22",
+            "enrolledCourses": [
+                "c2"
+            ],
+            "completedModules": [],
+            "skills": [
+                {
+                    "skill": "Solidity",
+                    "value": 70
+                },
+                {
+                    "skill": "Security",
+                    "value": 55
+                },
+                {
+                    "skill": "DeFi",
+                    "value": 50
+                },
+                {
+                    "skill": "Testing",
+                    "value": 60
+                }
+            ],
+            "weaknesses": [
+                "Flash Loan Mechanics",
+                "Oracle Security"
+            ]
+        },
+        {
+            "id": "s10",
+            "name": "Jack Thompson",
+            "email": "jack.t@example.com",
+            "progress": 92,
+            "score": 95,
+            "lastActive": "10m ago",
+            "status": "active",
+            "blockedModule": null,
+            "joinedDate": "2023-11-20",
+            "enrolledCourses": [
+                "c1",
+                "c2",
+                "c3",
+                "c4",
+                "c5",
+                "c6"
+            ],
+            "completedModules": [
+                "m1",
+                "m2",
+                "m3",
+                "m21",
+                "m22",
+                "m31",
+                "m51"
+            ],
+            "skills": [
+                {
+                    "skill": "Solidity",
+                    "value": 98
+                },
+                {
+                    "skill": "Security",
+                    "value": 95
+                },
+                {
+                    "skill": "DeFi",
+                    "value": 92
+                },
+                {
+                    "skill": "Testing",
+                    "value": 95
+                },
+                {
+                    "skill": "ZK Proofs",
+                    "value": 88
+                }
+            ]
+        }
+    ],
+    "badges": [
+        {
+            "id": "b1",
+            "name": "Architecte Logique",
+            "description": "Maîtrise Solidity.",
+            "dateEarned": "15/11/2023",
+            "icon": "Terminal",
+            "color": "text-blue-400"
+        },
+        {
+            "id": "b2",
+            "name": "Auditeur EVM",
+            "description": "Expertise bytecode.",
+            "dateEarned": "20/01/2024",
+            "icon": "Cpu",
+            "color": "text-purple-400"
+        },
+        {
+            "id": "b3",
+            "name": "Gardien DeFi",
+            "description": "Expert en sécurité DeFi.",
+            "dateEarned": "10/01/2024",
+            "icon": "Shield",
+            "color": "text-green-400"
+        },
+        {
+            "id": "b4",
+            "name": "Maître ZK",
+            "description": "Compréhension des Zero-Knowledge Proofs.",
+            "dateEarned": "25/01/2024",
+            "icon": "Lock",
+            "color": "text-indigo-400"
+        },
+        {
+            "id": "b5",
+            "name": "Testeur Élite",
+            "description": "Excellence en testing et CI/CD.",
+            "dateEarned": "05/02/2024",
+            "icon": "CheckCircle",
+            "color": "text-emerald-400"
+        }
+    ],
+    "insights": [
+        {
+            "id": "i1",
+            "topic": "DelegateCall Exploits",
+            "studentCount": 24,
+            "severity": "high",
+            "recommendation": "Lancer un webinaire sur les Proxy Patterns."
+        },
+        {
+            "id": "i2",
+            "topic": "Gas Optimization",
+            "studentCount": 45,
+            "severity": "medium",
+            "recommendation": "Mettre à jour le module 4 avec des exercices Yul."
+        },
+        {
+            "id": "i3",
+            "topic": "ZK-SNARK Complexity",
+            "studentCount": 18,
+            "severity": "high",
+            "recommendation": "Simplifier les explications mathématiques du module ZK."
+        },
+        {
+            "id": "i4",
+            "topic": "Flash Loan Confusion",
+            "studentCount": 32,
+            "severity": "high",
+            "recommendation": "Ajouter des diagrammes de séquence pour les attaques Flash Loan."
+        },
+        {
+            "id": "i5",
+            "topic": "Foundry Testing",
+            "studentCount": 12,
+            "severity": "low",
+            "recommendation": "Créer plus d'exemples pratiques de fuzz testing."
+        }
+    ],
+    "pendingReviews": [
+        {
+            "id": "r1",
+            "studentId": "s2",
+            "studentName": "Bob Johnson",
+            "moduleTitle": "Audit DeFi : Flash Loans",
+            "submissionDate": "2024-02-01T14:20:00Z",
+            "aiInitialScore": 72,
+            "status": "pending"
+        },
+        {
+            "id": "r2",
+            "studentId": "s3",
+            "studentName": "Charlie Brown",
+            "moduleTitle": "Architecture ZK-Rollup",
+            "submissionDate": "2024-01-31T18:45:00Z",
+            "aiInitialScore": 88,
+            "status": "pending"
+        },
+        {
+            "id": "r3",
+            "studentId": "s7",
+            "studentName": "Grace Lee",
+            "moduleTitle": "Exploration Profonde de l'EVM",
+            "submissionDate": "2024-02-01T09:30:00Z",
+            "aiInitialScore": 65,
+            "status": "pending"
+        },
+        {
+            "id": "r4",
+            "studentId": "s9",
+            "studentName": "Iris Patel",
+            "moduleTitle": "Vecteurs d'attaque Flash Loan",
+            "submissionDate": "2024-02-01T16:15:00Z",
+            "aiInitialScore": 58,
+            "status": "pending"
+        },
+        {
+            "id": "r5",
+            "studentId": "s5",
+            "studentName": "Eva Martinez",
+            "moduleTitle": "Tests Unitaires avec Foundry",
+            "submissionDate": "2024-02-01T11:00:00Z",
+            "aiInitialScore": 91,
+            "status": "approved"
+        }
+    ],
+    "activityLog": [
+        {
+            "id": "a1",
+            "studentId": "s2",
+            "type": "audit_submission",
+            "date": "2024-02-01T10:30:00Z",
+            "description": "Échec de l'audit: Smart Contract Security",
+            "score": 45
+        },
+        {
+            "id": "a2",
+            "studentId": "s2",
+            "type": "module_completion",
+            "date": "2024-01-31T14:00:00Z",
+            "description": "Module validé: EVM Deep Dive",
+            "score": 82
+        },
+        {
+            "id": "a3",
+            "studentId": "s2",
+            "type": "tutor_interaction",
+            "date": "2024-01-15T09:15:00Z",
+            "description": "Session longue sur les OpCodes"
+        },
+        {
+            "id": "a4",
+            "studentId": "s1",
+            "type": "module_completion",
+            "date": "2024-02-01T08:45:00Z",
+            "description": "Module validé: Exploration Profonde de l'EVM",
+            "score": 95
+        },
+        {
+            "id": "a5",
+            "studentId": "s4",
+            "type": "module_completion",
+            "date": "2024-02-01T12:20:00Z",
+            "description": "Module validé: Analyse de Reentrancy",
+            "score": 98
+        },
+        {
+            "id": "a6",
+            "studentId": "s10",
+            "type": "badge_earned",
+            "date": "2024-02-01T15:30:00Z",
+            "description": "Badge débloqué: Maître ZK"
+        },
+        {
+            "id": "a7",
+            "studentId": "s5",
+            "type": "tutor_interaction",
+            "date": "2024-02-01T10:00:00Z",
+            "description": "Session sur les tests Foundry"
+        },
+        {
+            "id": "a8",
+            "studentId": "s8",
+            "type": "module_completion",
+            "date": "2024-01-30T16:45:00Z",
+            "description": "Module validé: Audit & Sécurité Avancée",
+            "score": 88
+        },
+        {
+            "id": "a9",
+            "studentId": "s3",
+            "type": "audit_submission",
+            "date": "2024-01-31T18:45:00Z",
+            "description": "Tentative: Architecture ZK-Rollup",
+            "score": 88
+        },
+        {
+            "id": "a10",
+            "studentId": "s7",
+            "type": "audit_submission",
+            "date": "2024-02-01T09:30:00Z",
+            "description": "Échec: Exploration Profonde de l'EVM",
+            "score": 65
+        },
+        {
+            "id": "a11",
+            "studentId": "s6",
+            "type": "tutor_interaction",
+            "date": "2024-02-01T13:20:00Z",
+            "description": "Questions sur les Flash Loans"
+        },
+        {
+            "id": "a12",
+            "studentId": "s9",
+            "type": "audit_submission",
+            "date": "2024-02-01T16:15:00Z",
+            "description": "Échec: Vecteurs d'attaque Flash Loan",
+            "score": 58
+        }
+    ],
+    "kpis": {
+        "coach": {
+            "activeStudents": 1284,
+            "avgSuccessRate": 84.2,
+            "avgValidationTime": "1.5 jours",
+            "blockedStudents": 12
+        },
+        "admin": {
+            "activeLearners": 1284,
+            "completionRate": 68,
+            "frictionModules": 3,
+            "trends": {
+                "learners": "+12%",
+                "completion": "+5%",
+                "friction": "-1"
+            }
+        }
+    },
+    "alerts": [
+        {
+            "id": "al1",
+            "type": "critical",
+            "message": "Taux d'échec anormal (>40%) sur \"Sécurité Reentrancy\"",
+            "time": "2024-02-01T18:00:00Z"
+        },
+        {
+            "id": "al2",
+            "type": "warning",
+            "message": "Contenu \"Solidity 0.8\" marqué comme obsolète par l'IA",
+            "time": "2024-01-31T12:00:00Z"
+        },
+        {
+            "id": "al3",
+            "type": "info",
+            "message": "Augmentation des hallucinations LLM sur \"ZK-Rollups\"",
+            "time": "2024-02-01T16:00:00Z"
+        },
+        {
+            "id": "al4",
+            "type": "critical",
+            "message": "Module \"Flash Loan\" bloque 32 étudiants",
+            "time": "2024-02-01T19:00:00Z"
+        },
+        {
+            "id": "al5",
+            "type": "warning",
+            "message": "Temps de validation moyen en hausse (+20%)",
+            "time": "2024-02-01T17:30:00Z"
+        },
+        {
+            "id": "al6",
+            "type": "info",
+            "message": "Nouveau record: 150 modules validés aujourd'hui",
+            "time": "2024-02-01T20:00:00Z"
+        }
+    ]
+}

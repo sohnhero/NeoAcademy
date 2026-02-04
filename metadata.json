@@ -1,0 +1,7 @@
+{
+  "name": "ChainAcademy AI",
+  "description": "A next-generation, AI-powered LMS for Cryptocurrency and Web3 education with personalized tutoring and verifiable skill certification.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
