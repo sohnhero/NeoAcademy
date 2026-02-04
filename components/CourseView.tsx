@@ -395,7 +395,7 @@ const CourseView: React.FC<CourseViewProps> = ({ course, onModuleComplete, onBac
 
       {/* Notes Modal */}
       {isNotesOpen && (
-        <div className="fixed inset-y-0 right-0 w-full max-w-md border-l p-8 shadow-2xl z-[70] transform transition-all duration-300 ease-in-out flex flex-col" style={{ backgroundColor: 'var(--glass-bg)', borderColor: 'var(--border-color)', backdropFilter: 'blur(24px)' }}>
+        <div className="fixed top-24 right-8 bottom-8 w-full max-w-md border p-8 shadow-2xl z-[70] rounded-[40px] transform transition-all duration-500 ease-out flex flex-col animate-in slide-in-from-right-8" style={{ backgroundColor: 'var(--glass-bg)', borderColor: 'var(--border-color)', backdropFilter: 'blur(32px)' }}>
           <div className="flex items-center justify-between mb-8">
             <h3 className="text-xl font-bold flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
               <BookOpen className="w-5 h-5 text-blue-500" /> Mes Notes
