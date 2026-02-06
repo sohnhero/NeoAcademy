@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Plus, Layers, Shield, Code, ChevronRight, Edit3, Trash2, Eye, Save, X, ArrowLeft, Bot, Sparkles, AlertCircle } from 'lucide-react';
-import { Course, Module } from '../types';
+import { LegacyCourse as Course, Module } from '../types';
 import AdminPreviewChat from './AdminPreviewChat';
 import { generateModuleContent } from '../services/geminiService';
 

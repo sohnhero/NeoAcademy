@@ -346,17 +346,17 @@ const StudentDetailView: React.FC<StudentDetailViewProps> = ({ studentId, onBack
                             {student.activityLog.map((activity, index) => (
                                 <div key={activity.id} className="relative pl-12 group">
                                     <div className={`absolute left-0 top-1 w-10 h-10 rounded-full border-4 border-[#020617] flex items-center justify-center z-10 ${activity.type === 'module_completion' ? 'bg-green-500' :
-                                        activity.type === 'audit_submission' ? 'bg-blue-500' : 'bg-purple-500'
+                                        activity.type === 'course_completion' ? 'bg-blue-500' : 'bg-purple-500'
                                         }`}>
                                         {activity.type === 'module_completion' && <CheckCircle className="w-5 h-5 text-white" />}
-                                        {activity.type === 'audit_submission' && <FileText className="w-5 h-5 text-white" />}
+                                        {activity.type === 'course_completion' && <FileText className="w-5 h-5 text-white" />}
                                         {activity.type === 'tutor_interaction' && <MessageSquare className="w-5 h-5 text-white" />}
                                     </div>
 
                                     <div className="bg-slate-950/50 border border-slate-800 p-6 rounded-3xl hover:border-slate-700 transition-colors">
                                         <div className="flex justify-between items-start mb-2">
                                             <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${activity.type === 'module_completion' ? 'bg-green-500/10 text-green-400' :
-                                                activity.type === 'audit_submission' ? 'bg-blue-500/10 text-blue-400' : 'bg-purple-500/10 text-purple-400'
+                                                activity.type === 'course_completion' ? 'bg-blue-500/10 text-blue-400' : 'bg-purple-500/10 text-purple-400'
                                                 }`}>
                                                 {activity.type.replace('_', ' ')}
                                             </span>

@@ -3,6 +3,255 @@ export type UserRole = 'apprenant' | 'coach' | 'admin';
 export type BlockType = 'conceptual_misunderstanding' | 'logic_error' | 'missing_context' | 'terminology_confusion';
 export type InterventionMode = 'asynchronous' | 'ai_guided' | 'synchronous';
 
+// =====================================================
+// LEARNER LOGIC V2 - New Hierarchy Types
+// =====================================================
+
+// Exit profiles for AI-generated paths
+export type ExitProfile =
+  | 'web3_developer'
+  | 'smart_contract_auditor'
+  | 'defi_specialist'
+  | 'blockchain_architect'
+  | 'nft_developer';
+
+// Learning path types
+export type LearningPathType = 'ai-generated' | 'custom' | 'predefined';
+export type ProgressStatus = 'locked' | 'not-started' | 'in-progress' | 'completed' | 'failed';
+
+// Content types for courses
+export type ContentType = 'video' | 'text' | 'graphic' | 'audio' | 'interactive';
+
+// Badge types
+export type BadgeType = 'course' | 'module' | 'learning-path' | 'certification';
+
+// =====================================================
+// Core Content Structures
+// =====================================================
+
+export interface CourseContent {
+  id: string;
+  type: ContentType;
+  title: string;
+  content: string;
+  duration?: string;
+  mediaUrl?: string;
+}
+
+export interface Exercise {
+  id: string;
+  title: string;
+  description: string;
+  type: 'code' | 'text' | 'quiz' | 'practical';
+  prompt: string;
+  passingScore: number;
+  tools?: string[];
+}
+
+export interface Remediation {
+  id: string;
+  courseId: string;
+  title: string;
+  description: string;
+  content: CourseContent[];
+  exercise: Exercise;
+  targetedGaps: string[];
+  status: ProgressStatus;
+  assignedAt: string;
+}
+
+export interface Badge {
+  id: string;
+  name: string;
+  description: string;
+  type: BadgeType;
+  dateEarned: string;
+  icon: string;
+  color: string;
+  relatedId?: string; // ID of course/module/path
+}
+
+// =====================================================
+// Course Level (Lowest in hierarchy)
+// =====================================================
+
+export interface Course {
+  id: string;
+  title: string;
+  description: string;
+  duration: string;
+  content: CourseContent[];
+  objectives: string[];
+  exercise: Exercise;
+  status: ProgressStatus;
+  isLocked: boolean;
+  score?: number;
+  badge?: Badge;
+  remediation?: Remediation;
+  llmConfig?: LLMConfig;
+}
+
+export interface LLMConfig {
+  tutorContext?: string;
+  evaluationPrompt?: string;
+  strictness?: 'low' | 'medium' | 'high';
+  style?: 'socratic' | 'didactic' | 'concise';
+  depth?: 'overview' | 'detailed' | 'expert';
+}
+
+// =====================================================
+// Module Level (Contains Courses)
+// =====================================================
+
+export interface ModuleExam {
+  id: string;
+  title: string;
+  description: string;
+  duration: string;
+  questions: ExamQuestion[];
+  passingScore: number;
+  tools?: string[];
+  status: ProgressStatus;
+  score?: number;
+  attempts: number;
+}
+
+export interface ExamQuestion {
+  id: string;
+  type: 'code' | 'text' | 'multiple-choice' | 'practical';
+  question: string;
+  points: number;
+}
+
+export interface PathModule {
+  id: string;
+  title: string;
+  description: string;
+  duration: string;
+  courses: Course[];
+  exam?: ModuleExam;
+  status: ProgressStatus;
+  isLocked: boolean;
+  progress: number;
+  badge?: Badge;
+}
+
+// =====================================================
+// Learning Path Level (Top of hierarchy)
+// =====================================================
+
+export interface FinalProject {
+  id: string;
+  title: string;
+  description: string;
+  requirements: string[];
+  deliverables: Deliverable[];
+  globalDeadline: string;
+  status: ProgressStatus;
+  score?: number;
+  submittedAt?: string;
+  feedback?: string;
+}
+
+export interface Deliverable {
+  id: string;
+  title: string;
+  description: string;
+  deadline: string;
+  submittedAt?: string;
+  content?: string;
+  status: 'pending' | 'submitted' | 'validated' | 'failed';
+}
+
+export interface LearningPath {
+  id: string;
+  title: string;
+  description: string;
+  exitProfile: ExitProfile;
+  exitProfileLabel: string;
+  image: string;
+  modules: PathModule[];
+  finalProject?: FinalProject;
+  status: ProgressStatus;
+  progress: number;
+  type: LearningPathType;
+  estimatedDuration: string;
+  skills: string[];
+  certification?: Badge;
+  createdAt: string;
+  startedAt?: string;
+  completedAt?: string;
+}
+
+// =====================================================
+// Learner Progress & Profile
+// =====================================================
+
+export interface LearnerProgress {
+  totalPaths: number;
+  completedPaths: number;
+  totalModules: number;
+  completedModules: number;
+  totalCourses: number;
+  completedCourses: number;
+  avgScore: number;
+  skillMatrix: { skill: string; value: number }[];
+  currentPath?: LearningPath;
+}
+
+export interface LearnerProfile {
+  id: string;
+  name: string;
+  email: string;
+  joinedDate: string;
+  badges: Badge[];
+  certifications: Badge[];
+  progress: LearnerProgress;
+  strengths: string[];
+  weaknesses: string[];
+  activityLog: ActivityLog[];
+}
+
+// =====================================================
+// Coach Support
+// =====================================================
+
+export interface CoachSession {
+  id: string;
+  learnerId: string;
+  coachId: string;
+  learningPathId: string;
+  courseId?: string;
+  moduleId?: string;
+  status: 'requested' | 'scheduled' | 'in-progress' | 'completed';
+  context: string;
+  blockingPoints: string[];
+  messages: CoachMessage[];
+  scheduledAt?: string;
+  completedAt?: string;
+}
+
+export interface CoachMessage {
+  id: string;
+  senderId: string;
+  senderRole: 'learner' | 'coach';
+  content: string;
+  timestamp: string;
+}
+
+export interface Coach {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  specialties: string[];
+  availablePaths: string[];
+}
+
+// =====================================================
+// Legacy Types (for backward compatibility)
+// =====================================================
+
 export interface BlockInfo {
   isBlocked: boolean;
   type: BlockType;
@@ -14,7 +263,7 @@ export interface BlockInfo {
   moduleTitle: string;
 }
 
-
+// Legacy Module type (mapped to Course in V2)
 export interface Module {
   id: string;
   title: string;
@@ -24,18 +273,13 @@ export interface Module {
   status: 'completed' | 'in-progress' | 'locked' | 'not-started';
   content: string;
   objectives: string[];
-  prerequisites?: string[]; // IDs of required modules
+  prerequisites?: string[];
   score?: number;
-  llmConfig?: {
-    tutorContext?: string;
-    evaluationPrompt?: string;
-    strictness?: 'low' | 'medium' | 'high';
-    style?: 'socratic' | 'didactic' | 'concise';
-    depth?: 'overview' | 'detailed' | 'expert';
-  };
+  llmConfig?: LLMConfig;
 }
 
-export interface Course {
+// Legacy Course type (mapped to LearningPath in V2)
+export interface LegacyCourse {
   id: string;
   title: string;
   category: 'blockchain' | 'finance' | 'development' | 'security';
@@ -44,22 +288,6 @@ export interface Course {
   status?: 'draft' | 'published' | 'archived';
   version?: string;
   modules: Module[];
-}
-
-export interface Badge {
-  id: string;
-  name: string;
-  description: string;
-  dateEarned: string;
-  icon: string;
-  color: string;
-}
-
-export interface LearnerProgress {
-  totalCourses: number;
-  completedModules: number;
-  avgScore: number;
-  skillMatrix: { skill: string; value: number }[];
 }
 
 export interface InsightLLM {
@@ -80,10 +308,11 @@ export interface PendingReview {
 
 export interface ActivityLog {
   id: string;
-  type: 'module_completion' | 'audit_submission' | 'tutor_interaction';
+  type: 'course_completion' | 'module_completion' | 'path_completion' | 'exam_submission' | 'remediation' | 'coach_session' | 'tutor_interaction';
   date: string;
   description: string;
   score?: number;
+  relatedId?: string;
 }
 
 export interface StudentProfile {

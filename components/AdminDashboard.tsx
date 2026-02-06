@@ -28,8 +28,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoToConfig }) => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {MOCK_ADMIN_DASHBOARD_DATA.kpis.map((kpi, i) => (
           <div key={i} className="border p-6 rounded-[24px] relative overflow-hidden group transition-colors duration-500" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
-            <div className={`absolute top-0 right-0 p-4 opacity-50 ${kpi.alert ? 'text-red-500' : 'text-blue-500'}`}>
-              {kpi.alert ? <AlertTriangle className="w-6 h-6" /> : <Activity className="w-6 h-6" />}
+            <div className="absolute top-0 right-0 p-4 opacity-50 text-blue-500">
+              <Activity className="w-6 h-6" />
             </div>
             <p className="text-[10px] uppercase tracking-widest font-bold mb-2" style={{ color: 'var(--text-secondary)' }}>{kpi.label}</p>
             <div className="flex items-end gap-3">
@@ -40,11 +40,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoToConfig }) => {
                 {kpi.change}
               </span>
             </div>
-            {kpi.alert && (
-              <div className="mt-4 text-[10px] text-red-400 font-bold bg-red-500/10 p-2 rounded-lg flex items-center gap-2">
-                <AlertTriangle className="w-3 h-3" /> Attention requise
-              </div>
-            )}
           </div>
         ))}
       </div>
