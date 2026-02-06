@@ -11,6 +11,7 @@ import PathFinderView from './components/PathFinderView';
 import RemediationView from './components/RemediationView';
 import ModuleExamView from './components/ModuleExamView';
 import FinalProjectView from './components/FinalProjectView';
+import ExerciseIDEView from './components/ExerciseIDEView';
 import CoachRequestModal from './components/CoachRequestModal';
 import CoachDashboard from './components/CoachDashboard';
 import CoachCohortView from './components/CoachCohortView';
@@ -24,6 +25,7 @@ import LandingPage from './components/LandingPage';
 import { UserRole, LearningPath, PathModule, Course, LegacyCourse, Remediation } from './types';
 import { MOCK_LEARNING_PATHS, MOCK_COURSES } from './constants';
 import api from './services/api';
+import { evaluateModule } from './services/geminiService';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -54,6 +56,10 @@ const App: React.FC = () => {
   // Coach Modal
   const [showCoachModal, setShowCoachModal] = useState(false);
   const [coachContext, setCoachContext] = useState<{ course?: string; module?: string; blocking?: string }>({});
+
+  // IDE State (App-level for full-screen overlay)
+  const [showIDE, setShowIDE] = useState(false);
+  const [ideContext, setIdeContext] = useState<{ type: 'course' | 'module' | 'final'; title: string; moduleId?: string; courseId?: string } | null>(null);
 
   // Legacy State (for admin/coach views)
   const [legacyCourses, setLegacyCourses] = useState<LegacyCourse[]>([]);
@@ -342,7 +348,10 @@ const App: React.FC = () => {
               setActiveCourseId(null);
               setActiveModuleId(null);
             }}
-            onRequestCoach={() => openCoachHelp(course.title, module!.title)}
+            onOpenIDE={(context) => {
+              setIdeContext({ ...context, moduleId: activeModuleId || undefined });
+              setShowIDE(true);
+            }}
           />
         );
       }
@@ -464,6 +473,48 @@ const App: React.FC = () => {
         contextModule={coachContext.module}
         blockingPoint={coachContext.blocking}
       />
+
+      {/* Full-Screen IDE Environment - Rendered outside Layout to cover everything */}
+      {showIDE && ideContext && (
+        <ExerciseIDEView
+          exerciseType={ideContext.type}
+          title={ideContext.title}
+          description="Implémentez les concepts appris en créant un smart contract fonctionnel."
+          instructions={[
+            "Créez un contrat Solidity basé sur les concepts du cours",
+            "Implémentez les fonctions requises avec la logique appropriée",
+            "Assurez-vous que votre code compile sans erreurs",
+            "Exécutez les tests pour valider votre implémentation"
+          ]}
+          timeLimit={ideContext.type === 'final' ? 120 : ideContext.type === 'module' ? 60 : undefined}
+          onSubmit={async (code, output) => {
+            setShowIDE(false);
+            // Handle submission based on context type
+            if (ideContext.type === 'course' && ideContext.courseId && activeModuleId && currentLearningPath) {
+              // Find the course and evaluate
+              const module = currentLearningPath.modules.find(m => m.id === activeModuleId);
+              const course = module?.courses.find(c => c.id === ideContext.courseId);
+              if (course) {
+                const result = await evaluateModule(
+                  course.title,
+                  course.modules[0]?.content || '',
+                  course.modules[0]?.objectives || [],
+                  code
+                );
+                // Handle result - could trigger remediation if failed
+                if (result.isPassed) {
+                  handleCourseComplete(ideContext.courseId, true, result.score);
+                }
+              }
+            }
+            setIdeContext(null);
+          }}
+          onCancel={() => {
+            setShowIDE(false);
+            setIdeContext(null);
+          }}
+        />
+      )}
     </>
   );
 };

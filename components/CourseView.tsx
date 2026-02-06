@@ -1,16 +1,20 @@
 
 import React, { useState } from 'react';
-import { ChevronRight, Lock, CheckCircle2, Circle, MessageSquare, BookOpen, Target, Sparkles, Send, Zap, ArrowRight, ShieldCheck, Users, X } from 'lucide-react';
+import { ChevronRight, Lock, CheckCircle2, Circle, MessageSquare, BookOpen, Target, Sparkles, Send, Zap, ArrowRight, ShieldCheck, Users, X, Play, FileText, BarChart3, Headphones, Code, Award, Terminal } from 'lucide-react';
 import { Course, Module } from '../types';
 import { askTutor, evaluateModule } from '../services/geminiService';
+
+type ContentTab = 'video' | 'text' | 'graphics' | 'audio';
+type ExerciseTab = 'code' | 'text' | 'mcq';
 
 interface CourseViewProps {
   course: Course;
   onModuleComplete: (moduleId: string, score: number) => void;
   onBack?: () => void;
+  onOpenIDE?: (context: { type: 'course' | 'module' | 'final'; title: string; courseId?: string }) => void;
 }
 
-const CourseView: React.FC<CourseViewProps> = ({ course, onModuleComplete, onBack }) => {
+const CourseView: React.FC<CourseViewProps> = ({ course, onModuleComplete, onBack, onOpenIDE }) => {
   const [activeModuleId, setActiveModuleId] = useState<string>(course.modules[0].id);
   const [userSubmission, setUserSubmission] = useState('');
   const [isEvaluating, setIsEvaluating] = useState(false);
@@ -161,45 +165,82 @@ const CourseView: React.FC<CourseViewProps> = ({ course, onModuleComplete, onBac
               <div className="h-1 w-20 bg-blue-600 rounded-full mb-8"></div>
             </header>
 
-            <article className="prose prose-lg max-w-none leading-relaxed mb-16 font-medium relative transition-colors duration-500" style={{ color: 'var(--text-secondary)' }}>
-              {activeModule.content.split('\n').map((para, i) => (
-                <div key={i} className="mb-6 group relative">
-                  <p>{para.trim()}</p>
-                  <div className="absolute -right-4 top-0 translate-x-full opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-2">
-                    <button
-                      onClick={() => {
-                        setChatInput(`Explique moi ce concept autrement : "${para.substring(0, 50)}..."`);
-                        setIsChatOpen(true);
-                      }}
-                      className="p-2 rounded-lg hover:bg-blue-600 hover:text-white transition-colors"
-                      style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
-                      title="Expliquer autrement"
-                    >
-                      <Sparkles className="w-3 h-3" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        setChatInput(`Donne moi un exemple concret pour : "${para.substring(0, 50)}..."`);
-                        setIsChatOpen(true);
-                      }}
-                      className="p-2 rounded-lg hover:bg-green-600 hover:text-white transition-colors"
-                      style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
-                      title="Donner un exemple"
-                    >
-                      <Zap className="w-3 h-3" />
-                    </button>
-                    <button
-                      title="Prendre une note"
-                      onClick={() => setIsNotesOpen(true)}
-                      className="p-2 rounded-lg hover:bg-purple-600 hover:text-white transition-colors"
-                      style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
-                    >
-                      <BookOpen className="w-3 h-3" />
-                    </button>
+            {/* Mixed Course Content - Video, Text, Graphics shown together */}
+            <div className="space-y-10 mb-16">
+              {/* Video Section */}
+              <div className="aspect-video bg-slate-900 rounded-3xl flex items-center justify-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-transparent"></div>
+                <div className="text-center relative z-10">
+                  <div className="w-20 h-20 rounded-full bg-blue-600 flex items-center justify-center mx-auto mb-4 shadow-2xl shadow-blue-500/40 cursor-pointer hover:scale-110 transition-transform">
+                    <Play className="w-8 h-8 text-white ml-1" />
                   </div>
+                  <h3 className="text-xl font-bold text-white mb-2">{activeModule.title}</h3>
+                  <p className="text-sm text-slate-400">Vidéo explicative • {activeModule.duration}</p>
                 </div>
-              ))}
-            </article>
+              </div>
+
+              {/* Text Content */}
+              <article className="prose prose-lg max-w-none leading-relaxed font-medium relative transition-colors duration-500" style={{ color: 'var(--text-secondary)' }}>
+                {activeModule.content.split('\n').map((para, i) => (
+                  <div key={i} className="mb-6 group relative">
+                    <p>{para.trim()}</p>
+                    <div className="absolute -right-4 top-0 translate-x-full opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-2">
+                      <button
+                        onClick={() => {
+                          setChatInput(`Explique moi ce concept autrement : "${para.substring(0, 50)}..."`);
+                          setIsChatOpen(true);
+                        }}
+                        className="p-2 rounded-lg hover:bg-blue-600 hover:text-white transition-colors"
+                        style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
+                        title="Demander au Bot IA"
+                      >
+                        <Sparkles className="w-3 h-3" />
+                      </button>
+                      <button
+                        title="Prendre une note"
+                        onClick={() => setIsNotesOpen(true)}
+                        className="p-2 rounded-lg hover:bg-blue-600 hover:text-white transition-colors"
+                        style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
+                      >
+                        <BookOpen className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </article>
+
+              {/* Graphics/Diagrams Section */}
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="border rounded-3xl p-6 group hover:border-blue-500/30 transition-colors" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
+                  <div className="aspect-video bg-gradient-to-br from-blue-600/10 to-blue-600/5 rounded-2xl flex items-center justify-center mb-4">
+                    <BarChart3 className="w-12 h-12 text-blue-500 opacity-50" />
+                  </div>
+                  <h4 className="font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Diagramme d'architecture</h4>
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Visualisation interactive des concepts clés</p>
+                </div>
+                <div className="border rounded-3xl p-6 group hover:border-blue-500/30 transition-colors" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
+                  <div className="aspect-video bg-gradient-to-br from-blue-600/10 to-blue-600/5 rounded-2xl flex items-center justify-center mb-4">
+                    <Code className="w-12 h-12 text-blue-500 opacity-50" />
+                  </div>
+                  <h4 className="font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Exemple de code</h4>
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Illustrations pratiques avec annotations</p>
+                </div>
+              </div>
+
+              {/* Audio Version (optional) */}
+              <div className="border rounded-2xl p-4 flex items-center gap-4" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
+                <div className="w-12 h-12 rounded-xl bg-blue-600/10 flex items-center justify-center">
+                  <Headphones className="w-6 h-6 text-blue-500" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Version audio disponible</p>
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Écoutez ce cours pendant vos déplacements</p>
+                </div>
+                <button className="px-4 py-2 rounded-xl bg-blue-600/10 text-blue-500 text-xs font-bold uppercase tracking-wider hover:bg-blue-600/20 transition-colors">
+                  <Play className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-20">
               <div className="border p-8 rounded-3xl transition-colors duration-500" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
@@ -230,15 +271,27 @@ const CourseView: React.FC<CourseViewProps> = ({ course, onModuleComplete, onBac
               </div>
 
               {activeModule.status === 'completed' ? (
-                // SUCCESS GRAPHIC VIEW
+                // SUCCESS GRAPHIC VIEW WITH BADGE
                 <div className="border rounded-[40px] p-12 text-center relative overflow-hidden transition-colors duration-500" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
                   <div className="absolute top-0 left-0 w-full h-full bg-blue-600/5 blur-3xl"></div>
                   <div className="relative z-10 flex flex-col items-center">
                     <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center mb-6 shadow-2xl shadow-blue-500/30">
                       <CheckCircle2 className="w-12 h-12 text-white" />
                     </div>
-                    <h3 className="text-3xl font-black tracking-tight mb-2" style={{ color: 'var(--text-primary)' }}>Module Validé !</h3>
-                    <p className="font-medium mb-8" style={{ color: 'var(--text-muted)' }}>Votre compétence a été certifiée par le NŒud Neural.</p>
+                    <h3 className="text-3xl font-black tracking-tight mb-2" style={{ color: 'var(--text-primary)' }}>Cours Validé !</h3>
+                    <p className="font-medium mb-8" style={{ color: 'var(--text-muted)' }}>Votre compétence a été certifiée par le Nœud Neural.</p>
+
+                    {/* Badge Earned */}
+                    <div className="flex items-center gap-4 p-6 rounded-3xl border mb-8" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'rgba(37, 99, 235, 0.3)' }}>
+                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                        <Award className="w-8 h-8 text-white" />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500 mb-1">Badge Obtenu</p>
+                        <h4 className="text-lg font-black" style={{ color: 'var(--text-primary)' }}>{activeModule.title}</h4>
+                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Maîtrise validée • Ajouté au portfolio</p>
+                      </div>
+                    </div>
 
                     <div className="mb-10">
                       <span className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600 tracking-tighter">
@@ -264,7 +317,7 @@ const CourseView: React.FC<CourseViewProps> = ({ course, onModuleComplete, onBac
                           }}
                           className="px-8 py-3 rounded-xl bg-blue-600 text-white font-bold text-xs uppercase tracking-widest shadow-lg shadow-blue-600/20 hover:bg-blue-500 transition"
                         >
-                          Module Suivant →
+                          Cours Suivant →
                         </button>
                       )}
                     </div>
@@ -291,36 +344,45 @@ const CourseView: React.FC<CourseViewProps> = ({ course, onModuleComplete, onBac
                     </div>
                   )}
 
-                  <div className="p-6 border-l-4 border-blue-600 rounded-r-2xl" style={{ backgroundColor: 'var(--glow-color)' }}>
-                    <p className="font-bold leading-relaxed" style={{ color: 'var(--text-primary)' }}>
-                      "Sur la base du contenu fourni, expliquez les transitions de la machine à états impliquées dans l'exécution d'une transaction et comment la gestion de la mémoire impacte l'efficacité globale du gas du système."
-                    </p>
-                  </div>
+                  {/* Exercise Launch Section */}
+                  <div className="border rounded-[32px] p-10 text-center relative overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-transparent"></div>
+                    <div className="relative z-10">
+                      <div className="w-20 h-20 rounded-3xl bg-blue-600 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-blue-500/20">
+                        <Terminal className="w-10 h-10 text-white" />
+                      </div>
+                      <h4 className="text-2xl font-black mb-3" style={{ color: 'var(--text-primary)' }}>Exercice Pratique</h4>
+                      <p className="text-sm max-w-md mx-auto mb-8" style={{ color: 'var(--text-muted)' }}>
+                        Mettez en pratique les concepts appris dans un environnement de développement complet avec éditeur de code, terminal et aperçu en temps réel.
+                      </p>
 
-                  <textarea
-                    value={userSubmission}
-                    onChange={(e) => setUserSubmission(e.target.value)}
-                    placeholder="Rédigez votre analyse technique ici..."
-                    className="w-full border rounded-3xl p-8 h-64 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 outline-none transition-all font-mono text-sm leading-relaxed"
-                    style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', borderColor: 'var(--border-color)' }}
-                  />
+                      <div className="flex flex-wrap justify-center gap-4 mb-8">
+                        <div className="flex items-center gap-2 px-4 py-2 rounded-xl border text-xs font-bold" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>
+                          <Code className="w-4 h-4 text-blue-500" />
+                          Éditeur Solidity
+                        </div>
+                        <div className="flex items-center gap-2 px-4 py-2 rounded-xl border text-xs font-bold" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>
+                          <Terminal className="w-4 h-4 text-green-500" />
+                          Console intégrée
+                        </div>
+                        <div className="flex items-center gap-2 px-4 py-2 rounded-xl border text-xs font-bold" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>
+                          <Play className="w-4 h-4 text-purple-500" />
+                          Tests automatisés
+                        </div>
+                      </div>
 
-                  <div className="flex justify-end items-center space-x-6">
-                    <p className="text-[10px] font-mono uppercase tracking-widest text-right max-w-[200px]" style={{ color: 'var(--text-muted)' }}>
-                      Soumettre au Nœud Neural pour vérification
-                    </p>
-                    <button
-                      onClick={handleEvaluate}
-                      disabled={isEvaluating || !userSubmission.trim()}
-                      className="bg-blue-600 hover:bg-blue-500 disabled:opacity-30 disabled:cursor-not-allowed text-white px-12 py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-xs transition-all flex items-center space-x-4 shadow-xl shadow-blue-500/20 active:scale-95 group"
-                    >
-                      {isEvaluating ? (
-                        <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
-                      ) : (
-                        <Zap className="w-4 h-4 group-hover:animate-pulse" />
-                      )}
-                      <span>Transmettre le Rapport d'Audit</span>
-                    </button>
+                      <button
+                        onClick={() => onOpenIDE?.({
+                          type: 'course',
+                          title: `Exercice: ${activeModule.title}`,
+                          courseId: course.id
+                        })}
+                        className="bg-blue-600 hover:bg-blue-500 text-white px-10 py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-xs transition-all flex items-center gap-4 mx-auto shadow-xl shadow-blue-500/20 active:scale-95"
+                      >
+                        <Terminal className="w-5 h-5" />
+                        <span>Ouvrir l'Environnement de Développement</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Audit Feedback Result */}
