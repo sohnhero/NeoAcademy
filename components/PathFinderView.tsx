@@ -25,6 +25,7 @@ import { MOCK_LEARNING_PATHS, PREDEFINED_PATHS_CATALOG } from '../constants';
 interface PathFinderViewProps {
     onPathConfirmed: (path: LearningPath) => void;
     onBack?: () => void;
+    availablePaths?: LearningPath[];
 }
 
 type FlowType = 'ai' | 'modular' | 'certified' | null;
@@ -51,7 +52,7 @@ const ANALYSIS_STEPS = [
     { text: 'Construction du parcours personnalisé...', icon: Sparkles }
 ];
 
-const PathFinderView: React.FC<PathFinderViewProps> = ({ onPathConfirmed }) => {
+const PathFinderView: React.FC<PathFinderViewProps> = ({ onPathConfirmed, availablePaths = [] }) => {
     const [selectedFlow, setSelectedFlow] = useState<FlowType>(null);
 
     // AI Flow State
@@ -576,7 +577,7 @@ const PathFinderView: React.FC<PathFinderViewProps> = ({ onPathConfirmed }) => {
 
                     {/* Paths Grid */}
                     <div className="space-y-4 mb-8">
-                        {PREDEFINED_PATHS_CATALOG.map((path) => (
+                        {(availablePaths.length > 0 ? availablePaths : PREDEFINED_PATHS_CATALOG).map((path) => (
                             <button
                                 key={path.id}
                                 onClick={() => setSelectedCertifiedPath(path)}
@@ -602,7 +603,7 @@ const PathFinderView: React.FC<PathFinderViewProps> = ({ onPathConfirmed }) => {
                                             <span className="flex items-center gap-1.5">
                                                 <Layers className="w-3.5 h-3.5" /> {path.modules?.length || 3} modules
                                             </span>
-                                            <span>{path.estimatedDuration}</span>
+                                            <span>{(path as any).estimatedDuration || (path as any).duration || '3-4 mois'}</span>
                                         </div>
                                     </div>
                                     {selectedCertifiedPath?.id === path.id && (

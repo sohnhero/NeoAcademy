@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import {
     X, Play, Save, Terminal, File, Folder, ChevronRight, ChevronDown,
     Send, Clock, AlertTriangle, CheckCircle2, Code, FileText, Settings,
-    Layout, Maximize2, Minimize2, RotateCcw, Copy, Download
+    Layout, Maximize2, Minimize2, RotateCcw, Copy, Download, ShieldAlert
 } from 'lucide-react';
 
 interface ExerciseIDEViewProps {
@@ -14,6 +14,7 @@ interface ExerciseIDEViewProps {
     timeLimit?: number; // in minutes, optional
     onSubmit: (code: string, output: string) => void;
     onCancel: () => void;
+    onOpenCoachHelp?: (course: string, module: string, blocking?: string) => void;
 }
 
 const ExerciseIDEView: React.FC<ExerciseIDEViewProps> = ({
@@ -23,7 +24,9 @@ const ExerciseIDEView: React.FC<ExerciseIDEViewProps> = ({
     instructions,
     timeLimit,
     onSubmit,
-    onCancel
+    onCancel,
+    onOpenCoachHelp,
+    onTestRemediation
 }) => {
     const [code, setCode] = useState(`// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
@@ -321,6 +324,13 @@ contract YourContract {
                         <Save className="w-4 h-4" />
                         Sauvegarder
                     </button>
+                    <button
+                        onClick={() => onOpenCoachHelp?.(title, 'Module', 'Blocage exercice technique')}
+                        className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors"
+                    >
+                        <ShieldAlert className="w-4 h-4" />
+                        Aide Coach
+                    </button>
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -332,6 +342,13 @@ contract YourContract {
                             Afficher les instructions
                         </button>
                     )}
+                    <button
+                        onClick={onTestRemediation}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 border border-purple-500/30 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors"
+                    >
+                        <AlertTriangle className="w-4 h-4" />
+                        Simuler Échec (V2)
+                    </button>
                     <button
                         onClick={handleSubmit}
                         className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-black uppercase tracking-widest transition-colors shadow-lg shadow-blue-500/20"

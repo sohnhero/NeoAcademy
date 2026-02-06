@@ -121,6 +121,70 @@ export const badgesAPI = {
     getById: (id: string) => apiRequest<any>(`/badges/${id}`),
 };
 
+// Learning Paths API
+export const learningPathsAPI = {
+    getAll: () => apiRequest<any[]>('/learningPaths'),
+    getById: (id: string) => apiRequest<any>(`/learningPaths/${id}`),
+    create: (path: any) => apiRequest<any>('/learningPaths', {
+        method: 'POST',
+        body: JSON.stringify(path),
+    }),
+    update: (id: string, path: any) => apiRequest<any>(`/learningPaths/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(path),
+    }),
+    patch: (id: string, updates: Partial<any>) => apiRequest<any>(`/learningPaths/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(updates),
+    }),
+    delete: (id: string) => apiRequest<void>(`/learningPaths/${id}`, {
+        method: 'DELETE',
+    }),
+};
+
+// Users API
+export const usersAPI = {
+    getAll: () => apiRequest<any[]>('/users'),
+    getById: (id: string) => apiRequest<any>(`/users/${id}`),
+    getByEmail: (email: string) => apiRequest<any[]>(`/users?email=${encodeURIComponent(email)}`),
+    create: (user: any) => apiRequest<any>('/users', {
+        method: 'POST',
+        body: JSON.stringify(user),
+    }),
+    update: (id: string, user: any) => apiRequest<any>(`/users/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(user),
+    }),
+    patch: (id: string, updates: Partial<any>) => apiRequest<any>(`/users/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(updates),
+    }),
+};
+
+// Remediations API
+export const remediationsAPI = {
+    getAll: () => apiRequest<any[]>('/remediations'),
+    getById: (id: string) => apiRequest<any>(`/remediations/${id}`),
+    getByCourseId: (courseId: string) => apiRequest<any[]>(`/remediations?courseId=${courseId}`),
+};
+
+// Coach Requests API
+export const coachRequestsAPI = {
+    getAll: (status?: string) => {
+        const queryString = status ? `?status=${status}` : '';
+        return apiRequest<any[]>(`/coachRequests${queryString}`);
+    },
+    getById: (id: string) => apiRequest<any>(`/coachRequests/${id}`),
+    create: (request: any) => apiRequest<any>('/coachRequests', {
+        method: 'POST',
+        body: JSON.stringify(request),
+    }),
+    updateStatus: (id: string, status: string) => apiRequest<any>(`/coachRequests/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+    }),
+};
+
 export default {
     courses: coursesAPI,
     students: studentsAPI,
@@ -130,4 +194,8 @@ export default {
     kpis: kpisAPI,
     alerts: alertsAPI,
     badges: badgesAPI,
+    learningPaths: learningPathsAPI,
+    users: usersAPI,
+    remediations: remediationsAPI,
+    coachRequests: coachRequestsAPI,
 };

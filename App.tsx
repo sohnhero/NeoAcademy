@@ -63,20 +63,27 @@ const App: React.FC = () => {
 
   // Legacy State (for admin/coach views)
   const [legacyCourses, setLegacyCourses] = useState<LegacyCourse[]>([]);
+  const [availablePaths, setAvailablePaths] = useState<LearningPath[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [selectedReviewId, setSelectedReviewId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch legacy data for admin views
+  // Fetch data from API
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const coursesData = await api.courses.getAll();
+        // Fetch courses and learning paths in parallel
+        const [coursesData, pathsData] = await Promise.all([
+          api.courses.getAll(),
+          api.learningPaths.getAll()
+        ]);
         setLegacyCourses(coursesData);
+        setAvailablePaths(pathsData);
       } catch (error) {
         console.error('Failed to fetch data:', error);
         setLegacyCourses(MOCK_COURSES);
+        setAvailablePaths(MOCK_LEARNING_PATHS);
       } finally {
         setIsLoading(false);
       }
@@ -94,8 +101,9 @@ const App: React.FC = () => {
     if (role === 'apprenant' && newUser) {
       setShowPathFinder(true);
     } else if (role === 'apprenant') {
-      // Existing learner - load their path (mock: use first path)
-      setCurrentLearningPath(MOCK_LEARNING_PATHS[0]);
+      // Existing learner - load their path from available paths
+      const firstPath = availablePaths.length > 0 ? availablePaths[0] : MOCK_LEARNING_PATHS[0];
+      setCurrentLearningPath(firstPath);
       setShowPathFinder(false);
     } else {
       // Coach or Admin - no path needed
@@ -129,6 +137,7 @@ const App: React.FC = () => {
           setIsAuthenticated(false);
           setShowPathFinder(false);
         }}
+        availablePaths={availablePaths}
       />
     );
   }
@@ -309,52 +318,40 @@ const App: React.FC = () => {
 
     // V2: Course View (within learning path)
     if (activeCourseId && activeModuleId && currentLearningPath) {
-      const module = currentLearningPath.modules.find(m => m.id === activeModuleId);
-      const course = module?.courses.find(c => c.id === activeCourseId);
+      return (
+        <CourseView
+          learningPath={currentLearningPath}
+          activeModuleId={activeModuleId}
+          activeCourseId={activeCourseId}
+          showIDE={showIDE}
+          onCourseComplete={(moduleId, courseId, score) => {
+            const module = currentLearningPath.modules.find(m => m.id === moduleId);
+            const course = module?.courses.find(c => c.id === courseId);
+            if (!course) return;
 
-      if (course) {
-        const legacyCourse: LegacyCourse = {
-          id: course.id,
-          title: module!.title,
-          category: 'blockchain',
-          progress: module!.progress,
-          image: currentLearningPath.image || '',
-          modules: [{
-            id: course.id,
-            title: course.title,
-            description: course.description,
-            duration: course.duration,
-            isLocked: false,
-            status: course.status,
-            content: course.content.map(c => c.content).join('\n\n'),
-            objectives: course.objectives || [],
-            score: course.score
-          }]
-        };
-
-        return (
-          <CourseView
-            course={legacyCourse}
-            onModuleComplete={(moduleId, score) => {
-              const passed = score >= (course.exercise.passingScore || 70);
-              if (!passed && course.remediation) {
-                setActiveRemediation({ remediation: course.remediation, course });
-                setActiveCourseId(null);
-              } else {
-                handleCourseComplete(activeCourseId, passed, score);
-              }
-            }}
-            onBack={() => {
+            const passed = score >= (course.exercise.passingScore || 70);
+            if (!passed && course.remediation) {
+              setActiveRemediation({ remediation: course.remediation, course });
               setActiveCourseId(null);
-              setActiveModuleId(null);
-            }}
-            onOpenIDE={(context) => {
-              setIdeContext({ ...context, moduleId: activeModuleId || undefined });
-              setShowIDE(true);
-            }}
-          />
-        );
-      }
+            } else {
+              handleCourseComplete(courseId, passed, score);
+            }
+          }}
+          onBack={() => {
+            setActiveCourseId(null);
+            setActiveModuleId(null);
+          }}
+          onOpenIDE={(context) => {
+            setIdeContext({ ...context, moduleId: activeModuleId || undefined });
+            setShowIDE(true);
+          }}
+          onNavigate={(mId, cId) => {
+            setActiveModuleId(mId);
+            setActiveCourseId(cId);
+          }}
+          onOpenCoachHelp={openCoachHelp}
+        />
+      );
     }
 
     // Role-specific routing
@@ -487,6 +484,21 @@ const App: React.FC = () => {
             "Exécutez les tests pour valider votre implémentation"
           ]}
           timeLimit={ideContext.type === 'final' ? 120 : ideContext.type === 'module' ? 60 : undefined}
+          onOpenCoachHelp={openCoachHelp}
+          onTestRemediation={() => {
+            if (ideContext.type === 'course' && ideContext.courseId && activeModuleId && currentLearningPath) {
+              const module = currentLearningPath.modules.find(m => m.id === activeModuleId);
+              const course = module?.courses.find(c => c.id === ideContext.courseId);
+              if (course?.remediation) {
+                setActiveRemediation({ remediation: course.remediation, course });
+                setActiveCourseId(null);
+                setShowIDE(false);
+                setIdeContext(null);
+              } else {
+                alert("Aucune donnée de remédiation n'est définie pour ce cours. (Vérifiez constants.tsx)");
+              }
+            }
+          }}
           onSubmit={async (code, output) => {
             setShowIDE(false);
             // Handle submission based on context type
@@ -501,9 +513,17 @@ const App: React.FC = () => {
                   course.modules[0]?.objectives || [],
                   code
                 );
-                // Handle result - could trigger remediation if failed
-                if (result.isPassed) {
+                // Handle result - trigger remediation if failed
+                const passed = result.isPassed;
+                if (passed) {
                   handleCourseComplete(ideContext.courseId, true, result.score);
+                } else if (course.remediation) {
+                  // V2: Trigger remediation flow
+                  setActiveRemediation({ remediation: course.remediation, course });
+                  setActiveCourseId(null);
+                } else {
+                  // Just fail the course without remediation
+                  handleCourseComplete(ideContext.courseId, false, result.score);
                 }
               }
             }

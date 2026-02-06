@@ -11,61 +11,133 @@
             "modules": [
                 {
                     "id": "m1",
-                    "title": "Contrats Intelligents : Logique Déterministe",
-                    "description": "Maîtriser la machine à états de Solidity et les principes d'immuabilité.",
-                    "duration": "45 mins",
+                    "title": "MODULE 1: FONDAMENTAUX BLOCKCHAIN",
+                    "description": "Maîtriser les bases de la blockchain et du consensus.",
+                    "duration": "2.5 heures",
                     "isLocked": false,
                     "status": "completed",
-                    "content": "Les contrats intelligents sont des protocoles autonomes résidant sur un registre distribué. Ils sont immuables et déterministes.",
-                    "objectives": [
-                        "Storage vs Memory",
-                        "Gas Mechanics",
-                        "Oracles Basics"
-                    ],
                     "score": 92,
+                    "content": "Les fondamentaux de la blockchain constituent la base de toute compréhension de l'écosystème.",
+                    "objectives": [
+                        "Comprendre la blockchain",
+                        "Maîtriser le consensus",
+                        "Explorer les fonctions de hachage"
+                    ],
+                    "lessons": [
+                        {
+                            "id": "l1",
+                            "title": "Histoire de la Monnaie",
+                            "type": "video",
+                            "duration": "10 min",
+                            "status": "completed"
+                        },
+                        {
+                            "id": "l2",
+                            "title": "Fonctions de Hachage",
+                            "type": "text",
+                            "duration": "15 min",
+                            "status": "completed"
+                        },
+                        {
+                            "id": "l3",
+                            "title": "Validation: Consensus",
+                            "type": "quiz",
+                            "duration": "10 min",
+                            "status": "completed"
+                        }
+                    ],
                     "llmConfig": {
-                        "tutorContext": "Agis comme un expert en Solidity. Concentre-toi sur les concepts fondamentaux.",
+                        "tutorContext": "Expert blockchain. Focus sur les fondamentaux.",
                         "strictness": "medium",
                         "style": "didactic",
-                        "depth": "detailed",
-                        "evaluationPrompt": "Évalue la compréhension des concepts de base de Solidity."
+                        "depth": "detailed"
                     }
                 },
                 {
                     "id": "m2",
-                    "title": "Exploration Profonde de l'EVM",
-                    "description": "Analyse de l'architecture stack-based et de l'exécution des Opcodes.",
-                    "duration": "1.5 heures",
+                    "title": "MODULE 2: BASES DE SOLIDITY",
+                    "description": "Apprendre la syntaxe et les concepts fondamentaux de Solidity.",
+                    "duration": "4 heures",
                     "isLocked": false,
                     "status": "in-progress",
-                    "content": "L'EVM est une machine virtuelle quasi-Turing complète. Elle utilise une pile de 256 bits.",
+                    "content": "Solidity est le langage principal pour écrire des smart contracts sur Ethereum.",
                     "objectives": [
-                        "Opcode Execution",
-                        "Stack management",
-                        "Memory Expansion"
+                        "Variables & Types",
+                        "Fonctions & Modifiers",
+                        "Premier Smart Contract"
+                    ],
+                    "lessons": [
+                        {
+                            "id": "l4",
+                            "title": "Variables & Types",
+                            "type": "video",
+                            "duration": "20 min",
+                            "status": "completed"
+                        },
+                        {
+                            "id": "l5",
+                            "title": "Fonctions & Modifiers",
+                            "type": "text",
+                            "duration": "25 min",
+                            "status": "in-progress"
+                        },
+                        {
+                            "id": "l6",
+                            "title": "Lab: Premier Smart Contract",
+                            "type": "code",
+                            "duration": "45 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        },
+                        {
+                            "id": "l7",
+                            "title": "Examen de Module",
+                            "type": "exam",
+                            "duration": "30 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        }
                     ],
                     "prerequisites": [
                         "m1"
                     ],
                     "llmConfig": {
-                        "tutorContext": "Expert en architecture EVM. Utilise des analogies techniques.",
-                        "strictness": "high",
-                        "style": "socratic",
-                        "depth": "expert"
+                        "tutorContext": "Expert Solidity. Pédagogie progressive.",
+                        "strictness": "medium",
+                        "style": "practical",
+                        "depth": "detailed"
                     }
                 },
                 {
                     "id": "m3",
-                    "title": "Audit & Sécurité Avancée",
-                    "description": "Techniques d'analyse statique et dynamique pour la sécurité.",
-                    "duration": "2 heures",
+                    "title": "MODULE 3: SÉCURITÉ & AUDIT",
+                    "description": "Techniques d'audit et prévention des vulnérabilités.",
+                    "duration": "3 heures",
                     "isLocked": true,
                     "status": "not-started",
                     "content": "L'audit de sécurité est crucial pour éviter les exploits.",
                     "objectives": [
                         "Reentrancy",
-                        "Front-running",
-                        "Integer Overflow"
+                        "Overflow/Underflow",
+                        "Best Practices"
+                    ],
+                    "lessons": [
+                        {
+                            "id": "l8",
+                            "title": "Attaques Reentrancy",
+                            "type": "video",
+                            "duration": "25 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        },
+                        {
+                            "id": "l9",
+                            "title": "Overflow/Underflow",
+                            "type": "text",
+                            "duration": "20 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        }
                     ],
                     "prerequisites": [
                         "m1",
@@ -85,15 +157,47 @@
             "modules": [
                 {
                     "id": "m21",
-                    "title": "Vecteurs d'attaque Flash Loan",
+                    "title": "MODULE 1: FLASH LOANS & MANIPULATION",
                     "description": "Comprendre et prévenir la manipulation d'oracles de prix.",
                     "duration": "3 heures",
                     "isLocked": false,
-                    "status": "not-started",
+                    "status": "completed",
+                    "score": 88,
                     "content": "Les Flash Loans permettent d'emprunter des millions sans collatéral...",
                     "objectives": [
                         "Price Oracle Manipulation",
-                        "Arbitrage Exploits"
+                        "Arbitrage Exploits",
+                        "Protection Patterns"
+                    ],
+                    "lessons": [
+                        {
+                            "id": "l21",
+                            "title": "Introduction aux Flash Loans",
+                            "type": "video",
+                            "duration": "20 min",
+                            "status": "completed"
+                        },
+                        {
+                            "id": "l22",
+                            "title": "Mécanisme d'emprunt atomique",
+                            "type": "text",
+                            "duration": "30 min",
+                            "status": "completed"
+                        },
+                        {
+                            "id": "l23",
+                            "title": "Cas d'étude: bZx Hack",
+                            "type": "video",
+                            "duration": "25 min",
+                            "status": "completed"
+                        },
+                        {
+                            "id": "l24",
+                            "title": "Quiz: Flash Loan Fundamentals",
+                            "type": "quiz",
+                            "duration": "15 min",
+                            "status": "completed"
+                        }
                     ],
                     "llmConfig": {
                         "tutorContext": "Expert en sécurité DeFi. Focus sur les attaques réelles.",
@@ -104,19 +208,179 @@
                 },
                 {
                     "id": "m22",
-                    "title": "Analyse de Reentrancy",
+                    "title": "MODULE 2: ANALYSE DE REENTRANCY",
                     "description": "Comprendre et détecter les vulnérabilités de réentrance.",
-                    "duration": "2 heures",
+                    "duration": "4 heures",
                     "isLocked": false,
-                    "status": "not-started",
-                    "content": "La reentrancy est l'une des vulnérabilités les plus dangereuses dans les smart contracts.",
+                    "status": "in-progress",
+                    "content": "La reentrancy est l'une des vulnérabilités les plus dangereuses.",
                     "objectives": [
                         "Pattern Check-Effects-Interactions",
                         "ReentrancyGuard",
                         "Cas pratiques"
                     ],
+                    "lessons": [
+                        {
+                            "id": "l25",
+                            "title": "Qu'est-ce que la Reentrancy?",
+                            "type": "video",
+                            "duration": "25 min",
+                            "status": "completed"
+                        },
+                        {
+                            "id": "l26",
+                            "title": "The DAO Hack Explained",
+                            "type": "text",
+                            "duration": "35 min",
+                            "status": "completed"
+                        },
+                        {
+                            "id": "l27",
+                            "title": "Pattern Check-Effects-Interactions",
+                            "type": "video",
+                            "duration": "30 min",
+                            "status": "in-progress"
+                        },
+                        {
+                            "id": "l28",
+                            "title": "Lab: Identifier les vulnérabilités",
+                            "type": "code",
+                            "duration": "45 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        },
+                        {
+                            "id": "l29",
+                            "title": "Implémenter ReentrancyGuard",
+                            "type": "code",
+                            "duration": "40 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        },
+                        {
+                            "id": "l30",
+                            "title": "Examen Module 2",
+                            "type": "exam",
+                            "duration": "45 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        }
+                    ],
                     "prerequisites": [
                         "m21"
+                    ]
+                },
+                {
+                    "id": "m23",
+                    "title": "MODULE 3: ORACLE MANIPULATION",
+                    "description": "Sécuriser les sources de prix externes.",
+                    "duration": "3.5 heures",
+                    "isLocked": true,
+                    "status": "not-started",
+                    "content": "Les oracles sont un point critique de vulnérabilité dans DeFi.",
+                    "objectives": [
+                        "TWAP vs Spot Price",
+                        "Chainlink Integration",
+                        "Manipulation Prevention"
+                    ],
+                    "lessons": [
+                        {
+                            "id": "l31",
+                            "title": "Types d'oracles de prix",
+                            "type": "video",
+                            "duration": "25 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        },
+                        {
+                            "id": "l32",
+                            "title": "Attaques sur les oracles",
+                            "type": "text",
+                            "duration": "30 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        },
+                        {
+                            "id": "l33",
+                            "title": "Intégration Chainlink",
+                            "type": "code",
+                            "duration": "50 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        },
+                        {
+                            "id": "l34",
+                            "title": "TWAP Implementation",
+                            "type": "code",
+                            "duration": "45 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        }
+                    ],
+                    "prerequisites": [
+                        "m21",
+                        "m22"
+                    ]
+                },
+                {
+                    "id": "m24",
+                    "title": "MODULE 4: AUDIT PROFESSIONNEL",
+                    "description": "Méthodologie d'audit complète pour protocoles DeFi.",
+                    "duration": "5 heures",
+                    "isLocked": true,
+                    "status": "not-started",
+                    "content": "Apprenez la méthodologie utilisée par les auditeurs professionnels.",
+                    "objectives": [
+                        "Audit Checklist",
+                        "Static Analysis Tools",
+                        "Report Writing"
+                    ],
+                    "lessons": [
+                        {
+                            "id": "l35",
+                            "title": "Méthodologie d'audit",
+                            "type": "video",
+                            "duration": "30 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        },
+                        {
+                            "id": "l36",
+                            "title": "Outils d'analyse statique",
+                            "type": "text",
+                            "duration": "40 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        },
+                        {
+                            "id": "l37",
+                            "title": "Lab: Slither & Mythril",
+                            "type": "code",
+                            "duration": "60 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        },
+                        {
+                            "id": "l38",
+                            "title": "Rédaction de rapport d'audit",
+                            "type": "text",
+                            "duration": "45 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        },
+                        {
+                            "id": "l39",
+                            "title": "Projet Final: Audit complet",
+                            "type": "exam",
+                            "duration": "120 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        }
+                    ],
+                    "prerequisites": [
+                        "m21",
+                        "m22",
+                        "m23"
                     ]
                 }
             ]
@@ -132,9 +396,9 @@
             "modules": [
                 {
                     "id": "m31",
-                    "title": "Introduction aux Zero-Knowledge Proofs",
+                    "title": "MODULE 1: FONDAMENTAUX ZK",
                     "description": "Comprendre les fondamentaux des preuves à divulgation nulle.",
-                    "duration": "2.5 heures",
+                    "duration": "4 heures",
                     "isLocked": false,
                     "status": "not-started",
                     "content": "Les ZK-Proofs permettent de prouver la connaissance d'une information sans la révéler.",
@@ -142,6 +406,43 @@
                         "zk-SNARKs",
                         "zk-STARKs",
                         "Circuits arithmétiques"
+                    ],
+                    "lessons": [
+                        {
+                            "id": "l41",
+                            "title": "Introduction aux Zero-Knowledge",
+                            "type": "video",
+                            "duration": "25 min",
+                            "status": "not-started"
+                        },
+                        {
+                            "id": "l42",
+                            "title": "Mathématiques des ZK Proofs",
+                            "type": "text",
+                            "duration": "40 min",
+                            "status": "not-started"
+                        },
+                        {
+                            "id": "l43",
+                            "title": "zk-SNARKs vs zk-STARKs",
+                            "type": "video",
+                            "duration": "35 min",
+                            "status": "not-started"
+                        },
+                        {
+                            "id": "l44",
+                            "title": "Circuits arithmétiques expliqués",
+                            "type": "text",
+                            "duration": "45 min",
+                            "status": "not-started"
+                        },
+                        {
+                            "id": "l45",
+                            "title": "Quiz: Concepts ZK fondamentaux",
+                            "type": "quiz",
+                            "duration": "20 min",
+                            "status": "not-started"
+                        }
                     ],
                     "llmConfig": {
                         "tutorContext": "Expert en cryptographie. Simplifie les concepts mathématiques complexes.",
@@ -152,19 +453,182 @@
                 },
                 {
                     "id": "m32",
-                    "title": "Optimistic vs ZK Rollups",
+                    "title": "MODULE 2: ROLLUPS COMPARAISON",
                     "description": "Comparaison des différentes solutions de scalabilité Layer 2.",
-                    "duration": "1.5 heures",
-                    "isLocked": false,
+                    "duration": "3 heures",
+                    "isLocked": true,
                     "status": "not-started",
                     "content": "Les rollups sont la solution privilégiée pour scaler Ethereum.",
                     "objectives": [
                         "Fraud Proofs",
                         "Validity Proofs",
-                        "Trade-offs"
+                        "Trade-offs Analysis"
+                    ],
+                    "lessons": [
+                        {
+                            "id": "l46",
+                            "title": "Qu'est-ce qu'un Rollup?",
+                            "type": "video",
+                            "duration": "20 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        },
+                        {
+                            "id": "l47",
+                            "title": "Optimistic Rollups Deep Dive",
+                            "type": "text",
+                            "duration": "35 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        },
+                        {
+                            "id": "l48",
+                            "title": "ZK Rollups Deep Dive",
+                            "type": "text",
+                            "duration": "40 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        },
+                        {
+                            "id": "l49",
+                            "title": "Analyse comparative: Arbitrum vs zkSync",
+                            "type": "video",
+                            "duration": "30 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        }
                     ],
                     "prerequisites": [
                         "m31"
+                    ]
+                },
+                {
+                    "id": "m33",
+                    "title": "MODULE 3: DÉVELOPPEMENT ZK",
+                    "description": "Développer des applications utilisant les preuves ZK.",
+                    "duration": "5 heures",
+                    "isLocked": true,
+                    "status": "not-started",
+                    "content": "Apprenez à créer des circuits et applications ZK.",
+                    "objectives": [
+                        "Circom Language",
+                        "SnarkJS",
+                        "Practical ZK Apps"
+                    ],
+                    "lessons": [
+                        {
+                            "id": "l50",
+                            "title": "Introduction à Circom",
+                            "type": "video",
+                            "duration": "35 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        },
+                        {
+                            "id": "l51",
+                            "title": "Écriture de circuits simples",
+                            "type": "text",
+                            "duration": "45 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        },
+                        {
+                            "id": "l52",
+                            "title": "Lab: Premier circuit ZK",
+                            "type": "code",
+                            "duration": "60 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        },
+                        {
+                            "id": "l53",
+                            "title": "Intégration avec SnarkJS",
+                            "type": "code",
+                            "duration": "50 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        },
+                        {
+                            "id": "l54",
+                            "title": "Lab: Vérification on-chain",
+                            "type": "code",
+                            "duration": "70 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        }
+                    ],
+                    "prerequisites": [
+                        "m31",
+                        "m32"
+                    ]
+                },
+                {
+                    "id": "m34",
+                    "title": "MODULE 4: PROJET ZK AVANCÉ",
+                    "description": "Construire une application complète avec preuves ZK.",
+                    "duration": "8 heures",
+                    "isLocked": true,
+                    "status": "not-started",
+                    "content": "Projet final: créez une application privée avec ZK proofs.",
+                    "objectives": [
+                        "Private Voting",
+                        "Anonymous Credentials",
+                        "Production Deployment"
+                    ],
+                    "lessons": [
+                        {
+                            "id": "l55",
+                            "title": "Architecture d'app ZK",
+                            "type": "video",
+                            "duration": "40 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        },
+                        {
+                            "id": "l56",
+                            "title": "Design du système de vote privé",
+                            "type": "text",
+                            "duration": "50 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        },
+                        {
+                            "id": "l57",
+                            "title": "Lab: Circuit de vote",
+                            "type": "code",
+                            "duration": "90 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        },
+                        {
+                            "id": "l58",
+                            "title": "Lab: Smart contracts vérificateurs",
+                            "type": "code",
+                            "duration": "80 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        },
+                        {
+                            "id": "l59",
+                            "title": "Lab: Frontend intégration",
+                            "type": "code",
+                            "duration": "70 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        },
+                        {
+                            "id": "l60",
+                            "title": "Projet Final: Système de vote privé",
+                            "type": "exam",
+                            "duration": "180 min",
+                            "status": "not-started",
+                            "isLocked": true
+                        }
+                    ],
+                    "prerequisites": [
+                        "m31",
+                        "m32",
+                        "m33"
                     ]
                 }
             ]
@@ -985,6 +1449,346 @@
             "type": "info",
             "message": "Nouveau record: 150 modules validés aujourd'hui",
             "time": "2024-02-01T20:00:00Z"
+        }
+    ],
+    "learningPaths": [
+        {
+            "id": "lp1",
+            "title": "Maîtrise Ethereum & Smart Contracts",
+            "description": "Parcours certifiant complet pour devenir développeur blockchain Ethereum.",
+            "category": "Parcours Certifiant",
+            "type": "certified",
+            "image": "https://images.unsplash.com/photo-1622790698141-94e30457ef12?q=80&w=2072&auto=format&fit=crop",
+            "duration": "3-4 mois",
+            "level": "Intermédiaire",
+            "skills": [
+                "Solidity",
+                "EVM",
+                "Smart Contracts",
+                "Security"
+            ],
+            "progress": 35,
+            "status": "in-progress",
+            "modules": [
+                {
+                    "id": "lpm1",
+                    "title": "Module 1: Fondamentaux Ethereum",
+                    "description": "Comprendre l'architecture d'Ethereum et ses composants.",
+                    "status": "completed",
+                    "progress": 100,
+                    "courses": [
+                        {
+                            "id": "lpc1",
+                            "title": "Introduction à la Blockchain",
+                            "duration": "45 mins",
+                            "status": "completed",
+                            "score": 92,
+                            "isLocked": false,
+                            "modules": [
+                                {
+                                    "id": "lpcm1",
+                                    "title": "Qu'est-ce que la blockchain ?",
+                                    "content": "La blockchain est un registre distribué immuable qui permet de stocker des transactions de manière sécurisée. Elle utilise la cryptographie pour garantir l'intégrité des données.\n\nLes principales caractéristiques sont:\n- Décentralisation: aucun point central de contrôle\n- Immuabilité: les données ne peuvent pas être modifiées\n- Transparence: toutes les transactions sont publiques\n- Sécurité: cryptographie avancée",
+                                    "objectives": [
+                                        "Comprendre le concept de blockchain",
+                                        "Identifier les avantages de la décentralisation",
+                                        "Expliquer l'immuabilité"
+                                    ],
+                                    "duration": "15 mins",
+                                    "status": "completed",
+                                    "score": 95,
+                                    "isLocked": false
+                                },
+                                {
+                                    "id": "lpcm2",
+                                    "title": "Ethereum vs Bitcoin",
+                                    "content": "Ethereum est une plateforme de smart contracts qui va au-delà du simple transfert de valeur. Contrairement à Bitcoin qui est principalement une monnaie, Ethereum permet l'exécution de code arbitraire sur la blockchain.\n\nDifférences clés:\n- Smart Contracts: Ethereum supporte les contrats intelligents\n- Langage de programmation: Solidity vs Script Bitcoin\n- Temps de bloc: ~12s vs ~10min\n- Gas: mécanisme de frais unique",
+                                    "objectives": [
+                                        "Comparer Ethereum et Bitcoin",
+                                        "Comprendre les smart contracts",
+                                        "Expliquer le mécanisme de gas"
+                                    ],
+                                    "duration": "30 mins",
+                                    "status": "completed",
+                                    "score": 88,
+                                    "isLocked": false
+                                }
+                            ],
+                            "exercise": {
+                                "type": "code",
+                                "description": "Créez un simple contrat Solidity",
+                                "passingScore": 70
+                            }
+                        },
+                        {
+                            "id": "lpc2",
+                            "title": "Architecture de l'EVM",
+                            "duration": "1.5 heures",
+                            "status": "in-progress",
+                            "isLocked": false,
+                            "modules": [
+                                {
+                                    "id": "lpcm3",
+                                    "title": "La Machine Virtuelle Ethereum",
+                                    "content": "L'EVM (Ethereum Virtual Machine) est le cœur d'exécution d'Ethereum. C'est une machine à pile de 256 bits qui exécute du bytecode.\n\nConcepts fondamentaux:\n- Stack: pile LIFO de 1024 éléments\n- Memory: mémoire volatile linéaire\n- Storage: stockage persistant (coûteux)\n- Opcodes: instructions de base (PUSH, POP, ADD, etc.)",
+                                    "objectives": [
+                                        "Comprendre l'architecture EVM",
+                                        "Différencier Stack, Memory et Storage",
+                                        "Identifier les opcodes de base"
+                                    ],
+                                    "duration": "45 mins",
+                                    "status": "in-progress",
+                                    "isLocked": false
+                                },
+                                {
+                                    "id": "lpcm4",
+                                    "title": "Gas et Optimisation",
+                                    "content": "Le gas est l'unité de mesure du coût computationnel sur Ethereum. Chaque opération a un coût en gas prédéfini.\n\nOptimisation du gas:\n- Utiliser les types appropriés (uint256 vs uint8)\n- Minimiser les lectures/écritures en storage\n- Éviter les boucles non bornées\n- Utiliser les modifiers avec parcimonie",
+                                    "objectives": [
+                                        "Calculer les coûts en gas",
+                                        "Optimiser le code Solidity",
+                                        "Éviter les patterns coûteux"
+                                    ],
+                                    "duration": "45 mins",
+                                    "status": "not-started",
+                                    "isLocked": true
+                                }
+                            ],
+                            "exercise": {
+                                "type": "code",
+                                "description": "Optimisez un smart contract pour réduire les coûts en gas",
+                                "passingScore": 75
+                            }
+                        }
+                    ],
+                    "exam": {
+                        "id": "exam1",
+                        "title": "Examen Module 1",
+                        "duration": "1 heure",
+                        "passingScore": 70,
+                        "status": "not-started"
+                    }
+                },
+                {
+                    "id": "lpm2",
+                    "title": "Module 2: Développement Solidity",
+                    "description": "Maîtriser le langage Solidity et les patterns avancés.",
+                    "status": "locked",
+                    "progress": 0,
+                    "courses": [
+                        {
+                            "id": "lpc3",
+                            "title": "Syntaxe Solidity",
+                            "duration": "2 heures",
+                            "status": "not-started",
+                            "isLocked": true,
+                            "modules": [
+                                {
+                                    "id": "lpcm5",
+                                    "title": "Types et Variables",
+                                    "content": "Solidity est un langage typé statiquement. Les types de base incluent uint, int, bool, address, bytes et string.\n\nTypes importants:\n- uint256: entier non signé (le plus utilisé)\n- address: adresse Ethereum 20 bytes\n- mapping: table de hachage\n- struct: type personnalisé",
+                                    "objectives": [
+                                        "Maîtriser les types Solidity",
+                                        "Utiliser les mappings",
+                                        "Créer des structs"
+                                    ],
+                                    "duration": "1 heure",
+                                    "status": "not-started",
+                                    "isLocked": true
+                                }
+                            ],
+                            "exercise": {
+                                "type": "code",
+                                "description": "Créez un contrat avec différents types de données",
+                                "passingScore": 70
+                            }
+                        }
+                    ]
+                },
+                {
+                    "id": "lpm3",
+                    "title": "Module 3: Sécurité & Audit",
+                    "description": "Techniques d'audit et prévention des vulnérabilités.",
+                    "status": "locked",
+                    "progress": 0,
+                    "courses": []
+                }
+            ],
+            "finalProject": {
+                "id": "fp1",
+                "title": "Projet Final: DEX Simplifié",
+                "description": "Construire un échange décentralisé fonctionnel",
+                "deadline": "2024-03-15",
+                "status": "locked"
+            }
+        },
+        {
+            "id": "lp2",
+            "title": "Sécurité DeFi Avancée",
+            "description": "Spécialisation en sécurité des protocoles de finance décentralisée.",
+            "category": "Parcours Certifiant",
+            "type": "certified",
+            "image": "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?q=80&w=2000&auto=format&fit=crop",
+            "duration": "2-3 mois",
+            "level": "Avancé",
+            "skills": [
+                "Security",
+                "DeFi",
+                "Auditing",
+                "Flash Loans"
+            ],
+            "progress": 0,
+            "status": "not-started",
+            "modules": [
+                {
+                    "id": "lpm4",
+                    "title": "Module 1: Vulnérabilités DeFi",
+                    "description": "Comprendre les vecteurs d'attaque courants.",
+                    "status": "not-started",
+                    "progress": 0,
+                    "courses": [
+                        {
+                            "id": "lpc4",
+                            "title": "Flash Loan Attacks",
+                            "duration": "2 heures",
+                            "status": "not-started",
+                            "isLocked": false,
+                            "modules": [
+                                {
+                                    "id": "lpcm6",
+                                    "title": "Comprendre les Flash Loans",
+                                    "content": "Les Flash Loans permettent d'emprunter des millions sans collatéral, à condition de rembourser dans la même transaction.\n\nCas d'utilisation:\n- Arbitrage\n- Liquidations\n- Attaques sur les oracles de prix",
+                                    "objectives": [
+                                        "Comprendre le mécanisme des Flash Loans",
+                                        "Identifier les vecteurs d'attaque",
+                                        "Implémenter des protections"
+                                    ],
+                                    "duration": "1 heure",
+                                    "status": "not-started",
+                                    "isLocked": false
+                                }
+                            ],
+                            "exercise": {
+                                "type": "code",
+                                "description": "Simulez une attaque Flash Loan sur un testnet",
+                                "passingScore": 75
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "lp3",
+            "title": "Architecture ZK-Rollups",
+            "description": "Maîtriser les solutions de scalabilité Layer 2.",
+            "category": "Parcours Certifiant",
+            "type": "certified",
+            "image": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop",
+            "duration": "2-3 mois",
+            "level": "Expert",
+            "skills": [
+                "ZK Proofs",
+                "Layer 2",
+                "Cryptography"
+            ],
+            "progress": 0,
+            "status": "not-started",
+            "modules": []
+        }
+    ],
+    "users": [
+        {
+            "id": "u1",
+            "email": "demo@learner.com",
+            "password": "demo123",
+            "name": "Alice Demo",
+            "role": "apprenant",
+            "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
+            "currentPathId": "lp1",
+            "completedPaths": [],
+            "badges": [
+                "b1",
+                "b2"
+            ],
+            "skills": {
+                "Solidity": 85,
+                "Security": 70,
+                "DeFi": 60,
+                "ZK Proofs": 40
+            },
+            "createdAt": "2024-01-01T00:00:00Z"
+        },
+        {
+            "id": "u2",
+            "email": "demo@coach.com",
+            "password": "demo123",
+            "name": "Coach Michel",
+            "role": "coach",
+            "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
+            "assignedStudents": [
+                "s1",
+                "s2",
+                "s3",
+                "s4",
+                "s5"
+            ],
+            "createdAt": "2023-12-01T00:00:00Z"
+        },
+        {
+            "id": "u3",
+            "email": "demo@admin.com",
+            "password": "demo123",
+            "name": "Admin Sarah",
+            "role": "admin",
+            "avatar": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150",
+            "createdAt": "2023-11-01T00:00:00Z"
+        }
+    ],
+    "remediations": [
+        {
+            "id": "rem1",
+            "courseId": "lpc2",
+            "title": "Remédiation: Architecture EVM",
+            "description": "Cours de renforcement pour les concepts EVM",
+            "content": "Cette remédiation couvre les concepts fondamentaux de l'EVM que vous devez maîtriser avant de continuer.",
+            "estimatedTime": "30 mins",
+            "exercises": [
+                {
+                    "id": "remex1",
+                    "type": "mcq",
+                    "question": "Quelle est la taille de la pile EVM ?",
+                    "options": [
+                        "256 bits",
+                        "512 bits",
+                        "1024 éléments",
+                        "Illimitée"
+                    ],
+                    "correctAnswer": "1024 éléments"
+                }
+            ]
+        }
+    ],
+    "coachRequests": [
+        {
+            "id": "cr1",
+            "studentId": "s2",
+            "studentName": "Bob Johnson",
+            "courseTitle": "Architecture de l'EVM",
+            "moduleTitle": "Gas et Optimisation",
+            "blockingPoint": "Je ne comprends pas comment calculer le coût en gas des opérations SSTORE",
+            "status": "pending",
+            "createdAt": "2024-02-01T14:30:00Z"
+        },
+        {
+            "id": "cr2",
+            "studentId": "s7",
+            "studentName": "Grace Lee",
+            "courseTitle": "Flash Loan Attacks",
+            "moduleTitle": "Comprendre les Flash Loans",
+            "blockingPoint": "Comment fonctionne l'arbitrage avec les flash loans ?",
+            "status": "pending",
+            "createdAt": "2024-02-01T16:00:00Z"
         }
     ]
 }

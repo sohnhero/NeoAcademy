@@ -131,85 +131,8 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
-      {/* Modules Overview */}
-      <section className="border p-8 rounded-[40px] transition-colors" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
-        <div className="flex items-center justify-between mb-8">
-          <h3 className="text-xl font-bold tracking-tight flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
-            <Target className="w-5 h-5 text-purple-500" /> Modules du Parcours
-          </h3>
-          <button
-            onClick={onNavigateToPath}
-            className="text-blue-500 text-xs font-bold uppercase tracking-widest hover:text-blue-400 transition-colors"
-          >
-            Voir Détails
-          </button>
-        </div>
-
-        <div className="space-y-4">
-          {currentPath.modules.map((module, idx) => {
-            const isActive = module.status === 'in-progress';
-            const isCompleted = module.status === 'completed';
-            const isLocked = module.isLocked;
-            const coursesCompleted = module.courses.filter(c => c.status === 'completed').length;
-
-            return (
-              <div
-                key={module.id}
-                className={`p-5 rounded-2xl border transition-all ${isActive ? 'border-blue-500/30 bg-blue-500/5' :
-                  isCompleted ? 'border-green-500/30 bg-green-500/5' :
-                    ''
-                  }`}
-                style={{
-                  backgroundColor: !isActive && !isCompleted ? 'var(--bg-primary)' : undefined,
-                  borderColor: !isActive && !isCompleted ? 'var(--border-color)' : undefined
-                }}
-              >
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isCompleted ? 'bg-green-500 text-white' :
-                    isActive ? 'bg-blue-600 text-white' :
-                      'opacity-40'
-                    }`}
-                    style={{ backgroundColor: isLocked ? 'var(--bg-secondary)' : undefined, color: isLocked ? 'var(--text-muted)' : undefined }}
-                  >
-                    {isCompleted ? <CheckCircle2 className="w-5 h-5" /> :
-                      isLocked ? <Lock className="w-5 h-5" /> :
-                        <span className="font-bold">{idx + 1}</span>}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className={`font-bold text-sm truncate ${isLocked ? 'opacity-50' : ''}`} style={{ color: 'var(--text-primary)' }}>
-                        {module.title}
-                      </h4>
-                      {isActive && (
-                        <span className="bg-blue-500 text-white text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded">
-                          Actif
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--text-muted)' }}>
-                      <span>{coursesCompleted}/{module.courses.length} cours</span>
-                      <span>{module.duration}</span>
-                    </div>
-                  </div>
-
-                  <div className="w-24">
-                    <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--border-color)' }}>
-                      <div
-                        className={`h-full transition-all ${isCompleted ? 'bg-green-500' : 'bg-blue-500'}`}
-                        style={{ width: `${module.progress}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
       {/* Daily Goals & Activity Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-10">
         {/* Daily Goals */}
         <section className="lg:col-span-2 border p-8 rounded-[40px] flex flex-col transition-colors" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
           <div className="flex items-center justify-between mb-8">
@@ -252,7 +175,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           <h3 className="text-xl font-bold tracking-tight flex items-center gap-3 mb-6">
             <History className="w-5 h-5 text-purple-500" /> Activité
           </h3>
-          <div className="space-y-4 overflow-y-auto max-h-[280px] pr-2">
+          <div className="space-y-4 overflow-y-auto max-h-[280px] pr-2 scrollbar-thin">
             {MOCK_RECENT_ACTIVITY.map((activity) => (
               <div key={activity.id} className="flex items-center gap-4 p-3 rounded-2xl hover:bg-blue-600/5 transition-colors">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${activity.type === 'course' ? 'bg-green-500/10 text-green-500' :
@@ -272,54 +195,6 @@ const Dashboard: React.FC<DashboardProps> = ({
             ))}
           </div>
         </section>
-      </div>
-
-      {/* Skill Matrix & Badges */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-        <div className="lg:col-span-3 border p-10 rounded-[40px] shadow-2xl transition-colors" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
-          <h3 className="text-xl font-bold tracking-tight mb-10" style={{ color: 'var(--text-primary)' }}>Matrice de Compétences</h3>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={MOCK_STATS.skillMatrix}>
-                <PolarGrid stroke="rgba(255,255,255,0.1)" />
-                <PolarAngleAxis dataKey="skill" tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 700 }} />
-                <Radar name="Compétence" dataKey="value" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.5} />
-              </RadarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div className="lg:col-span-2 border p-10 rounded-[40px] flex flex-col shadow-2xl transition-colors" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
-          <h3 className="text-xl font-bold tracking-tight mb-8" style={{ color: 'var(--text-primary)' }}>Badges Obtenus</h3>
-          <div className="space-y-4 flex-1">
-            {MOCK_BADGES.filter(b => b.dateEarned !== '—').map((badge) => (
-              <div
-                key={badge.id}
-                onClick={onNavigateToPortfolio}
-                className="flex items-center justify-between p-5 rounded-2xl border hover:border-blue-500/30 group cursor-pointer transition-all shadow-inner"
-                style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
-              >
-                <div className="flex items-center space-x-5">
-                  <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
-                    <Award className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-sm tracking-tight" style={{ color: 'var(--text-primary)' }}>{badge.name}</h4>
-                    <p className="text-[10px] uppercase font-mono" style={{ color: 'var(--text-muted)' }}>{badge.dateEarned}</p>
-                  </div>
-                </div>
-                <ArrowRight className="w-4 h-4 transition-colors" style={{ color: 'var(--text-muted)' }} />
-              </div>
-            ))}
-          </div>
-          <button
-            onClick={onNavigateToPortfolio}
-            className="w-full mt-8 py-4 border rounded-2xl text-[10px] font-black uppercase tracking-widest hover:brightness-95 transition-all"
-            style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
-          >
-            Voir le Portfolio
-          </button>
-        </div>
       </div>
     </div>
   );

@@ -109,6 +109,31 @@ export const MOCK_LEARNING_PATHS: LearningPath[] = [
               prompt: 'Expliquez en quoi le consensus Proof-of-Work diffère du Proof-of-Stake.',
               passingScore: 70
             },
+            remediation: {
+              id: 'rem-c1-1',
+              courseId: 'c1-1',
+              title: 'Remédiation : Fondamentaux Blockchain',
+              description: 'Une révision rapide des concepts de base pour vous remettre sur les rails.',
+              targetedGaps: ['Consensus', 'Décentralisation'],
+              status: 'not-started' as any,
+              assignedAt: '2024-02-10',
+              content: [
+                {
+                  id: 'rem-cont-0',
+                  type: 'text',
+                  title: 'Le Consensus en Bref',
+                  content: 'Le consensus est la méthode par laquelle les nœuds d\'un réseau s\'accordent sur l\'état de la blockchain sans autorité centrale.'
+                }
+              ],
+              exercise: {
+                id: 'rem-ex-0',
+                title: 'Validation Flash',
+                description: 'Questions rapides sur le consensus.',
+                type: 'quiz',
+                prompt: 'Quel est le but principal d\'un mécanisme de consensus ?',
+                passingScore: 70
+              }
+            },
             badge: {
               id: 'badge-c1-1',
               name: 'Premier Pas Blockchain',
@@ -224,6 +249,31 @@ export const MOCK_LEARNING_PATHS: LearningPath[] = [
               prompt: 'Créez un contrat "SimpleStorage" avec une variable uint256 et des fonctions get/set.',
               passingScore: 80,
               tools: ['solidity-editor', 'remix']
+            },
+            remediation: {
+              id: 'rem-c2-1',
+              courseId: 'c2-1',
+              title: 'Remédiation : Syntaxe Solidity',
+              description: 'Retour sur les bases de la syntaxe et des types de données pour solidifier vos acquis.',
+              targetedGaps: ['Types de variables', 'Structure de contrat'],
+              status: 'not-started' as any,
+              assignedAt: '2024-02-10',
+              content: [
+                {
+                  id: 'rem-cont-1',
+                  type: 'text',
+                  title: 'Révision des Types',
+                  content: 'Les types de données en Solidity sont essentiels. N\'oubliez pas que uint256 est le type par défaut pour les entiers positifs...'
+                }
+              ],
+              exercise: {
+                id: 'rem-ex-1',
+                title: 'Exercice de Validation',
+                description: 'Démontrez votre compréhension des types de base.',
+                type: 'code',
+                prompt: 'Déclarez une variable de chaque type de base (uint, bool, address) dans un contrat simple.',
+                passingScore: 70
+              }
             }
           },
           {
@@ -250,6 +300,31 @@ export const MOCK_LEARNING_PATHS: LearningPath[] = [
               prompt: 'Décompilez et expliquez les opcodes d\'un contrat de stockage.',
               passingScore: 75,
               tools: ['evm-debugger']
+            },
+            remediation: {
+              id: 'rem-c2-2',
+              courseId: 'c2-2',
+              title: 'Remédiation : Architecture EVM',
+              description: 'Clarification des concepts de Stack et Memory pour maîtriser l\'exécution de l\'EVM.',
+              targetedGaps: ['Manipulation de la Stack', 'Gestion de la Memory'],
+              status: 'not-started' as any,
+              assignedAt: '2024-02-12',
+              content: [
+                {
+                  id: 'rem-cont-2',
+                  type: 'text',
+                  title: 'EVM Stack vs Memory',
+                  content: 'La stack est limitée à 1024 éléments et chaque slot fait 256 bits. La memory est un tableau d\'octets linéaire et extensible...'
+                }
+              ],
+              exercise: {
+                id: 'rem-ex-2',
+                title: 'Défi EVM',
+                description: 'Identifiez l\'erreur de gestion de stack.',
+                type: 'practical',
+                prompt: 'Expliquez pourquoi un stack overflow peut se produire avec une récursion profonde.',
+                passingScore: 75
+              }
             }
           },
           {
@@ -291,23 +366,185 @@ export const MOCK_LEARNING_PATHS: LearningPath[] = [
         courses: [
           {
             id: 'c3-1',
-            title: 'Methodologie d\'Audit',
+            title: 'Méthodologie d\'Audit',
             description: 'Processus complet d\'un audit de sécurité.',
             duration: '2 heures',
             status: 'locked',
             isLocked: true,
             objectives: ['Review process', 'Documentation', 'Reporting'],
+            content: [
+              { id: 'c3-1-1', type: 'text', title: 'Introduction à l\'audit', content: 'L\'audit de smart contracts est une pratique essentielle...' }
+            ],
+            exercise: { id: 'ex-3-1', title: 'Audit Complet', description: 'Réalisez un audit d\'un protocole simple.', type: 'practical', prompt: 'Auditez ce contrat DeFi.', passingScore: 85 }
+          },
+          {
+            id: 'c3-2',
+            title: 'Outils d\'Analyse Statique',
+            description: 'Slither, Mythril, et autres outils d\'audit.',
+            duration: '2.5 heures',
+            status: 'locked',
+            isLocked: true,
+            objectives: ['Slither basics', 'Mythril analysis', 'Custom detectors'],
+            content: [
+              { id: 'c3-2-1', type: 'text', title: 'Analyseurs statiques', content: 'Les outils d\'analyse statique permettent de détecter automatiquement des vulnérabilités...' }
+            ],
+            exercise: { id: 'ex-3-2', title: 'Lab Slither', description: 'Utilisez Slither pour auditer un contrat.', type: 'code', prompt: 'Analysez ce contrat avec Slither et documentez les findings.', passingScore: 80, tools: ['slither'] }
+          },
+          {
+            id: 'c3-3',
+            title: 'Rédaction de Rapports',
+            description: 'Comment rédiger un rapport d\'audit professionnel.',
+            duration: '1.5 heures',
+            status: 'locked',
+            isLocked: true,
+            objectives: ['Structure rapport', 'Severity levels', 'Recommendations'],
             content: [],
-            exercise: {
-              id: 'ex-3-1',
-              title: 'Audit Complet',
-              description: 'Réalisez un audit d\'un protocole simple.',
-              type: 'practical',
-              prompt: 'Auditez ce contrat DeFi et produisez un rapport.',
-              passingScore: 85
-            }
+            exercise: { id: 'ex-3-3', title: 'Rapport d\'Audit', description: 'Rédigez un rapport complet.', type: 'practical', prompt: 'Produisez un rapport d\'audit formaté.', passingScore: 75 }
           }
         ]
+      },
+      {
+        id: 'mod4',
+        title: 'DeFi & Protocoles Avancés',
+        description: 'Architecture des protocoles DeFi majeurs.',
+        duration: '4 semaines',
+        status: 'locked',
+        isLocked: true,
+        progress: 0,
+        courses: [
+          {
+            id: 'c4-1',
+            title: 'AMM & Liquidity Pools',
+            description: 'Comprendre Uniswap, Curve et les mécanismes de market making.',
+            duration: '3 heures',
+            status: 'locked',
+            isLocked: true,
+            objectives: ['Constant product formula', 'Impermanent loss', 'LP tokens'],
+            content: [
+              { id: 'c4-1-1', type: 'text', title: 'Les AMM expliqués', content: 'Les Automated Market Makers révolutionnent le trading décentralisé...' },
+              { id: 'c4-1-2', type: 'video', title: 'Uniswap Deep Dive', content: 'Analyse complète de Uniswap V2 et V3.', mediaUrl: 'https://example.com/uniswap.mp4', duration: '25 mins' }
+            ],
+            exercise: { id: 'ex-4-1', title: 'Analyse LP', description: 'Calculez l\'impermanent loss.', type: 'practical', prompt: 'Analysez une position de liquidité.', passingScore: 75 }
+          },
+          {
+            id: 'c4-2',
+            title: 'Lending & Borrowing',
+            description: 'Aave, Compound et les protocoles de prêt.',
+            duration: '3 heures',
+            status: 'locked',
+            isLocked: true,
+            objectives: ['Collateralization', 'Interest rates', 'Liquidations'],
+            content: [
+              { id: 'c4-2-1', type: 'text', title: 'Protocoles de lending', content: 'Les protocoles de lending permettent d\'emprunter des actifs...' }
+            ],
+            exercise: { id: 'ex-4-2', title: 'Simulation Lending', description: 'Simulez un scénario de liquidation.', type: 'code', prompt: 'Implémentez une logique de health factor.', passingScore: 80, tools: ['solidity-editor'] }
+          },
+          {
+            id: 'c4-3',
+            title: 'Flash Loans',
+            description: 'Exploiter les flash loans de manière sécurisée.',
+            duration: '2.5 heures',
+            status: 'locked',
+            isLocked: true,
+            objectives: ['Atomic transactions', 'Arbitrage', 'Attack vectors'],
+            content: [],
+            exercise: { id: 'ex-4-3', title: 'Flash Loan Arbitrage', description: 'Créez un contrat de flash loan.', type: 'code', prompt: 'Implémentez un flash loan arbitrage.', passingScore: 85, tools: ['solidity-editor', 'hardhat'] }
+          },
+          {
+            id: 'c4-4',
+            title: 'Oracles & Données Externes',
+            description: 'Chainlink, Band Protocol et la gestion des données on-chain.',
+            duration: '2 heures',
+            status: 'locked',
+            isLocked: true,
+            objectives: ['Price feeds', 'VRF', 'Data manipulation risks'],
+            content: [],
+            exercise: { id: 'ex-4-4', title: 'Intégration Chainlink', description: 'Intégrez un price feed Chainlink.', type: 'code', prompt: 'Utilisez Chainlink pour obtenir le prix ETH/USD.', passingScore: 75, tools: ['solidity-editor'] }
+          }
+        ],
+        exam: {
+          id: 'exam-mod4',
+          title: 'Examen DeFi',
+          description: 'Évaluation des connaissances DeFi.',
+          duration: '1.5 heures',
+          passingScore: 80,
+          status: 'locked',
+          attempts: 0,
+          questions: [
+            { id: 'q1', type: 'text', question: 'Expliquez le concept d\'Automated Market Maker.', points: 25 },
+            { id: 'q2', type: 'multiple-choice', question: 'Quel est l\'impact de l\'impermanent loss?', points: 25 }
+          ]
+        }
+      },
+      {
+        id: 'mod5',
+        title: 'Layer 2 & Scalabilité',
+        description: 'Solutions de scalabilité et développement multi-chain.',
+        duration: '3 semaines',
+        status: 'locked',
+        isLocked: true,
+        progress: 0,
+        courses: [
+          {
+            id: 'c5-1',
+            title: 'Rollups : Optimistic vs ZK',
+            description: 'Comprendre les différentes approches de scalabilité.',
+            duration: '2.5 heures',
+            status: 'locked',
+            isLocked: true,
+            objectives: ['Fraud proofs', 'Validity proofs', 'Data availability'],
+            content: [
+              { id: 'c5-1-1', type: 'text', title: 'Introduction aux Rollups', content: 'Les rollups sont la solution privilégiée pour scaler Ethereum...' }
+            ],
+            exercise: { id: 'ex-5-1', title: 'Analyse Rollup', description: 'Comparez Optimism et zkSync.', type: 'quiz', prompt: 'Questions sur les rollups.', passingScore: 70 }
+          },
+          {
+            id: 'c5-2',
+            title: 'Développement sur Arbitrum',
+            description: 'Déployer et optimiser sur Arbitrum.',
+            duration: '3 heures',
+            status: 'locked',
+            isLocked: true,
+            objectives: ['Arbitrum SDK', 'Cross-chain messaging', 'Gas optimization'],
+            content: [],
+            exercise: { id: 'ex-5-2', title: 'Deploy sur Arbitrum', description: 'Déployez un contrat sur Arbitrum.', type: 'code', prompt: 'Déployez et vérifiez un contrat.', passingScore: 80, tools: ['hardhat', 'arbitrum-sdk'] }
+          },
+          {
+            id: 'c5-3',
+            title: 'Zero-Knowledge Basics',
+            description: 'Introduction aux preuves à connaissance nulle.',
+            duration: '3 heures',
+            status: 'locked',
+            isLocked: true,
+            objectives: ['zk-SNARKs', 'zk-STARKs', 'Circom basics'],
+            content: [],
+            exercise: { id: 'ex-5-3', title: 'Premier Circuit ZK', description: 'Créez un circuit simple.', type: 'code', prompt: 'Implémentez un circuit de vérification.', passingScore: 75, tools: ['circom', 'snarkjs'] }
+          },
+          {
+            id: 'c5-4',
+            title: 'Bridges & Interopérabilité',
+            description: 'Communication cross-chain et ponts de tokens.',
+            duration: '2 heures',
+            status: 'locked',
+            isLocked: true,
+            objectives: ['Lock & mint', 'Message passing', 'Bridge security'],
+            content: [],
+            exercise: { id: 'ex-5-4', title: 'Analyse Bridge', description: 'Auditez un bridge.', type: 'practical', prompt: 'Identifiez les risques d\'un bridge.', passingScore: 85 }
+          }
+        ],
+        exam: {
+          id: 'exam-mod5',
+          title: 'Examen Layer 2',
+          description: 'Évaluation des solutions de scalabilité.',
+          duration: '1 heure',
+          passingScore: 75,
+          status: 'locked',
+          attempts: 0,
+          questions: [
+            { id: 'q1', type: 'text', question: 'Différence entre Optimistic et ZK Rollups.', points: 50 },
+            { id: 'q2', type: 'multiple-choice', question: 'Qu\'est-ce que la Data Availability?', points: 50 }
+          ]
+        }
       }
     ],
     finalProject: {
@@ -394,9 +631,83 @@ export const PREDEFINED_PATHS_CATALOG: Partial<LearningPath>[] = [
 // =====================================================
 
 export const MOCK_BADGES: Badge[] = [
-  { id: 'b1', name: 'Architecte Logique', description: 'Maîtrise Solidity.', dateEarned: '15/11/2023', icon: 'Terminal', color: 'text-blue-400', type: 'course' },
-  { id: 'b2', name: 'Auditeur EVM', description: 'Expertise bytecode.', dateEarned: '20/01/2024', icon: 'Cpu', color: 'text-purple-400', type: 'module' },
-  { id: 'b3', name: 'Développeur Web3', description: 'Parcours complet validé.', dateEarned: '—', icon: 'Award', color: 'text-yellow-400', type: 'certification' }
+  // Certifications
+  {
+    id: 'cert-1',
+    name: 'Architecte Ethereum Certifié',
+    description: 'Validation complète du parcours Maîtrise Ethereum. Capacité démontrée à concevoir des architectures décentralisées sécurisées.',
+    dateEarned: '15/05/2024',
+    icon: 'Trophy',
+    color: 'text-yellow-400',
+    type: 'certification'
+  },
+
+  // Module Badges
+  {
+    id: 'b-mod-1',
+    name: 'Fondations Solides',
+    description: 'Expertise confirmée dans les fondations de la blockchain et l\'architecture Ethereum.',
+    dateEarned: '15/02/2024',
+    icon: 'Award',
+    color: 'text-emerald-400',
+    type: 'module'
+  },
+  {
+    id: 'b-mod-2',
+    name: 'Maître du Solidity',
+    description: 'Maîtrise avancée du langage Solidity et des patterns de développement intelligents.',
+    dateEarned: '20/03/2024',
+    icon: 'Terminal',
+    color: 'text-blue-400',
+    type: 'module'
+  },
+  {
+    id: 'b-mod-3',
+    name: 'Gardien de la Sécurité',
+    description: 'Capacité à identifier et corriger les vulnérabilités critiques dans les smart contracts.',
+    dateEarned: '10/04/2024',
+    icon: 'Shield',
+    color: 'text-purple-400',
+    type: 'module'
+  },
+
+  // Course Badges
+  {
+    id: 'b-c-1',
+    name: 'Explorateur de Registre',
+    description: 'Compréhension parfaite des registres distribués et du consensus.',
+    dateEarned: '05/02/2024',
+    icon: 'Zap',
+    color: 'text-yellow-500',
+    type: 'course'
+  },
+  {
+    id: 'b-c-2',
+    name: 'Cryptographe Initié',
+    description: 'Maîtrise des concepts de hachage et signatures numériques.',
+    dateEarned: '08/02/2024',
+    icon: 'Unlock',
+    color: 'text-slate-400',
+    type: 'course'
+  },
+  {
+    id: 'b-c-3',
+    name: 'Architecte de Données',
+    description: 'Utilisation experte des types complexes en Solidity.',
+    dateEarned: '01/03/2024',
+    icon: 'Database',
+    color: 'text-cyan-400',
+    type: 'course'
+  },
+  {
+    id: 'b-c-4',
+    name: 'Optimiseur de Gas',
+    description: 'Écriture de code efficient pour minimiser les coûts de transaction.',
+    dateEarned: '15/03/2024',
+    icon: 'Fuel',
+    color: 'text-orange-400',
+    type: 'course'
+  }
 ];
 
 // =====================================================
