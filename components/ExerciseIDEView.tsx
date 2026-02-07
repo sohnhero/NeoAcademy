@@ -15,6 +15,7 @@ interface ExerciseIDEViewProps {
     onSubmit: (code: string, output: string) => void;
     onCancel: () => void;
     onOpenCoachHelp?: (course: string, module: string, blocking?: string) => void;
+    onTestRemediation?: () => void;
 }
 
 const ExerciseIDEView: React.FC<ExerciseIDEViewProps> = ({
