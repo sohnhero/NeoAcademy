@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import {
     X, Play, Save, Terminal, File, Folder, ChevronRight, ChevronDown,
     Send, Clock, AlertTriangle, CheckCircle2, Code, FileText, Settings,
-    Layout, Maximize2, Minimize2, RotateCcw, Copy, Download, ShieldAlert
+    Layout, Maximize2, Minimize2, RotateCcw, Copy, Download, ShieldAlert,
+    Eye, Edit3, Sparkles
 } from 'lucide-react';
 
 interface ExerciseIDEViewProps {
@@ -14,7 +14,6 @@ interface ExerciseIDEViewProps {
     timeLimit?: number; // in minutes, optional
     onSubmit: (code: string, output: string) => void;
     onCancel: () => void;
-    onOpenCoachHelp?: (course: string, module: string, blocking?: string) => void;
     onTestRemediation?: () => void;
 }
 
@@ -26,10 +25,9 @@ const ExerciseIDEView: React.FC<ExerciseIDEViewProps> = ({
     timeLimit,
     onSubmit,
     onCancel,
-    onOpenCoachHelp,
     onTestRemediation
 }) => {
-    const [code, setCode] = useState(`// SPDX-License-Identifier: MIT
+    const [code, setCode] = useState(exerciseType === 'course' ? `// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 contract YourContract {
@@ -46,22 +44,22 @@ contract YourContract {
         balances[msg.sender] -= amount;
         payable(msg.sender).transfer(amount);
     }
-}`);
+}` : `# Projet : ${title}\n\n## Description\n${description}\n\n## Rapport d'Analyse\n- [ ] Analyse des pré-requis\n- [ ] Architecture proposée\n- [ ] Implémentation critique\n\n### Notes\nSaisissez votre analyse ici...`);
+
     const [output, setOutput] = useState('');
-    const [consoleOutput, setConsoleOutput] = useState<string[]>([
-        '> Environnement Solidity initialisé',
-        '> Compilateur version: 0.8.20',
-        '> Prêt pour la compilation...'
-    ]);
-    const [activeFile, setActiveFile] = useState('contract.sol');
+    const [consoleOutput, setConsoleOutput] = useState<string[]>(
+        exerciseType === 'course'
+            ? ['> Environnement Solidity initialisé', '> Prêt pour la compilation...']
+            : ['> Environnement de Projet initialisé', '> Mode : Analyse & Conception', '> En attente de soumission...']
+    );
+    const [activeFile, setActiveFile] = useState(exerciseType === 'course' ? 'contract.sol' : 'project_plan.md');
     const [timeRemaining, setTimeRemaining] = useState(timeLimit ? timeLimit * 60 : 0);
     const [isCompiling, setIsCompiling] = useState(false);
-    const [isMaximized, setIsMaximized] = useState(true);
     const [showInstructions, setShowInstructions] = useState(true);
-    const [activeTab, setActiveTab] = useState<'code' | 'terminal' | 'output'>('code');
+    const [activeTab, setActiveTab] = useState<'editor' | 'preview' | 'terminal'>('editor');
 
-    // File tree structure
-    const fileTree = [
+    // File tree structure (dynamic based on type)
+    const fileTree = exerciseType === 'course' ? [
         {
             name: 'contracts', type: 'folder', children: [
                 { name: 'contract.sol', type: 'file' },
@@ -72,13 +70,11 @@ contract YourContract {
                 }
             ]
         },
-        {
-            name: 'test', type: 'folder', children: [
-                { name: 'Contract.test.js', type: 'file' }
-            ]
-        },
-        { name: 'hardhat.config.js', type: 'file' },
-        { name: 'package.json', type: 'file' }
+        { name: 'hardhat.config.js', type: 'file' }
+    ] : [
+        { name: 'project_plan.md', type: 'file' },
+        { name: 'architecture.txt', type: 'file' },
+        { name: 'requirements.md', type: 'file' }
     ];
 
     // Timer countdown
@@ -103,33 +99,30 @@ contract YourContract {
         return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     };
 
-    const handleCompile = async () => {
+    const handleAction = async () => {
         setIsCompiling(true);
-        setConsoleOutput(prev => [...prev, '> Compilation en cours...']);
+        const actionLabel = exerciseType === 'course' ? 'Compilation' : 'Analyse';
+        setConsoleOutput(prev => [...prev, `> ${actionLabel} en cours...`]);
 
-        // Simulate compilation
         await new Promise(resolve => setTimeout(resolve, 1500));
 
-        setConsoleOutput(prev => [
-            ...prev,
-            '> Compiled 1 Solidity file successfully',
-            '> Contract size: 2.4 KB',
-            '> Estimated gas: 245,000'
-        ]);
-        setOutput('Contract compiled successfully.\n\nBytecode: 0x608060405234801561001057600080fd5b50...\n\nABI exported to artifacts/');
+        if (exerciseType === 'course') {
+            setConsoleOutput(prev => [
+                ...prev,
+                '> Compiled successfully',
+                '> Gas estimate: 245,000'
+            ]);
+            setOutput('Succès de la compilation.');
+        } else {
+            setConsoleOutput(prev => [
+                ...prev,
+                '> Analyse de structure terminée',
+                '> Cohérence vérifiée : 100%',
+                '> Prêt pour la soumission finale'
+            ]);
+            setOutput('Le document est prêt à être audité par l\'IA.');
+        }
         setIsCompiling(false);
-    };
-
-    const handleRun = async () => {
-        setConsoleOutput(prev => [...prev, '> Running tests...']);
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        setConsoleOutput(prev => [
-            ...prev,
-            '  ✓ Should deploy contract',
-            '  ✓ Should accept deposits',
-            '  ✓ Should allow withdrawals',
-            '> 3 tests passed'
-        ]);
     };
 
     const handleSubmit = () => {
@@ -140,22 +133,16 @@ contract YourContract {
         return items.map((item, idx) => (
             <div key={idx}>
                 <div
-                    className={`flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-slate-700/50 transition-colors ${activeFile === item.name ? 'bg-blue-600/20 text-blue-400' : 'text-slate-400'}`}
+                    className={`flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-white/5 transition-colors ${activeFile === item.name ? 'bg-blue-600/10 text-blue-400 border-r-2 border-blue-500' : 'text-slate-400'}`}
                     style={{ paddingLeft: `${12 + depth * 16}px` }}
                     onClick={() => item.type === 'file' && setActiveFile(item.name)}
                 >
                     {item.type === 'folder' ? (
-                        <>
-                            <ChevronDown className="w-3 h-3" />
-                            <Folder className="w-4 h-4 text-blue-400" />
-                        </>
+                        <Folder className="w-3.5 h-3.5 text-blue-500/60" />
                     ) : (
-                        <>
-                            <div className="w-3" />
-                            <FileText className="w-4 h-4 text-slate-500" />
-                        </>
+                        <FileText className="w-3.5 h-3.5 opacity-40" />
                     )}
-                    <span className="text-xs font-medium">{item.name}</span>
+                    <span className="text-[11px] font-medium tracking-tight truncate">{item.name}</span>
                 </div>
                 {item.children && renderFileTree(item.children, depth + 1)}
             </div>
@@ -163,134 +150,179 @@ contract YourContract {
     };
 
     return (
-        <div className="fixed inset-0 z-[100] bg-slate-900 flex flex-col">
-            {/* Top Bar */}
-            <header className="h-12 bg-slate-800 border-b border-slate-700 flex items-center justify-between px-4">
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                        <Code className="w-5 h-5 text-blue-500" />
-                        <span className="font-bold text-white text-sm">ChainAcademy IDE</span>
+        <div className="fixed inset-0 z-[100] bg-[#0B0F19] text-slate-300 flex flex-col font-sans selection:bg-blue-500/30">
+            {/* Top Navigation Bar - Premium Style */}
+            <header className="h-14 bg-[#111827] border-b border-white/5 flex items-center justify-between px-6 shadow-2xl relative z-20">
+                <div className="flex items-center gap-8">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-600 to-blue-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                            <Layout className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="font-black text-white text-xs uppercase tracking-widest leading-none mb-1">Environnement Neural</span>
+                            <span className="text-[9px] text-blue-400 font-mono font-black uppercase tracking-tighter opacity-70">Dedicated Workspace v2.0</span>
+                        </div>
                     </div>
-                    <span className="text-xs px-2 py-1 rounded bg-blue-600/20 text-blue-400 font-bold uppercase tracking-wider">
-                        {exerciseType === 'course' ? 'Exercice de Cours' : exerciseType === 'module' ? 'Projet de Module' : 'Projet Final'}
-                    </span>
+
+                    <div className="h-6 w-px bg-white/5" />
+
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-500 mb-1">Cible Actuelle</span>
+                        <h2 className="text-sm font-black text-white truncate max-w-[300px] leading-none">{title}</h2>
+                    </div>
                 </div>
 
                 <div className="flex items-center gap-6">
                     {timeLimit && (
-                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${timeRemaining < 300 ? 'bg-red-500/20 text-red-400' : 'bg-slate-700 text-slate-300'}`}>
+                        <div className={`flex items-center gap-3 px-4 py-2 rounded-2xl border transition-all ${timeRemaining < 300 ? 'bg-red-500/10 border-red-500/30 text-red-400 animate-pulse' : 'bg-white/5 border-white/5 text-blue-300'}`}>
                             <Clock className="w-4 h-4" />
-                            <span className="font-mono font-bold text-sm">{formatTime(timeRemaining)}</span>
+                            <span className="font-mono font-black text-sm tracking-widest">{formatTime(timeRemaining)}</span>
                         </div>
                     )}
+
                     <button
                         onClick={onCancel}
-                        className="p-2 hover:bg-slate-700 rounded-lg transition-colors text-slate-400 hover:text-white"
+                        className="p-3 hover:bg-red-500/10 rounded-2xl transition-all text-slate-500 hover:text-red-400 group"
                     >
-                        <X className="w-5 h-5" />
+                        <X className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
                     </button>
                 </div>
             </header>
 
-            {/* Main Content */}
+            {/* Main Project Area */}
             <div className="flex-1 flex overflow-hidden">
-                {/* File Explorer */}
-                <aside className="w-56 bg-slate-800/50 border-r border-slate-700 flex flex-col">
-                    <div className="p-3 border-b border-slate-700">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Explorateur</span>
+                {/* Project File Manager */}
+                <aside className="w-64 bg-[#0F172A] border-r border-white/5 flex flex-col pt-4">
+                    <div className="px-6 mb-6">
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Workspace</span>
                     </div>
-                    <div className="flex-1 overflow-auto py-2">
-                        {renderFileTree(fileTree)}
+                    <div className="flex-1 overflow-auto scrollbar-thin">
+                        <div className="space-y-1">
+                            {renderFileTree(fileTree)}
+                        </div>
+                    </div>
+
+                    <div className="p-6 border-t border-white/5">
+                        <div className="bg-blue-600/5 rounded-2xl p-4 border border-blue-500/10">
+                            <div className="flex items-center gap-2 mb-2 text-blue-400">
+                                <ShieldAlert className="w-3.5 h-3.5" />
+                                <span className="text-[10px] font-black uppercase tracking-widest">Type Projet</span>
+                            </div>
+                            <span className="text-[11px] font-bold text-slate-300">
+                                {exerciseType === 'course' ? 'Exercice Technique' : exerciseType === 'module' ? 'Audit de Module' : 'Parcours Final'}
+                            </span>
+                        </div>
                     </div>
                 </aside>
 
-                {/* Editor Area */}
-                <main className="flex-1 flex flex-col">
-                    {/* Editor Tabs */}
-                    <div className="h-10 bg-slate-800 border-b border-slate-700 flex items-center px-2">
-                        <div className="flex items-center gap-1 px-3 py-1.5 bg-slate-900 rounded-t-lg border-t border-x border-slate-700">
-                            <FileText className="w-3.5 h-3.5 text-blue-400" />
-                            <span className="text-xs font-medium text-white">{activeFile}</span>
-                            <button className="ml-2 p-0.5 hover:bg-slate-700 rounded">
-                                <X className="w-3 h-3 text-slate-500" />
+                {/* Editor & Content Workspace */}
+                <main className="flex-1 flex flex-col relative bg-[#111827]">
+                    {/* View Controls */}
+                    <div className="h-12 border-b border-white/5 flex items-center justify-between px-6 bg-[#0B0F19]/50 backdrop-blur-xl">
+                        <div className="flex items-center gap-1 group">
+                            <FileText className="w-3.5 h-3.5 text-blue-500 group-hover:scale-110 transition-transform" />
+                            <span className="text-[11px] font-black uppercase tracking-widest text-white ml-2">{activeFile}</span>
+                        </div>
+
+                        <div className="flex items-center bg-white/5 p-1 rounded-xl border border-white/5">
+                            <button
+                                onClick={() => setActiveTab('editor')}
+                                className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${activeTab === 'editor' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-500 hover:text-slate-300'}`}
+                            >
+                                <Edit3 className="w-3.5 h-3.5" />
+                                Éditer
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('preview')}
+                                className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${activeTab === 'preview' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-500 hover:text-slate-300'}`}
+                            >
+                                <Eye className="w-3.5 h-3.5" />
+                                Aperçu
                             </button>
                         </div>
                     </div>
 
-                    {/* Editor Content */}
-                    <div className="flex-1 flex">
-                        {/* Code Editor */}
-                        <div className="flex-1 flex flex-col">
-                            {/* Line numbers + Code */}
-                            <div className="flex-1 flex overflow-hidden">
-                                {/* Line Numbers */}
-                                <div className="w-12 bg-slate-800/50 text-right pr-3 pt-4 text-slate-600 text-xs font-mono select-none">
-                                    {code.split('\n').map((_, i) => (
-                                        <div key={i} className="leading-6">{i + 1}</div>
-                                    ))}
+                    <div className="flex-1 flex overflow-hidden">
+                        <div className="flex-1 flex flex-col relative">
+                            {activeTab === 'editor' ? (
+                                <div className="flex-1 flex overflow-hidden">
+                                    <div className="w-12 bg-[#0B0F19] text-right pr-4 pt-6 text-slate-700 text-[10px] font-mono select-none border-r border-white/5">
+                                        {code.split('\n').map((_, i) => (
+                                            <div key={i} className="leading-6 opacity-40">{i + 1}</div>
+                                        ))}
+                                    </div>
+                                    <textarea
+                                        value={code}
+                                        onChange={(e) => setCode(e.target.value)}
+                                        className="flex-1 bg-transparent p-6 text-slate-200 font-mono text-xs leading-6 resize-none focus:outline-none scrollbar-thin"
+                                        spellCheck={false}
+                                    />
                                 </div>
-                                {/* Code Area */}
-                                <textarea
-                                    value={code}
-                                    onChange={(e) => setCode(e.target.value)}
-                                    className="flex-1 bg-slate-900 p-4 text-green-400 font-mono text-sm leading-6 resize-none focus:outline-none"
-                                    spellCheck={false}
-                                />
-                            </div>
+                            ) : (
+                                <div className="flex-1 p-10 overflow-auto scrollbar-thin">
+                                    <article className="prose prose-invert max-w-none">
+                                        <pre className="bg-[#0B0F19] !p-8 rounded-[32px] border border-white/5 text-slate-300 font-sans whitespace-pre-wrap leading-relaxed">
+                                            {code}
+                                        </pre>
+                                    </article>
+                                </div>
+                            )}
 
-                            {/* Bottom Panel - Terminal/Output */}
-                            <div className="h-48 border-t border-slate-700 flex flex-col">
-                                {/* Panel Tabs */}
-                                <div className="h-8 bg-slate-800 flex items-center px-2 gap-1">
-                                    {['terminal', 'output'].map(tab => (
-                                        <button
-                                            key={tab}
-                                            onClick={() => setActiveTab(tab as any)}
-                                            className={`px-3 py-1 text-xs font-bold uppercase tracking-wider rounded transition-colors ${activeTab === tab ? 'bg-slate-700 text-white' : 'text-slate-500 hover:text-slate-300'}`}
-                                        >
-                                            {tab === 'terminal' ? 'Terminal' : 'Output'}
-                                        </button>
-                                    ))}
+                            {/* Terminal Panel - Minimized by default if not code */}
+                            <div className="h-32 border-t border-white/5 bg-[#0B0F19]/80 backdrop-blur-xl">
+                                <div className="px-6 py-2 border-b border-white/5 flex items-center justify-between bg-[#111827]">
+                                    <div className="flex items-center gap-3">
+                                        <Terminal className="w-3.5 h-3.5 text-blue-500" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Flux de Sortie</span>
+                                    </div>
+                                    <div className="flex gap-1">
+                                        <div className="w-2 h-2 rounded-full bg-red-500/20" />
+                                        <div className="w-2 h-2 rounded-full bg-amber-500/20" />
+                                        <div className="w-2 h-2 rounded-full bg-green-500/20" />
+                                    </div>
                                 </div>
-                                {/* Panel Content */}
-                                <div className="flex-1 bg-slate-900 p-3 overflow-auto font-mono text-xs">
-                                    {activeTab === 'terminal' ? (
-                                        consoleOutput.map((line, i) => (
-                                            <div key={i} className={`${line.includes('✓') ? 'text-green-400' : line.includes('Error') ? 'text-red-400' : 'text-slate-400'}`}>
-                                                {line}
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <pre className="text-slate-400 whitespace-pre-wrap">{output || 'No output yet. Compile and run your code.'}</pre>
-                                    )}
+                                <div className="p-4 font-mono text-[11px] h-full overflow-auto scrollbar-thin">
+                                    {consoleOutput.map((line, i) => (
+                                        <div key={i} className={`mb-1 ${line.startsWith('>') ? 'text-blue-400' : 'text-slate-500'}`}>
+                                            <span className="opacity-30 mr-2">$</span> {line}
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         </div>
 
-                        {/* Instructions Panel */}
+                        {/* Instructions Sidebar */}
                         {showInstructions && (
-                            <aside className="w-80 bg-slate-800/50 border-l border-slate-700 flex flex-col">
-                                <div className="p-4 border-b border-slate-700 flex items-center justify-between">
-                                    <span className="text-xs font-bold uppercase tracking-widest text-blue-400">Instructions</span>
-                                    <button onClick={() => setShowInstructions(false)} className="p-1 hover:bg-slate-700 rounded">
-                                        <X className="w-4 h-4 text-slate-500" />
+                            <aside className="w-96 bg-[#0F172A] border-l border-white/5 flex flex-col">
+                                <div className="p-6 border-b border-white/5 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <Sparkles className="w-4 h-4 text-blue-500" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-white">Consignes d'Expert</span>
+                                    </div>
+                                    <button onClick={() => setShowInstructions(false)} className="p-2 hover:bg-white/5 rounded-xl transition-all">
+                                        <Minimize2 className="w-4 h-4 text-slate-500" />
                                     </button>
                                 </div>
-                                <div className="flex-1 overflow-auto p-4 space-y-4">
-                                    <h3 className="font-bold text-white">{title}</h3>
-                                    <p className="text-sm text-slate-400">{description}</p>
-                                    <div className="space-y-2">
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Objectifs</p>
-                                        <ul className="space-y-2">
-                                            {instructions.map((inst, i) => (
-                                                <li key={i} className="flex items-start gap-2 text-sm text-slate-300">
-                                                    <div className="w-5 h-5 rounded-full bg-blue-600/20 text-blue-400 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
-                                                        {i + 1}
-                                                    </div>
-                                                    <span>{inst}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
+                                <div className="flex-1 overflow-auto p-8 scrollbar-thin">
+                                    <div className="space-y-8">
+                                        <div>
+                                            <h3 className="text-xl font-black text-white mb-3 tracking-tighter">{title}</h3>
+                                            <p className="text-xs text-slate-400 leading-relaxed font-medium">{description}</p>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-500">Critères de Succès</span>
+                                            <ul className="space-y-4">
+                                                {instructions.map((inst, i) => (
+                                                    <li key={i} className="flex items-start gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-blue-500/30 transition-all group">
+                                                        <div className="w-6 h-6 rounded-lg bg-blue-600/10 text-blue-500 flex items-center justify-center text-[10px] font-black flex-shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                                                            {i + 1}
+                                                        </div>
+                                                        <span className="text-xs text-slate-300 font-medium leading-relaxed">{inst}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
                                     </div>
                                 </div>
                             </aside>
@@ -299,63 +331,50 @@ contract YourContract {
                 </main>
             </div>
 
-            {/* Bottom Action Bar */}
-            <footer className="h-14 bg-slate-800 border-t border-slate-700 flex items-center justify-between px-4">
-                <div className="flex items-center gap-2">
+            {/* Bottom Global Actions */}
+            <footer className="h-18 min-h-[72px] bg-[#111827] border-t border-white/5 flex items-center justify-between px-8 relative z-20 shadow-[0_-20px_40px_-15px_rgba(0,0,0,0.5)]">
+                <div className="flex items-center gap-4">
                     <button
-                        onClick={handleCompile}
+                        onClick={handleAction}
                         disabled={isCompiling}
-                        className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
+                        className="group flex items-center gap-3 px-6 py-3 bg-white/5 hover:bg-white/10 text-white rounded-[20px] text-xs font-black uppercase tracking-widest transition-all border border-white/5 disabled:opacity-50 active:scale-95"
                     >
                         {isCompiling ? (
                             <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                         ) : (
-                            <Settings className="w-4 h-4" />
+                            <Settings className="w-4 h-4 text-blue-500 group-hover:rotate-180 transition-transform duration-700" />
                         )}
-                        Compiler
+                        {exerciseType === 'course' ? 'Lancer Compilation' : 'Vérifier Structure'}
                     </button>
+
                     <button
-                        onClick={handleRun}
-                        className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-colors"
+                        onClick={onTestRemediation}
+                        className="flex items-center gap-3 px-6 py-3 bg-purple-600/10 hover:bg-purple-600/20 text-purple-400 border border-purple-500/20 rounded-[20px] text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
                     >
-                        <Play className="w-4 h-4" />
-                        Exécuter
-                    </button>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-colors">
-                        <Save className="w-4 h-4" />
-                        Sauvegarder
-                    </button>
-                    <button
-                        onClick={() => onOpenCoachHelp?.(title, 'Module', 'Blocage exercice technique')}
-                        className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors"
-                    >
-                        <ShieldAlert className="w-4 h-4" />
-                        Aide Coach
+                        <ShieldAlert className="w-4 h-4 animate-pulse" />
+                        Simuler Échec (V2)
                     </button>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-6">
                     {!showInstructions && (
                         <button
                             onClick={() => setShowInstructions(true)}
-                            className="text-xs text-slate-400 hover:text-white transition-colors"
+                            className="text-[10px] font-black tracking-widest uppercase text-slate-500 hover:text-white transition-all flex items-center gap-2"
                         >
-                            Afficher les instructions
+                            <Maximize2 className="w-3.5 h-3.5" />
+                            Consignes
                         </button>
                     )}
-                    <button
-                        onClick={onTestRemediation}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 border border-purple-500/30 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors"
-                    >
-                        <AlertTriangle className="w-4 h-4" />
-                        Simuler Échec (V2)
-                    </button>
+
                     <button
                         onClick={handleSubmit}
-                        className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-black uppercase tracking-widest transition-colors shadow-lg shadow-blue-500/20"
+                        className="group flex items-center gap-4 px-10 py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-[20px] text-xs font-black uppercase tracking-[0.25em] transition-all shadow-xl shadow-blue-500/20 active:scale-95 active:shadow-none"
                     >
-                        <Send className="w-4 h-4" />
-                        Soumettre
+                        <span>Finaliser Soumission</span>
+                        <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-all">
+                            <Send className="w-3.5 h-3.5" />
+                        </div>
                     </button>
                 </div>
             </footer>

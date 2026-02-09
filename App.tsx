@@ -577,15 +577,36 @@ const App: React.FC = () => {
         <ExerciseIDEView
           exerciseType={ideContext.type}
           title={ideContext.title}
-          description="Implémentez les concepts appris en créant un smart contract fonctionnel."
-          instructions={[
-            "Créez un contrat Solidity basé sur les concepts du cours",
-            "Implémentez les fonctions requises avec la logique appropriée",
-            "Assurez-vous que votre code compile sans erreurs",
-            "Exécutez les tests pour valider votre implémentation"
-          ]}
+          description={
+            ideContext.type === 'course'
+              ? "Implémentez les concepts appris en créant un smart contract fonctionnel."
+              : ideContext.type === 'module'
+                ? "Appliquez l'ensemble des compétences du module pour réaliser cet audit complet."
+                : "Le point d'orgue de votre formation : concevez une solution blockchain de bout en bout."
+          }
+          instructions={
+            ideContext.type === 'course'
+              ? [
+                "Créez un contrat Solidity basé sur les concepts du cours",
+                "Implémentez les fonctions requises avec la logique appropriée",
+                "Assurez-vous que votre code compile sans erreurs",
+                "Exécutez les tests pour valider votre implémentation"
+              ]
+              : ideContext.type === 'module'
+                ? [
+                  "Analysez le cahier des charges du module",
+                  "Structurez votre solution technique ou votre rapport d'audit",
+                  "Vérifiez la cohérence globale de votre proposition",
+                  "Soumettez pour une évaluation par expert IA"
+                ]
+                : [
+                  "Concevez une architecture robuste et sécurisée",
+                  "Détaillez chaque composant de votre solution",
+                  "Prévoyez les mécanismes de gouvernance et de sécurité",
+                  "Finalisez votre projet pour la certification"
+                ]
+          }
           timeLimit={ideContext.type === 'final' ? 120 : ideContext.type === 'module' ? 60 : undefined}
-          onOpenCoachHelp={openCoachHelp}
           onTestRemediation={() => {
             if (ideContext.type === 'course' && ideContext.courseId && activeModuleId && currentLearningPath) {
               const module = currentLearningPath.modules.find(m => m.id === activeModuleId);
