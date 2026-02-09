@@ -228,6 +228,44 @@ const CourseView: React.FC<CourseViewProps> = ({
                         </React.Fragment>
                       );
                     })}
+
+                    {/* Module Exam Entry */}
+                    {m.exam && (
+                      <button
+                        onClick={() => {
+                          const allCoursesCompleted = m.courses.every(c => c.status === 'completed');
+                          if (allCoursesCompleted && m.exam?.status !== 'completed') {
+                            onOpenIDE?.({
+                              type: 'module',
+                              title: m.exam?.title || "Examen de Module",
+                              moduleId: m.id
+                            } as any);
+                          }
+                        }}
+                        disabled={!m.courses.every(c => c.status === 'completed') || m.exam.status === 'completed'}
+                        className={`w-full flex items-center gap-3 py-2.5 px-3 rounded-lg text-left transition-all mt-2 border-2 ${m.exam.status === 'completed'
+                          ? 'bg-purple-500/10 border-purple-500/20 opacity-70'
+                          : m.courses.every(c => c.status === 'completed')
+                            ? 'bg-purple-500/20 border-purple-500/40 hover:border-purple-500/60 active:scale-[0.98]'
+                            : 'opacity-40 grayscale cursor-not-allowed border-transparent'
+                          }`}
+                      >
+                        <div className="flex-shrink-0">
+                          {m.exam.status === 'completed' ? (
+                            <Award className="w-3.5 h-3.5 text-purple-400" />
+                          ) : (
+                            <Zap className={`w-3.5 h-3.5 ${m.courses.every(c => c.status === 'completed') ? 'text-purple-400 animate-pulse' : 'text-slate-500'}`} />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <span className={`text-[10px] block font-black uppercase tracking-widest ${m.courses.every(c => c.status === 'completed') ? 'text-purple-400' : 'text-slate-500'}`}>Étape de Validation</span>
+                          <span className={`text-xs truncate font-bold ${m.exam.status === 'completed' ? 'text-purple-300' : 'text-white'}`}>
+                            {m.exam.title}
+                          </span>
+                        </div>
+                        {m.exam.status === 'completed' && <CheckCircle2 className="w-3 h-3 text-purple-400" />}
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

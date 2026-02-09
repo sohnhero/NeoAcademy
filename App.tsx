@@ -414,7 +414,10 @@ const App: React.FC = () => {
             setActiveModuleId(null);
           }}
           onOpenIDE={(context) => {
-            setIdeContext({ ...context, moduleId: activeModuleId || undefined });
+            setIdeContext({
+              ...context,
+              moduleId: context.moduleId || activeModuleId || undefined
+            });
             setShowIDE(true);
           }}
           onNavigate={(mId, cId) => {
