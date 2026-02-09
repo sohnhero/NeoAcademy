@@ -104,22 +104,16 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
           {role === 'apprenant' && (
             <>
               <SidebarItem
-                icon={BookOpen}
-                label={isCollapsed ? "" : "Bibliothèque"}
-                active={activeTab === 'courses'}
-                onClick={() => setActiveTab('courses')}
-              />
-              <SidebarItem
-                icon={ShieldCheck}
-                label={isCollapsed ? "" : "Vérifications"}
-                active={activeTab === 'portfolio'}
-                onClick={() => setActiveTab('portfolio')}
-              />
-              <SidebarItem
                 icon={User}
                 label={isCollapsed ? "" : "Mon Parcours"}
                 active={activeTab === 'profile'}
                 onClick={() => setActiveTab('profile')}
+              />
+              <SidebarItem
+                icon={ShieldCheck}
+                label={isCollapsed ? "" : "Portfolio"}
+                active={activeTab === 'portfolio'}
+                onClick={() => setActiveTab('portfolio')}
               />
             </>
           )}

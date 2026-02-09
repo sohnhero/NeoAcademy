@@ -116,58 +116,50 @@ const App: React.FC = () => {
       ideContextCourseId: ideContext?.courseId
     });
 
-    if (animationFinished && submissionResult && ideContext && ideContext.type === 'course' && ideContext.courseId) {
-      console.log('[IDE Completion] All conditions met, processing result');
-      const { result, course } = submissionResult;
+    if (animationFinished && submissionResult && ideContext) {
+      console.log('[IDE Completion] All conditions met, processing result', { type: ideContext.type });
+      const { result, course, moduleId, isFinalProject } = submissionResult;
       const passed = result.isPassed;
-      const courseIdToComplete = ideContext.courseId;
 
       // 1. User Feedback
       if (passed) {
-        console.log('[IDE Completion] Showing SUCCESS toast');
         toast.success(
-          `🌟 SUCCÈS NEURAL : Audit Validé !\n\nFélicitations ! Vous avez maîtrisé le nœud de connaissance "${course.title}" avec un score de ${result.score}%.\n\nLe module suivant est désormais synchronisé.`,
+          `🌟 SUCCÈS NEURAL : Audit Validé !\n\nFélicitations ! Vous avez validé "${ideContext.title}" avec un score de ${result.score}%.\n\nLa suite de votre parcours est désormais débloquée.`,
           {
             position: 'top-center',
             autoClose: 6000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
             theme: 'dark',
             style: { fontSize: '14px', fontWeight: 'bold' }
           }
         );
-      } else if (course.remediation) {
-        console.log('[IDE Completion] Showing FAILURE toast');
+      } else {
         toast.error(
-          `⚠️ ÉCHEC DE L'AUDIT\n\nVotre soumission n'a pas atteint les standards de sécurité ou de logique requis (Score: ${result.score}%).\n\nUn cours de remédiation a été généré dans votre barre latérale pour vous aider à maîtriser ces concepts.`,
+          `⚠️ ÉCHEC DE L'AUDIT\n\nVotre soumission n'a pas atteint les standards requis (Score: ${result.score}%).\n\n${ideContext.type === 'course' ? 'Un cours de remédiation a été généré.' : 'Veuillez revoir les concepts du module et réessayer.'}`,
           {
             position: 'top-center',
             autoClose: 8000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
             theme: 'dark',
             style: { fontSize: '14px', fontWeight: 'bold' }
           }
         );
       }
 
-      // 2. Business Logic Updates (immediate)
-      if (passed) {
-        handleCourseComplete(courseIdToComplete, true, result.score);
-      } else if (course.remediation) {
-        setActiveRemediation({ remediation: course.remediation, course });
-        setIsShowingRemediation(true);
-      } else {
-        handleCourseComplete(courseIdToComplete, false, result.score);
+      // 2. Business Logic Updates
+      if (ideContext.type === 'course' && ideContext.courseId) {
+        if (!passed && course?.remediation) {
+          setActiveRemediation({ remediation: course.remediation, course });
+          setIsShowingRemediation(true);
+        } else {
+          handleCourseComplete(ideContext.courseId, passed, result.score);
+        }
+      } else if (ideContext.type === 'module' && moduleId) {
+        handleModuleExamComplete(moduleId, passed, result.score);
+      } else if (ideContext.type === 'final') {
+        handleFinalProjectComplete(passed, result.score);
       }
 
-      // 3. Cleanup UI states (delayed to allow alert to render)
+      // 3. Cleanup UI states
       setTimeout(() => {
-        console.log('[IDE Completion] Cleaning up UI states');
         setShowAIOverlay(false);
         setShowIDE(false);
         setAnimationFinished(false);
@@ -275,7 +267,10 @@ const App: React.FC = () => {
           updatedModules[moduleIdx + 1] = {
             ...updatedModules[moduleIdx + 1],
             isLocked: false,
-            status: 'in-progress'
+            status: 'in-progress',
+            courses: updatedModules[moduleIdx + 1].courses.map((c, i) =>
+              i === 0 ? { ...c, isLocked: false, status: 'not-started' } : c
+            )
           };
         }
       }
@@ -491,10 +486,26 @@ const App: React.FC = () => {
               setActiveCourseId(courseId);
             }}
             onNavigateToExam={(moduleId) => {
-              setActiveModuleId(moduleId);
-              setShowModuleExam(true);
+              const module = currentLearningPath?.modules.find(m => m.id === moduleId);
+              if (module?.exam) {
+                setIdeContext({
+                  type: 'module',
+                  title: module.exam.title,
+                  courseId: undefined,
+                  moduleId: module.id
+                });
+                setShowIDE(true);
+              }
             }}
-            onNavigateToFinalProject={() => setShowFinalProject(true)}
+            onNavigateToFinalProject={() => {
+              if (currentLearningPath?.finalProject) {
+                setIdeContext({
+                  type: 'final',
+                  title: currentLearningPath.finalProject.title,
+                });
+                setShowIDE(true);
+              }
+            }}
           />
         );
 
@@ -603,27 +614,56 @@ const App: React.FC = () => {
               const course = module?.courses.find(c => c.id === ideContext.courseId);
 
               if (course) {
-                // Show AI Audit Overlay
                 setOverlayType('audit');
-                setAnimationFinished(false); // Reset animation state
+                setAnimationFinished(false);
                 setShowAIOverlay(true);
 
-                // Start evaluation
-                evaluateModule(
-                  course.title,
-                  course.content.map(c => c.content).join('\n'),
-                  course.objectives || [],
-                  code
-                ).then(result => {
+                evaluateModule(course.title, course.content.map(c => c.content).join('\n'), course.objectives || [], code)
+                  .then(result => {
+                    const forcedResult = { ...result, isPassed: true, score: Math.max(result.score, 85) };
+                    setSubmissionResult({ result: forcedResult, course });
+                  }).catch(err => {
+                    console.error("Evaluation error:", err);
+                    setShowAIOverlay(false);
+                    setAnimationFinished(false);
+                    alert("Une erreur de réseau est survenue. Veuillez réessayer.");
+                  });
+              }
+            } else if (ideContext.type === 'module' && ideContext.moduleId && currentLearningPath) {
+              const module = currentLearningPath.modules.find(m => m.id === ideContext.moduleId);
+              if (module?.exam) {
+                setOverlayType('audit');
+                setAnimationFinished(false);
+                setShowAIOverlay(true);
+
+                // For module exam, we evaluate based on module description and exam objectives
+                evaluateModule(module.exam.title, module.description, ["Pass module final project"], code)
+                  .then(result => {
+                    const forcedResult = { ...result, isPassed: true, score: Math.max(result.score, 85) };
+                    setSubmissionResult({ result: forcedResult, moduleId: module.id });
+                  }).catch(err => {
+                    console.error("Evaluation error:", err);
+                    setShowAIOverlay(false);
+                    setAnimationFinished(false);
+                    alert("Une erreur de réseau est survenue. Veuillez réessayer.");
+                  });
+              }
+            } else if (ideContext.type === 'final' && currentLearningPath) {
+              // Final project handling
+              setOverlayType('audit');
+              setAnimationFinished(false);
+              setShowAIOverlay(true);
+
+              evaluateModule(currentLearningPath.finalProject?.title || "Project Final", currentLearningPath.description, currentLearningPath.finalProject?.requirements || [], code)
+                .then(result => {
                   const forcedResult = { ...result, isPassed: true, score: Math.max(result.score, 85) };
-                  setSubmissionResult({ result: forcedResult, course });
+                  setSubmissionResult({ result: forcedResult, isFinalProject: true });
                 }).catch(err => {
                   console.error("Evaluation error:", err);
                   setShowAIOverlay(false);
                   setAnimationFinished(false);
                   alert("Une erreur de réseau est survenue. Veuillez réessayer.");
                 });
-              }
             } else {
               setShowIDE(false);
               setIdeContext(null);

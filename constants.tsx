@@ -353,7 +353,19 @@ export const MOCK_LEARNING_PATHS: LearningPath[] = [
               tools: ['solidity-editor', 'slither']
             }
           }
-        ]
+        ],
+        exam: {
+          id: 'exam-mod2',
+          title: 'Projet Module 2 : Sécurité Solidity',
+          description: 'Implémentez un contrat sécurisé utilisant les patterns appris.',
+          duration: '1.5 heures',
+          passingScore: 75,
+          status: 'not-started',
+          attempts: 0,
+          questions: [
+            { id: 'mq1', type: 'code', question: 'Créez un contrat protégé contre la réentrance.', points: 100 }
+          ]
+        }
       },
       {
         id: 'mod3',
