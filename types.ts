@@ -13,7 +13,10 @@ export type ExitProfile =
   | 'smart_contract_auditor'
   | 'defi_specialist'
   | 'blockchain_architect'
-  | 'nft_developer';
+  | 'nft_developer'
+  | 'security_expert'
+  | 'infra_engineer'
+  | 'fullstack_dapp';
 
 // Learning path types
 export type LearningPathType = 'ai-generated' | 'custom' | 'predefined';
@@ -100,8 +103,27 @@ export interface LLMConfig {
 }
 
 // =====================================================
-// Module Level (Contains Courses)
+// Project Planning Support
 // =====================================================
+
+export interface PlannedTask {
+  id: string;
+  title: string;
+  durationInHours: number;
+  status: 'pending' | 'completed' | 'on-track' | 'at-risk';
+  order: number;
+}
+
+export interface ProjectPlan {
+  id: string;
+  tasks: PlannedTask[];
+  totalAllocatedHours: number;
+  lastUpdated: string;
+}
+
+// =====================================================
+// Module Level (Contains Courses)
+// =====================================
 
 export interface ModuleExam {
   id: string;
@@ -114,6 +136,8 @@ export interface ModuleExam {
   status: ProgressStatus;
   score?: number;
   attempts: number;
+  globalDeadline?: string;
+  plan?: ProjectPlan;
 }
 
 export interface ExamQuestion {
@@ -151,6 +175,7 @@ export interface FinalProject {
   score?: number;
   submittedAt?: string;
   feedback?: string;
+  plan?: ProjectPlan;
 }
 
 export interface Deliverable {

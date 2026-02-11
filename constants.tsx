@@ -35,6 +35,24 @@ export const EXIT_PROFILES: { id: ExitProfile; label: string; description: strin
     label: 'Développeur NFT',
     description: 'Créez des marketplaces et des collections NFT.',
     icon: 'Hexagon'
+  },
+  {
+    id: 'security_expert',
+    label: 'Expert Sécurité & Audit',
+    description: 'Devenez le dernier rempart contre les hacks DeFi.',
+    icon: 'Shield'
+  },
+  {
+    id: 'infra_engineer',
+    label: 'Ingénieur Infrastructure',
+    description: 'Maîtrisez les Layers 2 et les protocoles ZK.',
+    icon: 'Layers'
+  },
+  {
+    id: 'fullstack_dapp',
+    label: 'Développeur dApp Full-Stack',
+    description: 'Concevez des expériences Web3 fluides de bout en bout.',
+    icon: 'Code'
   }
 ];
 
@@ -90,7 +108,7 @@ export const MOCK_LEARNING_PATHS: LearningPath[] = [
                 id: 'content-1-1',
                 type: 'text',
                 title: 'Qu\'est-ce qu\'un registre distribué?',
-                content: 'Un registre distribué (DLT) est une base de données partagée, répliquée et synchronisée entre plusieurs participants d\'un réseau décentralisé...'
+                content: '### Scénario : La Chaîne Logistique de "Global Logistics"\n\nImaginez que vous gérez les flux de milliers de conteneurs pour une entreprise mondiale. Traditionnellement, chaque acteur (usine, transporteur, douane, entrepôt) possède sa propre base de données. En cas de litige, réconcilier ces données prend des semaines.\n\n**Le Registre Distribué (DLT)** résout ce problème en créant une "Source de Vérité" unique et partagée. Contrairement à une base de données classique où un administrateur peut modifier les entrées, un DLT est **immuable** : une fois qu\'une étape est validée par le réseau, elle ne peut plus être effacée. \n\nDans ce cours, nous allons voir comment Ethereum agit comme ce registre mondial, mais pour la valeur et le code logique.'
               },
               {
                 id: 'content-1-2',
@@ -158,7 +176,7 @@ export const MOCK_LEARNING_PATHS: LearningPath[] = [
                 id: 'content-2-1',
                 type: 'text',
                 title: 'Le hachage cryptographique',
-                content: 'Les fonctions de hachage transforment des données de taille arbitraire en une empreinte fixe de 256 bits...'
+                content: '### Cas d\'usage : Le Passeport Numérique\n\nComment prouver qu\'un document est authentique sans montrer l\'original ? La cryptographie blockchain utilise deux piliers :\n\n1. **Le Hachage (Keccak-256)** : C\'est l\'empreinte digitale de la donnée. Changez une seule virgule dans un contrat de 100 pages, et le "hash" sera totalement différent.\n2. **Les Signatures ECDSA** : Elles permettent de prouver qu\'un message a été envoyé par vous, sans jamais révéler votre clé privée.\n\nImaginez un système de diplômes numériques : l\'université signe le hash du diplôme. L\'étudiant peut alors prouver à n\'importe quel employeur l\'authenticité de sa réussite instantanément.'
               }
             ],
             exercise: {
@@ -185,7 +203,7 @@ export const MOCK_LEARNING_PATHS: LearningPath[] = [
                 id: 'content-3-1',
                 type: 'text',
                 title: 'Les comptes Ethereum',
-                content: 'Ethereum distingue deux types de comptes : les EOA (Externally Owned Accounts) contrôlés par des clés privées, et les comptes de contrats...'
+                content: '### Simulation : "Flash Transfer" - Votre Premier Envoi\n\nDans le monde Web2, un virement bancaire peut prendre 48h. Dans le Web3, c\'est une question de secondes, mais l\'erreur est irréversible.\n\n**La Transaction** est l\'unité atomique de changement d\'état sur Ethereum. Elle contient :\n- Le `Nonce` (nombre de transactions envoyées par le compte).\n- Le `Gas Price` (ce que vous êtes prêt à payer pour la priorité).\n- Le `Data` (les instructions pour le smart contract).\n\nDans ce cours, vous allez utiliser un "Faucet" pour obtenir de faux jetons sur le réseau de test Sepolia et envoyer votre première transaction signée cryptographiquement.'
               }
             ],
             exercise: {
@@ -207,6 +225,7 @@ export const MOCK_LEARNING_PATHS: LearningPath[] = [
           status: 'completed',
           score: 88,
           attempts: 1,
+          globalDeadline: '2024-03-01T23:59:59Z',
           questions: [
             { id: 'q1', type: 'text', question: 'Expliquez le problème du double spending.', points: 25 },
             { id: 'q2', type: 'multiple-choice', question: 'Quel algorithme de hachage utilise Ethereum?', points: 15 },
@@ -238,7 +257,7 @@ export const MOCK_LEARNING_PATHS: LearningPath[] = [
                 id: 'content-4-1',
                 type: 'text',
                 title: 'Introduction à Solidity',
-                content: 'Solidity est un langage orienté contrat, typé statiquement, conçu pour la machine virtuelle Ethereum (EVM)...'
+                content: '### Défi Réel : Gestionnaire de Patrimoine Immobilier\n\nPour ce premier module de code, nous allons concevoir le moteur d\'un "Registry" immobilier. \n\n**Solidity** est un langage orienté contrat. Contrairement à Python ou JavaScript, chaque ligne de code exécutée coûte du "Gas" (de l\'argent réel). \n\nDans ce cours, vous apprendrez à :\n- Déclarer des structures de données pour des "Propriétés".\n- Gérer des listes de "Propriétaires" via des `mapping`.\n- Utiliser les types statiques pour garantir que le prix d\'une transaction ne puisse jamais être négatif.'
               }
             ],
             exercise: {
@@ -289,7 +308,7 @@ export const MOCK_LEARNING_PATHS: LearningPath[] = [
                 id: 'content-5-1',
                 type: 'text',
                 title: 'L\'EVM en détail',
-                content: 'L\'EVM est une machine à états quasi-Turing complète. Elle utilise une pile de 256 bits et distingue trois zones de données : storage, memory et stack...'
+                content: '### Plongée Technique : Le Cœur de la Machine (EVM)\n\nL\'EVM est l\'ordinateur mondial d\'Ethereum. Imaginez un système qui traite des milliers d\'instructions simultanément sur des nœuds partout dans le monde.\n\nComprendre l\'EVM, c\'est comprendre comment optimiser vos coûts de **Gas**. \n\nDans ce cours, nous allons :\n- Démonter un contrat pour voir ses **Opcodes** (PUSH1, MSTORE, CALLER).\n- Apprendre la différence cruciale entre le **Storage** (cher et permanent) et la **Memory** (bon marché et temporaire).\n- Voir comment "Stack-based execution" empêche (ou permet) certains bugs de logique.'
               }
             ],
             exercise: {
@@ -340,7 +359,7 @@ export const MOCK_LEARNING_PATHS: LearningPath[] = [
                 id: 'content-6-1',
                 type: 'text',
                 title: 'Sécurité des Smart Contracts',
-                content: 'La sécurité est primordiale dans le développement blockchain car les erreurs sont immuables et peuvent coûter des millions...'
+                content: '### Cas d\'école : Le Hack de "Reentrancy"\n\nImaginez un distributeur de billets défectueux : vous retirez 100€, et avant que le solde ne soit mis à jour sur l\'écran, vous demandez à nouveau 100€. Si le code n\'est pas bien structuré, vous pourriez vider la banque.\n\nC\'est ce qu\'on appelle une attaque de **Réentrance**. Pour l\'éviter, nous apprenons le pattern **Checks-Effects-Interactions** :\n1. **Checks** : Vérifier que l\'utilisateur a bien le solde.\n2. **Effects** : Déduire le montant du solde TOUT DE SUITE.\n3. **Interactions** : Envoyer l\'argent après.\n\nDans ce cours, vous allez coder une défense contre ce hack classique.'
               }
             ],
             exercise: {
@@ -362,6 +381,7 @@ export const MOCK_LEARNING_PATHS: LearningPath[] = [
           passingScore: 75,
           status: 'not-started',
           attempts: 0,
+          globalDeadline: '2024-03-15T23:59:59Z',
           questions: [
             { id: 'mq1', type: 'code', question: 'Créez un contrat protégé contre la réentrance.', points: 100 }
           ]
@@ -385,7 +405,7 @@ export const MOCK_LEARNING_PATHS: LearningPath[] = [
             isLocked: true,
             objectives: ['Review process', 'Documentation', 'Reporting'],
             content: [
-              { id: 'c3-1-1', type: 'text', title: 'Introduction à l\'audit', content: 'L\'audit de smart contracts est une pratique essentielle...' }
+              { id: 'c3-1-1', type: 'text', title: 'Introduction à l\'audit', content: '### Mission d\'Audit : Sécuriser le Protocole "SolidGuard"\n\nVous êtes recruté pour auditer un nouveau protocole de lending. Votre mission : trouver les vulnérabilités avant les hackers.\n\nUn audit professionnel suit une méthodologie stricte :\n1. **Pré-audit** : Comprendre le business logic du client.\n2. **Review Manuel** : Lire chaque ligne de code pour trouver des failles logiques.\n3. **Analyse Automatisée** : Utiliser des outils pour détecter les erreurs classiques.\n\nDans ce module, vous allez apprendre à rédiger un rapport d\'audit qui sauve des millions d\'actifs.' }
             ],
             exercise: { id: 'ex-3-1', title: 'Audit Complet', description: 'Réalisez un audit d\'un protocole simple.', type: 'practical', prompt: 'Auditez ce contrat DeFi.', passingScore: 85 }
           },
@@ -398,7 +418,7 @@ export const MOCK_LEARNING_PATHS: LearningPath[] = [
             isLocked: true,
             objectives: ['Slither basics', 'Mythril analysis', 'Custom detectors'],
             content: [
-              { id: 'c3-2-1', type: 'text', title: 'Analyseurs statiques', content: 'Les outils d\'analyse statique permettent de détecter automatiquement des vulnérabilités...' }
+              { id: 'c3-2-1', type: 'text', title: 'Analyseurs statiques', content: '### Vos Nouveaux Alliés : Slither & Mythril\n\nAuditer à la main est indispensable, mais l\'humain fait des erreurs. Les outils d\'analyse statique scannent votre code en quelques secondes pour trouver des failles connues.\n\n**Slither** est le standard de l\'industrie. Il génère un graphe de dépendance de votre contrat et détecte :\n- La réentrance.\n- Les variables non initialisées.\n- Les optimisations de gas manquées.\n\nVous apprendrez à intégrer ces outils dans votre workflow de développeur professionnel.' }
             ],
             exercise: { id: 'ex-3-2', title: 'Lab Slither', description: 'Utilisez Slither pour auditer un contrat.', type: 'code', prompt: 'Analysez ce contrat avec Slither et documentez les findings.', passingScore: 80, tools: ['slither'] }
           },
@@ -592,7 +612,7 @@ export const MOCK_LEARNING_PATHS: LearningPath[] = [
           status: 'pending'
         }
       ],
-      globalDeadline: '2024-04-30',
+      globalDeadline: '2024-04-30T23:59:59Z',
       status: 'locked'
     }
   }
@@ -606,34 +626,67 @@ export const PREDEFINED_PATHS_CATALOG: Partial<LearningPath>[] = [
   {
     id: 'catalog-1',
     title: 'Maîtrise Ethereum & Smart Contracts',
-    description: 'Parcours complet pour devenir développeur Web3.',
+    description: 'Devenez un expert Solidity. Apprenez à concevoir des protocoles décentralisés pour la finance, l\'identité et la logistique.',
     exitProfile: 'web3_developer',
     exitProfileLabel: 'Développeur Web3',
     image: 'https://images.unsplash.com/photo-1622790698141-94e30457ef12?q=80&w=2072',
     estimatedDuration: '12 semaines',
-    skills: ['Solidity', 'EVM', 'Web3.js', 'Hardhat'],
+    skills: ['Solidity', 'EVM', 'Web3.js', 'Hardhat', 'Truffle'],
     type: 'predefined'
   },
   {
     id: 'catalog-2',
     title: 'Auditeur de Sécurité Blockchain',
-    description: 'Devenez expert en audit de smart contracts.',
+    description: 'Le dernier rempart. Apprenez les techniques d\'audit professionnel, du fuzzing à la vérification formelle.',
     exitProfile: 'smart_contract_auditor',
     exitProfileLabel: 'Auditeur Smart Contracts',
     image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?q=80&w=2000',
     estimatedDuration: '16 semaines',
-    skills: ['Analyse statique', 'Fuzzing', 'Formal Verification'],
+    skills: ['Analyse statique', 'Fuzzing', 'Formal Verification', 'Audit Report'],
     type: 'predefined'
   },
   {
     id: 'catalog-3',
     title: 'Architecte DeFi',
-    description: 'Concevez des protocoles de finance décentralisée.',
+    description: 'Concevez des protocoles de finance décentralisée complexes.',
     exitProfile: 'defi_specialist',
     exitProfileLabel: 'Spécialiste DeFi',
     image: 'https://images.unsplash.com/photo-1642104704074-907c0698b98d?q=80&w=2000',
     estimatedDuration: '14 semaines',
     skills: ['AMM', 'Lending', 'Yield Farming', 'Tokenomics'],
+    type: 'predefined'
+  },
+  {
+    id: 'catalog-4',
+    title: 'Expert en Sécurité & Audit DeFi',
+    description: 'Apprenez à identifier les vulnérabilités critiques et à sécuriser des milliards d\'actifs.',
+    exitProfile: 'security_expert',
+    exitProfileLabel: 'Expert Sécurité',
+    image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070',
+    estimatedDuration: '10 semaines',
+    skills: ['Audit', 'Fuzzing', 'Formal Verification', 'Security Patterns'],
+    type: 'predefined'
+  },
+  {
+    id: 'catalog-5',
+    title: 'Ingénieur Infra & ZK-Rollups',
+    description: 'Plongez dans le futur de la scalabilité avec les Zero-Knowledge Proofs et les L2.',
+    exitProfile: 'infra_engineer',
+    exitProfileLabel: 'Ingénieur Infra',
+    image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072',
+    estimatedDuration: '16 semaines',
+    skills: ['Circom', 'ZK-Proofs', 'Layer 2', 'Arbitrum', 'Optimism'],
+    type: 'predefined'
+  },
+  {
+    id: 'catalog-6',
+    title: 'Développeur dApps Full-Stack',
+    description: 'Le pont entre le Web2 et le Web3. Intégrez React, Ethers.js et Solidity de façon professionnelle.',
+    exitProfile: 'fullstack_dapp',
+    exitProfileLabel: 'Full-Stack Web3',
+    image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=2072',
+    estimatedDuration: '12 semaines',
+    skills: ['React', 'Ethers.js', 'Solidity', 'Tailwind', 'Next.js'],
     type: 'predefined'
   }
 ];

@@ -25,7 +25,9 @@ import CoachReviewView from './components/CoachReviewView';
 import Auth from './components/Auth';
 import LandingPage from './components/LandingPage';
 import AIProcessOverlay from './components/AIProcessOverlay';
-import { UserRole, LearningPath, PathModule, Course, LegacyCourse, Remediation } from './types';
+import DeadlinePlanningBoard from './components/DeadlinePlanningBoard';
+import DeadlineQuickView from './components/DeadlineQuickView';
+import { UserRole, LearningPath, PathModule, Course, LegacyCourse, Remediation, ProjectPlan } from './types';
 import { MOCK_LEARNING_PATHS, MOCK_COURSES } from './constants';
 import api from './services/api';
 import { evaluateModule } from './services/geminiService';
@@ -75,6 +77,16 @@ const App: React.FC = () => {
   // Submission Synchronization State
   const [submissionResult, setSubmissionResult] = useState<any>(null);
   const [animationFinished, setAnimationFinished] = useState(false);
+
+  // Deadline Delivery System State
+  const [showPlanningBoard, setShowPlanningBoard] = useState(false);
+  const [planningContext, setPlanningContext] = useState<{
+    type: 'module' | 'final';
+    deadline: string;
+    title: string;
+    id: string;
+    initialPlan?: ProjectPlan
+  } | null>(null);
 
   // Legacy State (for admin/coach views)
   const [legacyCourses, setLegacyCourses] = useState<LegacyCourse[]>([]);
@@ -414,6 +426,46 @@ const App: React.FC = () => {
             setActiveModuleId(null);
           }}
           onOpenIDE={(context) => {
+            console.log('[Deadline System] onOpenIDE triggered', context);
+            // Check if planning is needed for this context
+            if (context.type === 'module' && context.moduleId) {
+              const module = currentLearningPath?.modules.find(m => m.id === context.moduleId);
+              console.log('[Deadline System] Module lookup:', {
+                moduleId: context.moduleId,
+                found: !!module,
+                hasExam: !!module?.exam,
+                globalDeadline: module?.exam?.globalDeadline,
+                hasPlan: !!module?.exam?.plan
+              });
+
+              if (module?.exam?.globalDeadline && !module.exam.plan) {
+                console.log('[Deadline System] Planning required, opening board');
+                setPlanningContext({
+                  type: 'module',
+                  id: module.id,
+                  title: module.exam.title,
+                  deadline: module.exam.globalDeadline
+                });
+                setShowPlanningBoard(true);
+                return; // Interrupt IDE opening to show planning first
+              }
+            } else if (context.type === 'final' && currentLearningPath?.finalProject) {
+              console.log('[Deadline System] Final project planning check:', {
+                globalDeadline: currentLearningPath.finalProject.globalDeadline,
+                hasPlan: !!currentLearningPath.finalProject.plan
+              });
+              if (currentLearningPath.finalProject.globalDeadline && !currentLearningPath.finalProject.plan) {
+                setPlanningContext({
+                  type: 'final',
+                  id: currentLearningPath.finalProject.id,
+                  title: currentLearningPath.finalProject.title,
+                  deadline: currentLearningPath.finalProject.globalDeadline
+                });
+                setShowPlanningBoard(true);
+                return; // Interrupt IDE opening
+              }
+            }
+
             setIdeContext({
               ...context,
               moduleId: context.moduleId || activeModuleId || undefined
@@ -433,6 +485,10 @@ const App: React.FC = () => {
           onRemediationComplete={() => {
             setActiveRemediation(null);
             setIsShowingRemediation(false);
+          }}
+          onOpenPlanning={(type, id, deadline, title, initialPlan) => {
+            setPlanningContext({ type, id, deadline, title, initialPlan });
+            setShowPlanningBoard(true);
           }}
         />
       );
@@ -463,6 +519,10 @@ const App: React.FC = () => {
             }}
             onNavigateToPortfolio={() => setActiveTab('portfolio')}
             onNavigateToPath={() => setActiveTab('profile')}
+            onOpenPlanning={(type, id, deadline, title, initialPlan) => {
+              setPlanningContext({ type, id, deadline, title, initialPlan });
+              setShowPlanningBoard(true);
+            }}
           />
         );
 
@@ -491,22 +551,42 @@ const App: React.FC = () => {
             onNavigateToExam={(moduleId) => {
               const module = currentLearningPath?.modules.find(m => m.id === moduleId);
               if (module?.exam) {
-                setIdeContext({
-                  type: 'module',
-                  title: module.exam.title,
-                  courseId: undefined,
-                  moduleId: module.id
-                });
-                setShowIDE(true);
+                if (module.exam.globalDeadline && !module.exam.plan) {
+                  setPlanningContext({
+                    type: 'module',
+                    id: module.id,
+                    title: module.exam.title,
+                    deadline: module.exam.globalDeadline
+                  });
+                  setShowPlanningBoard(true);
+                } else {
+                  setIdeContext({
+                    type: 'module',
+                    title: module.exam.title,
+                    courseId: undefined,
+                    moduleId: module.id
+                  });
+                  setShowIDE(true);
+                }
               }
             }}
             onNavigateToFinalProject={() => {
               if (currentLearningPath?.finalProject) {
-                setIdeContext({
-                  type: 'final',
-                  title: currentLearningPath.finalProject.title,
-                });
-                setShowIDE(true);
+                if (currentLearningPath.finalProject.globalDeadline && !currentLearningPath.finalProject.plan) {
+                  setPlanningContext({
+                    type: 'final',
+                    id: currentLearningPath.finalProject.id,
+                    title: currentLearningPath.finalProject.title,
+                    deadline: currentLearningPath.finalProject.globalDeadline
+                  });
+                  setShowPlanningBoard(true);
+                } else {
+                  setIdeContext({
+                    type: 'final',
+                    title: currentLearningPath.finalProject.title,
+                  });
+                  setShowIDE(true);
+                }
               }
             }}
           />
@@ -532,6 +612,37 @@ const App: React.FC = () => {
       default:
         return <Dashboard currentPath={currentLearningPath || undefined} onCourseSelect={() => { }} />;
     }
+  };
+
+  const handleSaveProjectPlan = (plan: ProjectPlan) => {
+    if (!currentLearningPath || !planningContext) return;
+
+    console.log('[Deadline System] Saving plan:', plan);
+
+    const updatedPath = { ...currentLearningPath };
+
+    if (planningContext.type === 'module') {
+      const module = updatedPath.modules.find(m => m.id === planningContext.id);
+      if (module && module.exam) {
+        module.exam.plan = plan;
+      }
+    } else {
+      if (updatedPath.finalProject) {
+        updatedPath.finalProject.plan = plan;
+      }
+    }
+
+    setCurrentLearningPath(updatedPath);
+    setShowPlanningBoard(false);
+
+    // Automatically open IDE after planning if intended
+    setIdeContext({
+      type: planningContext.type,
+      title: planningContext.title,
+      moduleId: planningContext.type === 'module' ? planningContext.id : undefined
+    });
+    setShowIDE(true);
+    setPlanningContext(null);
   };
 
   const isStudyMode = activeCourseId !== null || showModuleExam || showFinalProject || activeRemediation !== null;
@@ -709,6 +820,20 @@ const App: React.FC = () => {
           setAnimationFinished(true);
         }}
       />
+
+      {/* Project Planning Board */}
+      {showPlanningBoard && planningContext && (
+        <DeadlinePlanningBoard
+          globalDeadline={planningContext.deadline}
+          projectType={planningContext.type}
+          initialPlan={planningContext.initialPlan}
+          onSavePlan={handleSaveProjectPlan}
+          onCancel={() => {
+            setShowPlanningBoard(false);
+            setPlanningContext(null);
+          }}
+        />
+      )}
 
       {/* Toast Notifications Container */}
       <ToastContainer aria-label="Notifications" />

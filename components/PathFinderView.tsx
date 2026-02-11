@@ -17,7 +17,10 @@ import {
     Layers,
     Zap,
     Send,
-    RefreshCw
+    RefreshCw,
+    Filter,
+    Clock,
+    Star
 } from 'lucide-react';
 import { LearningPath } from '../types';
 import { MOCK_LEARNING_PATHS, PREDEFINED_PATHS_CATALOG } from '../constants';
@@ -71,6 +74,8 @@ const PathFinderView: React.FC<PathFinderViewProps> = ({ onPathConfirmed, availa
 
     // Certified Tracks State
     const [selectedCertifiedPath, setSelectedCertifiedPath] = useState<Partial<LearningPath> | null>(null);
+    const [certifiedCategory, setCertifiedCategory] = useState('Tous');
+    const certifiedCategories = ['Tous', 'Développement', 'Sécurité', 'Infrastructure', 'DeFi'];
 
     // Analysis animation effect
     useEffect(() => {
@@ -554,86 +559,192 @@ const PathFinderView: React.FC<PathFinderViewProps> = ({ onPathConfirmed, availa
     // Certified Tracks Flow
     if (selectedFlow === 'certified') {
         return (
-            <div className="min-h-screen p-6" style={{ backgroundColor: '#020617' }}>
-                <div className="max-w-4xl mx-auto">
+            <div className="min-h-screen p-6 pb-20 overflow-y-auto" style={{ backgroundColor: '#020617' }}>
+                <div className="max-w-6xl mx-auto">
                     {/* Back Button */}
-                    <button
-                        onClick={() => { setSelectedFlow(null); setSelectedCertifiedPath(null); }}
-                        className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest mb-12 text-slate-500 hover:text-blue-400 transition-colors"
-                    >
-                        <ArrowLeft className="w-4 h-4" /> Retour
-                    </button>
+                    <div className="flex items-center justify-between mb-12">
+                        <button
+                            onClick={() => { setSelectedFlow(null); setSelectedCertifiedPath(null); setSearchQuery(''); }}
+                            className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-blue-400 transition-colors"
+                        >
+                            <ArrowLeft className="w-4 h-4" /> Retour
+                        </button>
+                        <div className="flex items-center gap-2 text-blue-500/60 text-[10px] font-black uppercase tracking-widest bg-blue-500/5 px-4 py-2 rounded-full border border-blue-500/10">
+                            <Star className="w-3 h-3 fill-current" />
+                            <span>Contenu Premium</span>
+                        </div>
+                    </div>
 
                     {/* Header */}
-                    <div className="text-center mb-12">
-                        <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-blue-400 to-blue-500 flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-blue-500/30">
+                    <div className="text-center mb-16">
+                        <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-blue-500/30">
                             <Award className="w-10 h-10 text-white" />
                         </div>
-                        <h2 className="text-4xl font-black tracking-tight mb-3 text-white">
+                        <h2 className="text-5xl font-black tracking-tight mb-4 text-white">
                             Certified Tracks
                         </h2>
-                        <p className="text-slate-400">Parcours certifiants conçus par des experts</p>
+                        <p className="text-slate-400 max-w-2xl mx-auto text-lg">
+                            Des parcours de haute intensité conçus par des experts pour propulser votre carrière Web3.
+                        </p>
+                    </div>
+
+                    {/* Search & Filter Bar */}
+                    <div className="flex flex-col md:flex-row gap-4 mb-12">
+                        <div className="relative flex-1 group">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-blue-500 transition-colors" />
+                            <input
+                                type="text"
+                                placeholder="Rechercher un parcours, une compétence (Solidity, Audit...)"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full bg-slate-900/50 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all text-sm text-white"
+                            />
+                        </div>
+                        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                            {certifiedCategories.map(cat => (
+                                <button
+                                    key={cat}
+                                    onClick={() => setCertifiedCategory(cat)}
+                                    className={`px-6 py-3 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${certifiedCategory === cat
+                                        ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20'
+                                        : 'bg-white/5 border-white/10 text-slate-400 hover:border-white/20'
+                                        }`}
+                                >
+                                    {cat}
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
                     {/* Paths Grid */}
-                    <div className="space-y-4 mb-8">
-                        {(availablePaths.length > 0 ? availablePaths : PREDEFINED_PATHS_CATALOG).map((path) => (
-                            <button
-                                key={path.id}
-                                onClick={() => setSelectedCertifiedPath(path)}
-                                className={`w-full p-6 rounded-2xl border text-left transition-all ${selectedCertifiedPath?.id === path.id
-                                    ? 'border-blue-500 bg-blue-500/10'
-                                    : 'border-slate-800 bg-slate-900/50 hover:border-blue-500/30'
-                                    }`}
-                            >
-                                <div className="flex items-start gap-5">
-                                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 ${selectedCertifiedPath?.id === path.id ? 'bg-blue-500 text-white' : 'bg-blue-500/10 text-blue-400'
-                                        }`}>
-                                        <Award className="w-8 h-8" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-3 mb-2">
-                                            <h4 className="text-lg font-bold text-white">{path.title}</h4>
-                                            <span className="text-[10px] px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 font-bold uppercase tracking-wider">
-                                                Certifiant
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+                        {PREDEFINED_PATHS_CATALOG
+                            .filter(path => {
+                                const lowerQuery = searchQuery.toLowerCase();
+                                const matchesSearch = (path.title?.toLowerCase() || '').includes(lowerQuery) ||
+                                    (path.skills?.some(s => s.toLowerCase().includes(lowerQuery)) || false);
+
+                                const matchesCategory = certifiedCategory === 'Tous' ||
+                                    (certifiedCategory === 'Développement' && (path.exitProfile === 'web3_developer' || path.exitProfile === 'fullstack_dapp')) ||
+                                    (certifiedCategory === 'Sécurité' && (path.exitProfile === 'smart_contract_auditor' || path.exitProfile === 'security_expert')) ||
+                                    (certifiedCategory === 'Infrastructure' && (path.exitProfile === 'blockchain_architect' || path.exitProfile === 'infra_engineer')) ||
+                                    (certifiedCategory === 'DeFi' && path.exitProfile === 'defi_specialist');
+
+                                return matchesSearch && matchesCategory;
+                            })
+                            .map((path) => (
+                                <div
+                                    key={path.id}
+                                    onClick={() => setSelectedCertifiedPath(path)}
+                                    className={`group relative border rounded-[32px] overflow-hidden transition-all duration-500 cursor-pointer flex flex-col ${selectedCertifiedPath?.id === path.id
+                                        ? 'border-blue-500 ring-4 ring-blue-500/10 shadow-2xl shadow-blue-500/20 scale-[1.02]'
+                                        : 'border-slate-800 bg-slate-900/50 hover:border-blue-500/30'
+                                        }`}
+                                >
+                                    <div className="relative h-56 overflow-hidden">
+                                        <div
+                                            className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
+                                            style={{ backgroundImage: `url(${path.image})` }}
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-[#020617]/40 to-transparent" />
+
+                                        {/* Badge Overlays */}
+                                        <div className="absolute top-4 left-4 flex gap-2">
+                                            <span className="bg-blue-600/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full shadow-lg">
+                                                CERTIFIÉ
+                                            </span>
+                                            <span className="bg-white/10 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full border border-white/20">
+                                                {path.estimatedDuration}
                                             </span>
                                         </div>
-                                        <p className="text-sm text-slate-400 mb-4">{path.description}</p>
-                                        <div className="flex items-center gap-6 text-xs text-slate-500">
-                                            <span className="flex items-center gap-1.5">
-                                                <Layers className="w-3.5 h-3.5" /> {path.modules?.length || 3} modules
-                                            </span>
-                                            <span>{(path as any).estimatedDuration || (path as any).duration || '3-4 mois'}</span>
+
+                                        <div className="absolute bottom-6 left-6 right-6">
+                                            <div className="flex items-center gap-2 text-blue-400 text-[10px] font-black uppercase tracking-widest mb-2">
+                                                <Zap className="w-3 h-3 fill-current" />
+                                                <span>{path.exitProfileLabel}</span>
+                                            </div>
+                                            <h3 className="text-2xl font-black tracking-tight text-white leading-tight">
+                                                {path.title}
+                                            </h3>
+                                        </div>
+
+                                        {selectedCertifiedPath?.id === path.id && (
+                                            <div className="absolute top-4 right-4 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white shadow-lg">
+                                                <CheckCircle className="w-5 h-5" />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="p-8 flex-1 flex flex-col">
+                                        <p className="text-sm text-slate-400 mb-6 line-clamp-2 leading-relaxed">
+                                            {path.description}
+                                        </p>
+
+                                        <div className="flex flex-wrap gap-2 mb-8 mt-auto">
+                                            {path.skills?.slice(0, 4).map((skill, i) => (
+                                                <span key={i} className="px-3 py-1.5 bg-blue-500/5 text-blue-400 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-blue-500/10">
+                                                    {skill}
+                                                </span>
+                                            ))}
+                                        </div>
+
+                                        <div className="flex items-center justify-between pt-6 border-t border-dashed border-slate-800">
+                                            <div className="flex items-center gap-4">
+                                                <Clock className="w-4 h-4 text-slate-500" />
+                                                <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                                    {path.estimatedDuration}
+                                                </span>
+                                            </div>
+                                            <div className="text-blue-500 text-xs font-black uppercase tracking-widest">
+                                                {selectedCertifiedPath?.id === path.id ? 'SÉLECTIONNÉ' : 'DÉTAILS'}
+                                            </div>
                                         </div>
                                     </div>
-                                    {selectedCertifiedPath?.id === path.id && (
-                                        <CheckCircle className="w-6 h-6 text-blue-400 shrink-0" />
-                                    )}
                                 </div>
-                            </button>
-                        ))}
+                            ))}
                     </div>
 
-                    {/* Confirm Button */}
+                    {/* No Results Fallback */}
+                    {PREDEFINED_PATHS_CATALOG.filter(path => {
+                        const matchesSearch = (path.title?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+                            (path.skills?.some(s => s.toLowerCase().includes(searchQuery.toLowerCase())) || false);
+                        const matchesCategory = certifiedCategory === 'Tous' ||
+                            (certifiedCategory === 'Développement' && (path.exitProfile === 'web3_developer' || path.exitProfile === 'fullstack_dapp')) ||
+                            (certifiedCategory === 'Sécurité' && (path.exitProfile === 'smart_contract_auditor' || path.exitProfile === 'security_expert')) ||
+                            (certifiedCategory === 'Infrastructure' && (path.exitProfile === 'blockchain_architect' || path.exitProfile === 'infra_engineer')) ||
+                            (certifiedCategory === 'DeFi' && path.exitProfile === 'defi_specialist');
+                        return matchesSearch && matchesCategory;
+                    }).length === 0 && (
+                            <div className="text-center py-24 bg-white/5 rounded-[40px] border border-dashed border-slate-800">
+                                <Search className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                                <h3 className="text-xl font-bold text-white mb-2">Aucun parcours trouvé</h3>
+                                <p className="text-slate-500">Essayez une autre recherche ou changez de catégorie.</p>
+                            </div>
+                        )}
+
+                    {/* Fixed Confirm Button (Sticky-like or Bottom Spaced) */}
                     {selectedCertifiedPath && (
-                        <button
-                            onClick={() => {
-                                // Create a full path with modules from MOCK data
-                                const fullPath: LearningPath = {
-                                    ...MOCK_LEARNING_PATHS[0],
-                                    id: selectedCertifiedPath.id || `certified-${Date.now()}`,
-                                    title: selectedCertifiedPath.title || 'Parcours Certifiant',
-                                    description: selectedCertifiedPath.description || '',
-                                    type: 'predefined',
-                                    progress: 0
-                                };
-                                onPathConfirmed(fullPath);
-                            }}
-                            className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white py-5 rounded-2xl font-black uppercase tracking-widest text-sm transition-all flex items-center justify-center gap-3 shadow-xl shadow-blue-500/20"
-                        >
-                            <Award className="w-5 h-5" />
-                            Choisir ce Parcours
-                        </button>
+                        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 w-full max-w-md px-6 z-50">
+                            <button
+                                onClick={() => {
+                                    const fullPath: LearningPath = {
+                                        ...MOCK_LEARNING_PATHS[0],
+                                        id: selectedCertifiedPath.id || `certified-${Date.now()}`,
+                                        title: selectedCertifiedPath.title || 'Parcours Certifiant',
+                                        description: selectedCertifiedPath.description || '',
+                                        type: 'predefined',
+                                        progress: 0,
+                                        skills: selectedCertifiedPath.skills || [],
+                                        image: selectedCertifiedPath.image || ''
+                                    };
+                                    onPathConfirmed(fullPath);
+                                }}
+                                className="w-full bg-blue-600 hover:bg-blue-500 text-white py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-sm transition-all flex items-center justify-center gap-3 shadow-2xl shadow-blue-600/40 transform hover:-translate-y-1 active:scale-95"
+                            >
+                                <Award className="w-5 h-5" />
+                                S'inscrire au Parcours
+                            </button>
+                        </div>
                     )}
                 </div>
             </div>

@@ -1524,8 +1524,9 @@
                             "id": "lpc2",
                             "title": "Architecture de l'EVM",
                             "duration": "1.5 heures",
-                            "status": "in-progress",
+                            "status": "completed",
                             "isLocked": false,
+                            "score": 85,
                             "modules": [
                                 {
                                     "id": "lpcm3",
@@ -1566,7 +1567,8 @@
                         "title": "Examen Module 1",
                         "duration": "1 heure",
                         "passingScore": 70,
-                        "status": "not-started"
+                        "status": "not-started",
+                        "globalDeadline": "2024-03-01T23:59:59Z"
                     }
                 },
                 {
@@ -1619,6 +1621,7 @@
                 "title": "Projet Final: DEX Simplifié",
                 "description": "Construire un échange décentralisé fonctionnel",
                 "deadline": "2024-03-15",
+                "globalDeadline": "2024-03-15T23:59:59Z",
                 "status": "locked"
             }
         },

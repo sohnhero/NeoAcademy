@@ -3,20 +3,23 @@ import React from 'react';
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer } from 'recharts';
 import { Play, Award, TrendingUp, Clock, ArrowRight, Zap, ChevronRight, Target, History, Trophy, BookOpen, AlertTriangle, CheckCircle2, Lock } from 'lucide-react';
 import { MOCK_BADGES, MOCK_STATS, MOCK_DAILY_GOALS, MOCK_RECENT_ACTIVITY, MOCK_LEARNING_PATHS } from '../constants';
-import { LearningPath, PathModule, Course } from '../types';
+import { LearningPath, PathModule, Course, ProjectPlan } from '../types';
+import DeadlineQuickView from './DeadlineQuickView';
 
 interface DashboardProps {
   currentPath?: LearningPath;
   onCourseSelect: (pathId: string, moduleId: string, courseId: string) => void;
   onNavigateToPortfolio?: () => void;
   onNavigateToPath?: () => void;
+  onOpenPlanning?: (type: 'module' | 'final', id: string, deadline: string, title: string, initialPlan?: ProjectPlan) => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({
   currentPath = MOCK_LEARNING_PATHS[0],
   onCourseSelect,
   onNavigateToPortfolio,
-  onNavigateToPath
+  onNavigateToPath,
+  onOpenPlanning
 }) => {
   if (!currentPath) {
     return (
@@ -40,6 +43,28 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <div className="space-y-10 max-w-7xl mx-auto pb-20">
+      {/* Intelligent Deadline Delivery System - Quick Access */}
+      {currentPath.modules.filter(m => m.exam?.plan).map(m => (
+        m.exam && m.exam.plan && m.exam.globalDeadline && (
+          <div key={m.id} className="animate-in fade-in slide-in-from-top-4 duration-700">
+            <DeadlineQuickView
+              plan={m.exam.plan}
+              globalDeadline={m.exam.globalDeadline}
+              onOpenPlanning={() => onOpenPlanning?.('module', m.id, m.exam!.globalDeadline!, m.exam!.title, m.exam!.plan)}
+            />
+          </div>
+        )
+      ))}
+      {currentPath.finalProject?.plan && currentPath.finalProject.globalDeadline && (
+        <div className="animate-in fade-in slide-in-from-top-4 duration-700">
+          <DeadlineQuickView
+            plan={currentPath.finalProject.plan}
+            globalDeadline={currentPath.finalProject.globalDeadline}
+            onOpenPlanning={() => onOpenPlanning?.('final', currentPath.finalProject!.id, currentPath.finalProject!.globalDeadline, currentPath.finalProject!.title, currentPath.finalProject!.plan)}
+          />
+        </div>
+      )}
+
 
       {/* Primary Hero - Current Learning Path */}
       <section className="relative overflow-hidden rounded-[40px] p-10 bg-blue-600 group shadow-2xl shadow-blue-500/20">

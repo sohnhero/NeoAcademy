@@ -5,9 +5,10 @@ import {
   BookOpen, Target, Sparkles, Send, Zap, ArrowRight, ShieldCheck,
   Users, X, Play, FileText, BarChart3, Headphones, Code, Award, Terminal
 } from 'lucide-react';
-import { Course, LearningPath, PathModule, Remediation } from '../types';
+import { Course, LearningPath, PathModule, Remediation, ProjectPlan } from '../types';
 import { askTutor, evaluateModule } from '../services/geminiService';
 import RemediationView from './RemediationView';
+import DeadlineQuickView from './DeadlineQuickView';
 
 interface CourseViewProps {
   learningPath: LearningPath;
@@ -16,7 +17,7 @@ interface CourseViewProps {
   showIDE?: boolean;
   onCourseComplete: (moduleId: string, courseId: string, score: number) => void;
   onBack?: () => void;
-  onOpenIDE?: (context: { type: 'course' | 'module' | 'final'; title: string; courseId?: string }) => void;
+  onOpenIDE?: (context: { type: 'course' | 'module' | 'final'; title: string; courseId?: string; moduleId?: string }) => void;
   onNavigate: (moduleId: string, courseId: string) => void;
   onOpenCoachHelp?: (course: string, module: string, blocking?: string) => void;
   activeRemediation?: { remediation: Remediation, course: Course } | null;
@@ -24,6 +25,7 @@ interface CourseViewProps {
   onSelectRemediation?: () => void;
   onSelectCourse?: () => void;
   onRemediationComplete?: () => void;
+  onOpenPlanning?: (type: 'module' | 'final', id: string, deadline: string, title: string, initialPlan?: ProjectPlan) => void;
 }
 
 const CourseView: React.FC<CourseViewProps> = ({
@@ -40,7 +42,8 @@ const CourseView: React.FC<CourseViewProps> = ({
   isShowingRemediation = false,
   onSelectRemediation,
   onSelectCourse,
-  onRemediationComplete
+  onRemediationComplete,
+  onOpenPlanning
 }) => {
   // Local state for sidebar accordions
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set([activeModuleId]));
@@ -271,6 +274,46 @@ const CourseView: React.FC<CourseViewProps> = ({
               </div>
             );
           })}
+        </div>
+
+        {/* Project Planning Context in Sidebar */}
+        <div className="mt-8 space-y-4">
+          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 px-2 flex items-center gap-2">
+            <Target className="w-3 h-3" /> Focus Projet
+          </h3>
+
+          {/* Active Module Plan */}
+          {activeModule.exam?.plan && activeModule.exam.globalDeadline && (
+            <div className="px-1 transform scale-95 origin-top">
+              <DeadlineQuickView
+                plan={activeModule.exam.plan}
+                globalDeadline={activeModule.exam.globalDeadline}
+                onOpenPlanning={() => onOpenPlanning?.('module', activeModule.id, activeModule.exam!.globalDeadline!, activeModule.exam!.title, activeModule.exam!.plan)}
+              />
+            </div>
+          )}
+
+          {/* Fallback for other modules or Final Project if applicable */}
+          {!activeModule.exam?.plan && activeModule.status === 'in-progress' && activeModule.exam?.globalDeadline && (
+            <button
+              onClick={() => onOpenPlanning?.('module', activeModule.id, activeModule.exam!.globalDeadline!, activeModule.exam!.title)}
+              className="w-full py-4 bg-blue-600/5 hover:bg-blue-600/10 border border-blue-500/20 rounded-2xl text-[10px] font-black uppercase tracking-widest text-blue-400 transition-all flex flex-col items-center gap-2"
+            >
+              <Target className="w-4 h-4" />
+              Initialiser ma Stratégie
+            </button>
+          )}
+
+          {learningPath.finalProject?.plan && (
+            <div className="px-1 transform scale-95 origin-top border-t border-slate-800 pt-4 mt-4">
+              <div className="text-[9px] font-bold text-slate-500 uppercase mb-2 px-1">Projet de Fin de Parcours</div>
+              <DeadlineQuickView
+                plan={learningPath.finalProject.plan}
+                globalDeadline={learningPath.finalProject.globalDeadline}
+                onOpenPlanning={() => onOpenPlanning?.('final', learningPath.finalProject!.id, learningPath.finalProject!.globalDeadline, learningPath.finalProject!.title, learningPath.finalProject!.plan)}
+              />
+            </div>
+          )}
         </div>
       </aside>
 

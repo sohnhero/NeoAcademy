@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Sparkles, List, BookOpen, ChevronRight, ArrowRight, Target, Zap, CheckCircle2, Code, Shield, TrendingUp, Layers, Hexagon } from 'lucide-react';
+import { Sparkles, List, BookOpen, ChevronRight, ArrowRight, Target, Zap, CheckCircle2, Code, Shield, TrendingUp, Layers, Hexagon, Search, Filter, Clock, Star } from 'lucide-react';
 import { LearningPath, ExitProfile } from '../types';
 import { EXIT_PROFILES, PREDEFINED_PATHS_CATALOG, MOCK_LEARNING_PATHS } from '../constants';
 
@@ -20,6 +20,10 @@ const PathSelectionView: React.FC<PathSelectionViewProps> = ({ onPathSelected, o
     const [selectedProfile, setSelectedProfile] = useState<ExitProfile | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
     const [generatedPath, setGeneratedPath] = useState<LearningPath | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('Tous');
+
+    const categories = ['Tous', 'Développement', 'Sécurité', 'Infrastructure', 'DeFi'];
 
     const handleGeneratePath = async () => {
         if (!selectedProfile) return;
@@ -81,8 +85,8 @@ const PathSelectionView: React.FC<PathSelectionViewProps> = ({ onPathSelected, o
                                 setSelectedProfile(null);
                             }}
                             className={`flex-1 p-6 rounded-3xl border-2 transition-all text-left group ${isActive
-                                    ? 'border-blue-500 bg-blue-500/10'
-                                    : 'hover:border-blue-500/30'
+                                ? 'border-blue-500 bg-blue-500/10'
+                                : 'hover:border-blue-500/30'
                                 }`}
                             style={{
                                 backgroundColor: !isActive ? 'var(--bg-secondary)' : undefined,
@@ -128,8 +132,8 @@ const PathSelectionView: React.FC<PathSelectionViewProps> = ({ onPathSelected, o
                                         key={profile.id}
                                         onClick={() => setSelectedProfile(profile.id)}
                                         className={`p-6 rounded-3xl border-2 text-left transition-all group ${isSelected
-                                                ? 'border-blue-500 bg-blue-500/10'
-                                                : 'hover:border-blue-500/30'
+                                            ? 'border-blue-500 bg-blue-500/10'
+                                            : 'hover:border-blue-500/30'
                                             }`}
                                         style={{
                                             backgroundColor: !isSelected ? 'var(--bg-primary)' : undefined,
@@ -250,53 +254,136 @@ const PathSelectionView: React.FC<PathSelectionViewProps> = ({ onPathSelected, o
                             </p>
                         </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            {PREDEFINED_PATHS_CATALOG.map((path) => (
-                                <div
-                                    key={path.id}
-                                    className="group border rounded-3xl overflow-hidden hover:border-blue-500/30 transition-all"
-                                    style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
-                                >
-                                    <div
-                                        className="h-40 bg-cover bg-center relative"
-                                        style={{ backgroundImage: `url(${path.image})` }}
+                        {/* Search and Filter Bar */}
+                        <div className="flex flex-col md:flex-row gap-4 mb-8">
+                            <div className="relative flex-1 group">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                                <input
+                                    type="text"
+                                    placeholder="Rechercher un parcours, une compétence..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all text-sm"
+                                    style={{ color: 'var(--text-primary)' }}
+                                />
+                            </div>
+                            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                                {categories.map(cat => (
+                                    <button
+                                        key={cat}
+                                        onClick={() => setSelectedCategory(cat)}
+                                        className={`px-5 py-3 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${selectedCategory === cat
+                                            ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20'
+                                            : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/20'
+                                            }`}
                                     >
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                                        <div className="absolute bottom-4 left-6 right-6">
-                                            <span className="bg-blue-600 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-lg">
-                                                {path.exitProfileLabel}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className="p-6">
-                                        <h3 className="text-xl font-black tracking-tight mb-2" style={{ color: 'var(--text-primary)' }}>
-                                            {path.title}
-                                        </h3>
-                                        <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
-                                            {path.description}
-                                        </p>
-                                        <div className="flex flex-wrap gap-2 mb-4">
-                                            {path.skills?.slice(0, 4).map((skill, i) => (
-                                                <span key={i} className="px-2 py-1 text-[10px] font-bold uppercase tracking-widest rounded border" style={{ borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}>
-                                                    {skill}
-                                                </span>
-                                            ))}
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                                                {path.estimatedDuration}
-                                            </span>
-                                            <button
-                                                onClick={() => handleSelectPredefinedPath(path.id!)}
-                                                className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center gap-2 transition-all"
-                                            >
-                                                S'inscrire <ChevronRight className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
+                                        {cat}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            {PREDEFINED_PATHS_CATALOG
+                                .filter(path => {
+                                    const matchesSearch = path.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                        path.skills?.some(s => s.toLowerCase().includes(searchQuery.toLowerCase()));
+                                    const matchesCategory = selectedCategory === 'Tous' ||
+                                        (selectedCategory === 'Développement' && path.exitProfile === 'web3_developer' || path.exitProfile === 'fullstack_dapp') ||
+                                        (selectedCategory === 'Sécurité' && path.exitProfile === 'smart_contract_auditor' || path.exitProfile === 'security_expert') ||
+                                        (selectedCategory === 'Infrastructure' && path.exitProfile === 'blockchain_architect' || path.exitProfile === 'infra_engineer') ||
+                                        (selectedCategory === 'DeFi' && path.exitProfile === 'defi_specialist');
+
+                                    return matchesSearch && matchesCategory;
+                                })
+                                .map((path) => (
+                                    <div
+                                        key={path.id}
+                                        className="group relative border rounded-[32px] overflow-hidden hover:border-blue-500/30 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/10 flex flex-col"
+                                        style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
+                                    >
+                                        <div className="relative h-56 overflow-hidden">
+                                            <div
+                                                className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
+                                                style={{ backgroundImage: `url(${path.image})` }}
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+
+                                            {/* Badge Overlays */}
+                                            <div className="absolute top-4 left-4 flex gap-2">
+                                                <span className="bg-blue-600/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full shadow-lg">
+                                                    CERTIFIÉ
+                                                </span>
+                                                <span className="bg-white/10 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full border border-white/20">
+                                                    {path.estimatedDuration}
+                                                </span>
+                                            </div>
+
+                                            <div className="absolute bottom-6 left-6 right-6">
+                                                <div className="flex items-center gap-2 text-blue-400 text-[10px] font-black uppercase tracking-widest mb-2">
+                                                    <Zap className="w-3 h-3 fill-current" />
+                                                    <span>{path.exitProfileLabel}</span>
+                                                </div>
+                                                <h3 className="text-2xl font-black tracking-tight text-white leading-tight">
+                                                    {path.title}
+                                                </h3>
+                                            </div>
+                                        </div>
+
+                                        <div className="p-8 flex-1 flex flex-col">
+                                            <p className="text-sm mb-6 line-clamp-2 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                                                {path.description}
+                                            </p>
+
+                                            <div className="flex flex-wrap gap-2 mb-8 mt-auto">
+                                                {path.skills?.slice(0, 4).map((skill, i) => (
+                                                    <span key={i} className="px-3 py-1.5 bg-blue-500/5 text-blue-500 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-blue-500/10">
+                                                        {skill}
+                                                    </span>
+                                                ))}
+                                                {path.skills && path.skills.length > 4 && (
+                                                    <span className="px-3 py-1.5 bg-gray-500/5 text-gray-500 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-gray-500/10">
+                                                        +{path.skills.length - 4}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            <div className="flex items-center justify-between pt-6 border-t border-dashed border-white/10">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Niveau</span>
+                                                        <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Intermédiaire</span>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => handleSelectPredefinedPath(path.id!)}
+                                                    className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center gap-3 transition-all transform active:scale-95 shadow-xl shadow-blue-600/20"
+                                                >
+                                                    S'inscrire <ArrowRight className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                        </div>
+                        {PREDEFINED_PATHS_CATALOG.filter(path => {
+                            const matchesSearch = path.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                path.skills?.some(s => s.toLowerCase().includes(searchQuery.toLowerCase()));
+                            const matchesCategory = selectedCategory === 'Tous' ||
+                                (selectedCategory === 'Développement' && path.exitProfile === 'web3_developer' || path.exitProfile === 'fullstack_dapp') ||
+                                (selectedCategory === 'Sécurité' && path.exitProfile === 'smart_contract_auditor' || path.exitProfile === 'security_expert') ||
+                                (selectedCategory === 'Infrastructure' && path.exitProfile === 'blockchain_architect' || path.exitProfile === 'infra_engineer') ||
+                                (selectedCategory === 'DeFi' && path.exitProfile === 'defi_specialist');
+                            return matchesSearch && matchesCategory;
+                        }).length === 0 && (
+                                <div className="text-center py-20 bg-white/5 rounded-[32px] border border-dashed border-white/10">
+                                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <Search className="w-8 h-8 text-gray-500" />
+                                    </div>
+                                    <h3 className="text-xl font-bold mb-2">Aucun parcours trouvé</h3>
+                                    <p className="text-sm text-gray-400">Essayez d'ajuster votre recherche ou vos filtres.</p>
+                                </div>
+                            )}
                     </div>
                 )}
             </div>
