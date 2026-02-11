@@ -25,6 +25,7 @@ import CoachReviewView from './components/CoachReviewView';
 import Auth from './components/Auth';
 import LandingPage from './components/LandingPage';
 import AIProcessOverlay from './components/AIProcessOverlay';
+import WelcomeOverlay from './components/WelcomeOverlay';
 import DeadlinePlanningBoard from './components/DeadlinePlanningBoard';
 import DeadlineQuickView from './components/DeadlineQuickView';
 import { UserRole, LearningPath, PathModule, Course, LegacyCourse, Remediation, ProjectPlan } from './types';
@@ -68,6 +69,7 @@ const App: React.FC = () => {
 
   // AI Overlay State
   const [showAIOverlay, setShowAIOverlay] = useState(false);
+  const [showWelcomeOverlay, setShowWelcomeOverlay] = useState(false);
   const [overlayType, setOverlayType] = useState<'analysis' | 'generation' | 'audit' | 'remediation'>('analysis');
   const [pendingIDEAction, setPendingIDEAction] = useState<(() => void) | null>(null);
 
@@ -206,6 +208,13 @@ const App: React.FC = () => {
   // Handle path confirmation from PathFinder
   const handlePathConfirmed = (path: LearningPath) => {
     setCurrentLearningPath(path);
+    setShowWelcomeOverlay(true);
+    setShowPathFinder(false);
+    setIsNewUser(false);
+  };
+
+  const handleWelcomeComplete = () => {
+    setShowWelcomeOverlay(false);
     setShowPathFinder(false);
     setIsNewUser(false);
     setActiveTab('dashboard');
@@ -833,6 +842,11 @@ const App: React.FC = () => {
             setPlanningContext(null);
           }}
         />
+      )}
+
+      {/* Welcome Animation */}
+      {showWelcomeOverlay && (
+        <WelcomeOverlay onComplete={handleWelcomeComplete} />
       )}
 
       {/* Toast Notifications Container */}
