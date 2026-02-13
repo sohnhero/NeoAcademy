@@ -28,8 +28,9 @@ import AIProcessOverlay from './components/AIProcessOverlay';
 import WelcomeOverlay from './components/WelcomeOverlay';
 import DeadlinePlanningBoard from './components/DeadlinePlanningBoard';
 import DeadlineQuickView from './components/DeadlineQuickView';
-import { UserRole, LearningPath, PathModule, Course, LegacyCourse, Remediation, ProjectPlan } from './types';
-import { MOCK_LEARNING_PATHS, MOCK_COURSES } from './constants';
+import LiveSessionOverlay from './components/LiveSessionOverlay';
+import { UserRole, LearningPath, PathModule, Course, LegacyCourse, Remediation, ProjectPlan, Coach } from './types';
+import { MOCK_LEARNING_PATHS, MOCK_COURSES, MOCK_COACHES } from './constants';
 import api from './services/api';
 import { evaluateModule } from './services/geminiService';
 
@@ -89,6 +90,14 @@ const App: React.FC = () => {
     id: string;
     subBlocks?: { id: string; title: string }[];
     initialPlan?: ProjectPlan
+  } | null>(null);
+
+  // Live Coaching Session State
+  const [activeLiveSession, setActiveLiveSession] = useState<{
+    type: 'module' | 'final';
+    id: string;
+    title: string;
+    coach: Coach;
   } | null>(null);
 
   // Legacy State (for admin/coach views)
@@ -525,6 +534,16 @@ const App: React.FC = () => {
               setSelectedStudentId(sid);
               setActiveTab('cohort');
             }}
+            onStartLiveSession={(studentId, type, title) => {
+              setActiveLiveSession({
+                type: type as 'module' | 'final',
+                id: studentId,
+                title: title,
+                coach: MOCK_COACHES[0]
+              });
+              toast.info(`Session Live démarrée. Connexion neurale établie.`, { theme: 'dark' });
+            }}
+            activeSession={activeLiveSession}
           />;
         }
         if (userRole === 'admin') return <AdminDashboard onGoToConfig={() => setActiveTab('admin-config')} />;
@@ -711,11 +730,12 @@ const App: React.FC = () => {
         blockingPoint={coachContext.blocking}
       />
 
-      {/* Full-Screen IDE Environment - Rendered outside Layout to cover everything */}
       {showIDE && ideContext && (
         <ExerciseIDEView
           exerciseType={ideContext.type}
           title={ideContext.title}
+          isLiveSession={!!activeLiveSession && activeLiveSession.id === (ideContext.moduleId || ideContext.id)}
+          coachName={activeLiveSession?.coach.name}
           description={
             ideContext.type === 'course'
               ? "Implémentez les concepts appris en créant un smart contract fonctionnel."
@@ -867,6 +887,20 @@ const App: React.FC = () => {
       {/* Welcome Animation */}
       {showWelcomeOverlay && (
         <WelcomeOverlay onComplete={handleWelcomeComplete} />
+      )}
+
+      {/* Live Coaching Session Overlay */}
+      {activeLiveSession && (
+        <LiveSessionOverlay
+          sessionType={activeLiveSession.type}
+          targetTitle={activeLiveSession.title}
+          coachName={activeLiveSession.coach.name}
+          coachAvatar={activeLiveSession.coach.avatar}
+          onEndSession={() => {
+            setActiveLiveSession(null);
+            toast.warn("Session Live terminée.", { theme: 'dark' });
+          }}
+        />
       )}
 
       {/* Toast Notifications Container */}

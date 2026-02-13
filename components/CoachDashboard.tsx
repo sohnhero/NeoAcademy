@@ -11,13 +11,17 @@ interface CoachDashboardProps {
   showOnlyInsights?: boolean;
   onReviewStudent?: (reviewId: string) => void;
   onInterveneStudent?: (studentId: string) => void;
+  onStartLiveSession?: (studentId: string, type: string, title: string) => void;
+  activeSession?: any;
 }
 
 const CoachDashboard: React.FC<CoachDashboardProps> = ({
   onGoToInsights,
   showOnlyInsights,
   onReviewStudent,
-  onInterveneStudent
+  onInterveneStudent,
+  onStartLiveSession,
+  activeSession
 }) => {
   const [timeRange, setTimeRange] = useState('week');
 
@@ -150,9 +154,24 @@ const CoachDashboard: React.FC<CoachDashboardProps> = ({
                       <p className="text-[11px] leading-relaxed font-medium p-3 rounded-2xl border transition-colors" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>
                         "{student.blockInfo.aiSynthesis}"
                       </p>
-                      <button onClick={() => onInterveneStudent?.(student.id)} className="text-blue-500 hover:text-blue-600 font-black uppercase tracking-widest text-[10px] flex items-center justify-end gap-2 group-hover:gap-3 transition-all">
-                        Intervenir <ArrowRight className="w-3 h-3" />
-                      </button>
+                      <div className="flex items-center justify-end gap-3">
+                        <button
+                          onClick={() => onInterveneStudent?.(student.id)}
+                          className="text-slate-500 hover:text-slate-300 font-black uppercase tracking-widest text-[10px] flex items-center gap-2 transition-all"
+                        >
+                          Détails
+                        </button>
+                        <button
+                          onClick={() => onStartLiveSession?.(student.id, 'module', student.blockInfo.moduleTitle)}
+                          className={`font-black uppercase tracking-widest text-[10px] flex items-center gap-2 transition-all px-3 py-1.5 rounded-lg ${activeSession?.id === student.id ? 'bg-green-500/20 text-green-500 cursor-default' : 'bg-blue-600 text-white hover:bg-blue-500'}`}
+                        >
+                          {activeSession?.id === student.id ? (
+                            <>Session Connectée <CheckCircle className="w-3 h-3" /></>
+                          ) : (
+                            <>Démarrer Session Live <ArrowRight className="w-3 h-3" /></>
+                          )}
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>

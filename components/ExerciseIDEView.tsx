@@ -3,7 +3,7 @@ import {
     X, Play, Save, Terminal, File, Folder, ChevronRight, ChevronDown,
     Send, Clock, AlertTriangle, CheckCircle2, Code, FileText, Settings,
     Layout, Maximize2, Minimize2, RotateCcw, Copy, Download, ShieldAlert,
-    Eye, Edit3, Sparkles
+    Eye, Edit3, Sparkles, User
 } from 'lucide-react';
 
 interface ExerciseIDEViewProps {
@@ -15,6 +15,8 @@ interface ExerciseIDEViewProps {
     onSubmit: (code: string, output: string) => void;
     onCancel: () => void;
     onTestRemediation?: () => void;
+    isLiveSession?: boolean;
+    coachName?: string;
 }
 
 const ExerciseIDEView: React.FC<ExerciseIDEViewProps> = ({
@@ -25,7 +27,9 @@ const ExerciseIDEView: React.FC<ExerciseIDEViewProps> = ({
     timeLimit,
     onSubmit,
     onCancel,
-    onTestRemediation
+    onTestRemediation,
+    isLiveSession,
+    coachName
 }) => {
     const [code, setCode] = useState(exerciseType === 'course' ? `// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
@@ -189,6 +193,24 @@ contract YourContract {
                 </div>
             </header>
 
+            {/* Live Session Presence Badge */}
+            {isLiveSession && (
+                <div className="absolute top-16 right-8 z-[90] animate-in slide-in-from-top-4 duration-500">
+                    <div className="px-5 py-2.5 rounded-2xl bg-blue-600/10 backdrop-blur-xl border border-blue-500/30 flex items-center gap-3 shadow-2xl">
+                        <div className="relative">
+                            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center border border-white/10">
+                                <User className="w-4 h-4 text-white" />
+                            </div>
+                            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-[#0B0F19]" />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-black text-white uppercase tracking-widest leading-none mb-1">{coachName}</span>
+                            <span className="text-[8px] text-blue-400 font-bold uppercase tracking-tighter opacity-70">En train de regarder...</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Main Project Area */}
             <div className="flex-1 flex overflow-hidden">
                 {/* Project File Manager */}
@@ -216,7 +238,23 @@ contract YourContract {
                 </aside>
 
                 {/* Editor & Content Workspace */}
-                <main className="flex-1 flex flex-col relative bg-[#111827]">
+                <main className={`flex-1 flex flex-col relative transition-all duration-700 ${isLiveSession ? 'shadow-[inset_0_0_100px_rgba(59,130,246,0.1)] ring-2 ring-blue-500/20' : ''}`}>
+                    {isLiveSession && (
+                        <>
+                            <div className="absolute inset-0 pointer-events-none border-2 border-blue-500/10 z-50 animate-pulse" />
+                            {/* Simulated Coach Cursor */}
+                            <div className="absolute top-[30%] left-[40%] z-[60] pointer-events-none animate-bounce">
+                                <div className="relative">
+                                    <div className="w-0.5 h-6 bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.8)]" />
+                                    <div className="absolute -top-6 -left-2 px-2 py-0.5 rounded bg-blue-600 text-[8px] font-black text-white whitespace-nowrap shadow-lg">
+                                        {coachName} (Coach)
+                                    </div>
+                                </div>
+                            </div>
+                            {/* Active Highlight Simulation */}
+                            <div className="absolute top-[35%] left-[20%] right-[30%] h-6 bg-blue-500/10 border-y border-blue-500/30 blur-[1px] z-[55] pointer-events-none" />
+                        </>
+                    )}
                     {/* View Controls */}
                     <div className="h-12 border-b border-white/5 flex items-center justify-between px-6 bg-[#0B0F19]/50 backdrop-blur-xl">
                         <div className="flex items-center gap-1 group">
