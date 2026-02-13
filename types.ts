@@ -108,8 +108,10 @@ export interface LLMConfig {
 
 export interface PlannedTask {
   id: string;
+  originalId?: string; // ID of the course or module this task refers to
   title: string;
   durationInHours: number;
+  deadline?: string; // ISO string for individual milestone deadline
   status: 'pending' | 'completed' | 'on-track' | 'at-risk';
   order: number;
 }

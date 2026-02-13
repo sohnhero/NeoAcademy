@@ -43,28 +43,6 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <div className="space-y-10 max-w-7xl mx-auto pb-20">
-      {/* Intelligent Deadline Delivery System - Quick Access */}
-      {currentPath.modules.filter(m => m.exam?.plan).map(m => (
-        m.exam && m.exam.plan && m.exam.globalDeadline && (
-          <div key={m.id} className="animate-in fade-in slide-in-from-top-4 duration-700">
-            <DeadlineQuickView
-              plan={m.exam.plan}
-              globalDeadline={m.exam.globalDeadline}
-              onOpenPlanning={() => onOpenPlanning?.('module', m.id, m.exam!.globalDeadline!, m.exam!.title, m.exam!.plan)}
-            />
-          </div>
-        )
-      ))}
-      {currentPath.finalProject?.plan && currentPath.finalProject.globalDeadline && (
-        <div className="animate-in fade-in slide-in-from-top-4 duration-700">
-          <DeadlineQuickView
-            plan={currentPath.finalProject.plan}
-            globalDeadline={currentPath.finalProject.globalDeadline}
-            onOpenPlanning={() => onOpenPlanning?.('final', currentPath.finalProject!.id, currentPath.finalProject!.globalDeadline, currentPath.finalProject!.title, currentPath.finalProject!.plan)}
-          />
-        </div>
-      )}
-
 
       {/* Primary Hero - Current Learning Path */}
       <section className="relative overflow-hidden rounded-[40px] p-10 bg-blue-600 group shadow-2xl shadow-blue-500/20">
@@ -104,8 +82,38 @@ const Dashboard: React.FC<DashboardProps> = ({
             </div>
           </div>
 
-          <div className="flex justify-center lg:justify-end">
-            <div className="relative w-56 h-56">
+          <div className="flex flex-col md:flex-row items-center justify-center lg:justify-end gap-10">
+            {/* Objectif Livraison Integration */}
+            {currentPath.modules.find(m => m.exam?.plan)?.exam && (
+              <div className="hidden md:block">
+                {(() => {
+                  const m = currentPath.modules.find(m => m.exam?.plan);
+                  if (m?.exam?.plan && m.exam.globalDeadline) {
+                    return (
+                      <DeadlineQuickView
+                        isCompact
+                        plan={m.exam.plan}
+                        globalDeadline={m.exam.globalDeadline}
+                        onOpenPlanning={() => onOpenPlanning?.('module', m.id, m.exam!.globalDeadline!, m.exam!.title, m.exam!.plan)}
+                      />
+                    );
+                  }
+                  return null;
+                })()}
+              </div>
+            )}
+            {currentPath.finalProject?.plan && currentPath.finalProject.globalDeadline && (
+              <div className="hidden md:block">
+                <DeadlineQuickView
+                  isCompact
+                  plan={currentPath.finalProject.plan}
+                  globalDeadline={currentPath.finalProject.globalDeadline}
+                  onOpenPlanning={() => onOpenPlanning?.('final', currentPath.finalProject!.id, currentPath.finalProject!.globalDeadline, currentPath.finalProject!.title, currentPath.finalProject!.plan)}
+                />
+              </div>
+            )}
+
+            <div className="relative w-56 h-56 flex-shrink-0">
               <svg className="w-full h-full transform -rotate-90 filter drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
                 <circle cx="112" cy="112" r="100" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="14" />
                 <circle

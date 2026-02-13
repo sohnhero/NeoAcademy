@@ -87,6 +87,7 @@ const App: React.FC = () => {
     deadline: string;
     title: string;
     id: string;
+    subBlocks?: { id: string; title: string }[];
     initialPlan?: ProjectPlan
   } | null>(null);
 
@@ -453,7 +454,8 @@ const App: React.FC = () => {
                   type: 'module',
                   id: module.id,
                   title: module.exam.title,
-                  deadline: module.exam.globalDeadline
+                  deadline: module.exam.globalDeadline,
+                  subBlocks: module.courses.map(c => ({ id: c.id, title: c.title }))
                 });
                 setShowPlanningBoard(true);
                 return; // Interrupt IDE opening to show planning first
@@ -468,7 +470,8 @@ const App: React.FC = () => {
                   type: 'final',
                   id: currentLearningPath.finalProject.id,
                   title: currentLearningPath.finalProject.title,
-                  deadline: currentLearningPath.finalProject.globalDeadline
+                  deadline: currentLearningPath.finalProject.globalDeadline,
+                  subBlocks: currentLearningPath.modules.map(m => ({ id: m.id, title: m.title }))
                 });
                 setShowPlanningBoard(true);
                 return; // Interrupt IDE opening
@@ -496,7 +499,14 @@ const App: React.FC = () => {
             setIsShowingRemediation(false);
           }}
           onOpenPlanning={(type, id, deadline, title, initialPlan) => {
-            setPlanningContext({ type, id, deadline, title, initialPlan });
+            let subBlocks: { id: string; title: string }[] = [];
+            if (type === 'module') {
+              const module = currentLearningPath?.modules.find(m => m.id === id);
+              if (module) subBlocks = module.courses.map(c => ({ id: c.id, title: c.title }));
+            } else {
+              if (currentLearningPath) subBlocks = currentLearningPath.modules.map(m => ({ id: m.id, title: m.title }));
+            }
+            setPlanningContext({ type, id, deadline, title, initialPlan, subBlocks });
             setShowPlanningBoard(true);
           }}
         />
@@ -529,7 +539,14 @@ const App: React.FC = () => {
             onNavigateToPortfolio={() => setActiveTab('portfolio')}
             onNavigateToPath={() => setActiveTab('profile')}
             onOpenPlanning={(type, id, deadline, title, initialPlan) => {
-              setPlanningContext({ type, id, deadline, title, initialPlan });
+              let subBlocks: { id: string; title: string }[] = [];
+              if (type === 'module') {
+                const module = currentLearningPath?.modules.find(m => m.id === id);
+                if (module) subBlocks = module.courses.map(c => ({ id: c.id, title: c.title }));
+              } else {
+                if (currentLearningPath) subBlocks = currentLearningPath.modules.map(m => ({ id: m.id, title: m.title }));
+              }
+              setPlanningContext({ type, id, deadline, title, initialPlan, subBlocks });
               setShowPlanningBoard(true);
             }}
           />
@@ -565,7 +582,8 @@ const App: React.FC = () => {
                     type: 'module',
                     id: module.id,
                     title: module.exam.title,
-                    deadline: module.exam.globalDeadline
+                    deadline: module.exam.globalDeadline,
+                    subBlocks: module.courses.map(c => ({ id: c.id, title: c.title }))
                   });
                   setShowPlanningBoard(true);
                 } else {
@@ -586,7 +604,8 @@ const App: React.FC = () => {
                     type: 'final',
                     id: currentLearningPath.finalProject.id,
                     title: currentLearningPath.finalProject.title,
-                    deadline: currentLearningPath.finalProject.globalDeadline
+                    deadline: currentLearningPath.finalProject.globalDeadline,
+                    subBlocks: currentLearningPath.modules.map(m => ({ id: m.id, title: m.title }))
                   });
                   setShowPlanningBoard(true);
                 } else {
@@ -836,6 +855,7 @@ const App: React.FC = () => {
           globalDeadline={planningContext.deadline}
           projectType={planningContext.type}
           initialPlan={planningContext.initialPlan}
+          subBlocks={planningContext.subBlocks}
           onSavePlan={handleSaveProjectPlan}
           onCancel={() => {
             setShowPlanningBoard(false);

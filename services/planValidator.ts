@@ -7,82 +7,108 @@ export interface ValidationResult {
     warnings: string[];
     suggestions: string[];
     riskLevel: 'low' | 'medium' | 'high';
+    pacingHealth?: 'relaxed' | 'balanced' | 'aggressive';
 }
 
 /**
  * Validates a project plan against a global deadline.
- * Global deadline is assumed to be the total hours available from the start.
  */
 export const validatePlan = (
     plan: ProjectPlan,
-    globalDeadlineHours: number,
+    globalDeadlineISO: string,
     projectType: 'module' | 'final'
 ): ValidationResult => {
-    const totalAllocated = plan.tasks.reduce((acc, task) => acc + task.durationInHours, 0);
     const warnings: string[] = [];
     const suggestions: string[] = [];
     let riskLevel: 'low' | 'medium' | 'high' = 'low';
 
-    // 1. Check if total plan fits in deadline
-    if (totalAllocated > globalDeadlineHours) {
-        warnings.push(`Votre planification (${totalAllocated}h) dépasse la date limite globale (${globalDeadlineHours}h).`);
-        riskLevel = 'high';
-    }
+    // 1. Check individual deadlines
+    const tasksWithDeadlines = [...plan.tasks].filter(t => t.deadline).sort((a, b) => a.order - b.order);
+    let lastDeadline: Date | null = null;
+    const globalDeadlineDate = new Date(globalDeadlineISO);
 
-    // 2. Check for realistic task distributions (Smart Layer)
-    const coreTasks = plan.tasks.filter(t =>
-        t.title.toLowerCase().includes('audit') ||
-        t.title.toLowerCase().includes('critique') ||
-        t.title.toLowerCase().includes('développement') ||
-        t.title.toLowerCase().includes('architecture')
-    );
+    tasksWithDeadlines.forEach(task => {
+        const taskDeadline = new Date(task.deadline!);
 
-    coreTasks.forEach(task => {
-        const minRecommended = projectType === 'final' ? 4 : 2;
-        if (task.durationInHours < minRecommended) {
-            warnings.push(`La tâche "${task.title}" semble sous-estimée (${task.durationInHours}h). Nous suggérons au moins ${minRecommended}h.`);
-            riskLevel = riskLevel === 'high' ? 'high' : 'medium';
+        if (taskDeadline > globalDeadlineDate) {
+            warnings.push(`Le jalon "${task.title}" dépasse la deadline finale du projet.`);
+            riskLevel = 'high';
         }
+
+        if (lastDeadline && taskDeadline < lastDeadline) {
+            warnings.push(`Les deadlines sont incohérentes : "${task.title}" est prévu avant un jalon précédent.`);
+            riskLevel = 'high';
+        }
+        lastDeadline = taskDeadline;
     });
 
-    // 3. Proactive Pacing Suggestions
-    if (totalAllocated < globalDeadlineHours * 0.5) {
-        suggestions.push("Votre planning est très optimiste. Pensez à ajouter des jalons pour la revue de code ou les tests.");
+    // 2. Calculate Pacing Health
+    let pacingHealth: 'relaxed' | 'balanced' | 'aggressive' = 'balanced';
+    if (tasksWithDeadlines.length > 0) {
+        const totalDays = Math.max(1, Math.ceil((globalDeadlineDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)));
+        const daysPerTask = totalDays / plan.tasks.length;
+
+        if (daysPerTask > 7) pacingHealth = 'relaxed';
+        else if (daysPerTask < 3) pacingHealth = 'aggressive';
+    }
+
+    if (tasksWithDeadlines.length < plan.tasks.length && plan.tasks.length > 0) {
+        suggestions.push("Pensez à assigner une deadline à chaque jalon pour un meilleur suivi.");
     }
 
     if (plan.tasks.length < 3) {
-        suggestions.push("Découper votre projet en plus de jalons (3-5) vous aidera à mieux suivre votre progression.");
+        suggestions.push("Découper votre projet en plus de jalons vous aidera à mieux suivre votre progression.");
     }
 
     return {
-        isValid: totalAllocated <= globalDeadlineHours,
-        totalHours: totalAllocated,
-        availableHours: globalDeadlineHours,
+        isValid: (riskLevel as string) !== 'high',
+        totalHours: 0,
+        availableHours: 0,
         warnings,
         suggestions,
-        riskLevel
+        riskLevel,
+        pacingHealth
     };
 };
 
 /**
- * Suggests a default distribution of time for a given project type.
+ * Suggests distributed dates for tasks based on available time.
+ */
+export const suggestDistributedDates = (
+    taskCount: number,
+    globalDeadlineISO: string
+): string[] => {
+    const start = new Date();
+    const end = new Date(globalDeadlineISO);
+    const totalMs = end.getTime() - start.getTime();
+    const interval = totalMs / (taskCount + 1);
+
+    const dates: string[] = [];
+    for (let i = 1; i <= taskCount; i++) {
+        const date = new Date(start.getTime() + interval * i);
+        dates.push(date.toISOString());
+    }
+    return dates;
+};
+
+/**
+ * Suggests default jalons for a project type.
  */
 export const suggestDefaultPlan = (
-    globalDeadlineHours: number,
     projectType: 'module' | 'final'
 ): PlannedTask[] => {
     if (projectType === 'module') {
         return [
-            { id: 't1', title: 'Analyse du cahier des charges', durationInHours: Math.floor(globalDeadlineHours * 0.2), status: 'pending', order: 1 },
-            { id: 't2', title: 'Exécution technique / Audit', durationInHours: Math.floor(globalDeadlineHours * 0.5), status: 'pending', order: 2 },
-            { id: 't3', title: 'Rédaction du rapport final', durationInHours: Math.floor(globalDeadlineHours * 0.3), status: 'pending', order: 3 },
+            { id: 't1', title: 'Analyse du cahier des charges', durationInHours: 0, status: 'pending', order: 1 },
+            { id: 't2', title: 'Exécution technique / Audit', durationInHours: 0, status: 'pending', order: 2 },
+            { id: 't3', title: 'Rédaction du rapport final', durationInHours: 0, status: 'pending', order: 3 },
         ];
     } else {
         return [
-            { id: 't1', title: 'Conception & Architecture', durationInHours: Math.floor(globalDeadlineHours * 0.25), status: 'pending', order: 1 },
-            { id: 't2', title: 'Développement core features', durationInHours: Math.floor(globalDeadlineHours * 0.4), status: 'pending', order: 2 },
-            { id: 't3', title: 'Sécurité & Tests unitaires', durationInHours: Math.floor(globalDeadlineHours * 0.2), status: 'pending', order: 3 },
-            { id: 't4', title: 'Finalisation & Documentation', durationInHours: Math.floor(globalDeadlineHours * 0.15), status: 'pending', order: 4 },
+            { id: 't1', title: 'Conception & Architecture', durationInHours: 0, status: 'pending', order: 1 },
+            { id: 't2', title: 'Développement core features', durationInHours: 0, status: 'pending', order: 2 },
+            { id: 't3', title: 'Sécurité & Tests unitaires', durationInHours: 0, status: 'pending', order: 3 },
+            { id: 't4', title: 'Finalisation & Documentation', durationInHours: 0, status: 'pending', order: 4 },
         ];
     }
 };

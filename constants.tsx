@@ -225,7 +225,7 @@ export const MOCK_LEARNING_PATHS: LearningPath[] = [
           status: 'completed',
           score: 88,
           attempts: 1,
-          globalDeadline: '2024-03-01T23:59:59Z',
+          globalDeadline: '2026-03-01T23:59:59Z',
           questions: [
             { id: 'q1', type: 'text', question: 'Expliquez le problème du double spending.', points: 25 },
             { id: 'q2', type: 'multiple-choice', question: 'Quel algorithme de hachage utilise Ethereum?', points: 15 },
@@ -381,7 +381,7 @@ export const MOCK_LEARNING_PATHS: LearningPath[] = [
           passingScore: 75,
           status: 'not-started',
           attempts: 0,
-          globalDeadline: '2024-03-15T23:59:59Z',
+          globalDeadline: '2026-02-20T23:59:59Z',
           questions: [
             { id: 'mq1', type: 'code', question: 'Créez un contrat protégé contre la réentrance.', points: 100 }
           ]
@@ -612,7 +612,7 @@ export const MOCK_LEARNING_PATHS: LearningPath[] = [
           status: 'pending'
         }
       ],
-      globalDeadline: '2024-04-30T23:59:59Z',
+      globalDeadline: '2026-12-30T23:59:59Z',
       status: 'locked'
     }
   }
