@@ -4,7 +4,8 @@ import {
     MoreHorizontal, Share2, MessageSquare, BrainCircuit, Activity,
     User, Sparkles, Zap, Send, Settings, PenTool, Eraser, StickyNote,
     MousePointer2, Plus, GripVertical, Wand2, Link2, Box, Info, Target,
-    Layers, Cpu, ShieldCheck
+    Layers, Cpu, ShieldCheck, Terminal, Globe, Database, Container,
+    GitBranch, Server, Workflow, Search, Filter, AlertTriangle
 } from 'lucide-react';
 
 interface NeuralNode {
@@ -13,7 +14,7 @@ interface NeuralNode {
     y: number;
     title: string;
     content: string;
-    type: 'logic' | 'security' | 'architecture' | 'ai-insight';
+    type: 'logic' | 'security' | 'architecture' | 'ai-insight' | 'devops' | 'infra' | 'database';
     isExpanded: boolean;
 }
 
@@ -73,19 +74,42 @@ const LiveSessionOverlay: React.FC<LiveSessionOverlayProps> = ({
     const handleMagicWand = () => {
         setIsMagicWandActive(true);
         setTimeout(() => {
-            const newNode: NeuralNode = {
-                id: `n${Date.now()}`,
-                x: 300 + Math.random() * 100,
-                y: 300 + Math.random() * 100,
-                title: 'AI Audit Insight',
-                content: 'Potential gas optimization identified in loop operations.',
-                type: 'ai-insight',
-                isExpanded: true
-            };
+            const isDevOps = targetTitle.toLowerCase().includes('devops') || targetTitle.toLowerCase().includes('pipeline') || targetTitle.toLowerCase().includes('cloud');
+            const isSWE = targetTitle.toLowerCase().includes('software') || targetTitle.toLowerCase().includes('app') || targetTitle.toLowerCase().includes('service');
+
+            let newNode: NeuralNode;
+            if (isDevOps) {
+                const scenarios = [
+                    { title: 'CI/CD Pipeline Leak', content: 'Detected sensitive env variables in logs.', type: 'devops' as const },
+                    { title: 'K8s Health Check', content: 'Liveness probe failing on cluster-A.', type: 'infra' as const },
+                    { title: 'Docker Size Alert', content: 'Artifact size exceeds 2GB. Multi-stage build recommended.', type: 'infra' as const }
+                ];
+                const s = scenarios[Math.floor(Math.random() * scenarios.length)];
+                newNode = { id: `n${Date.now()}`, x: 300 + Math.random() * 200, y: 300 + Math.random() * 200, isExpanded: true, ...s };
+            } else if (isSWE) {
+                const scenarios = [
+                    { title: 'API Latency Spike', content: 'N+1 Query detected in UserResolver.', type: 'architecture' as const },
+                    { title: 'DB Deadlock', content: 'Transaction conflict on global_locks table.', type: 'database' as const },
+                    { title: 'Service Discovery', content: 'Unhealthy mapping between Auth & Core.', type: 'architecture' as const }
+                ];
+                const s = scenarios[Math.floor(Math.random() * scenarios.length)];
+                newNode = { id: `n${Date.now()}`, x: 300 + Math.random() * 200, y: 300 + Math.random() * 200, isExpanded: true, ...s };
+            } else {
+                newNode = {
+                    id: `n${Date.now()}`,
+                    x: 300 + Math.random() * 100,
+                    y: 300 + Math.random() * 100,
+                    title: 'Neural Insight',
+                    content: 'Analysis of current session context completed.',
+                    type: 'ai-insight',
+                    isExpanded: true
+                };
+            }
+
             setNodes(prev => [...prev, newNode]);
-            setConnections(prev => [...prev, { from: 'n1', to: newNode.id }]);
+            setConnections(prev => [...prev, { from: nodes[nodes.length - 1]?.id || 'n1', to: newNode.id }]);
             setIsMagicWandActive(false);
-        }, 1500);
+        }, 1200);
     };
 
     const toggleNodeExpansion = (id: string) => {
@@ -212,20 +236,26 @@ const LiveSessionOverlay: React.FC<LiveSessionOverlayProps> = ({
                                                 className={`p-1 rounded-full cursor-pointer transition-all duration-500 ${node.isExpanded ? 'scale-110' : 'hover:scale-105'}`}
                                             >
                                                 <div className={`w-12 h-12 rounded-full flex items-center justify-center border-4 border-[#0B0F19] shadow-2xl transition-colors ${node.type === 'security' ? 'bg-red-600' :
-                                                        node.type === 'architecture' ? 'bg-blue-600' :
-                                                            node.type === 'ai-insight' ? 'bg-purple-600' : 'bg-slate-600'
+                                                    node.type === 'architecture' ? 'bg-blue-600' :
+                                                        node.type === 'ai-insight' ? 'bg-purple-600' : 'bg-slate-600'
                                                     }`}>
                                                     {node.type === 'security' ? <ShieldCheck className="w-5 h-5 text-white" /> :
                                                         node.type === 'architecture' ? <Layers className="w-5 h-5 text-white" /> :
                                                             node.type === 'ai-insight' ? <Cpu className="w-5 h-5 text-white" /> :
-                                                                <Box className="w-5 h-5 text-white" />}
+                                                                node.type === 'devops' ? <Workflow className="w-5 h-5 text-white" /> :
+                                                                    node.type === 'infra' ? <Container className="w-5 h-5 text-white" /> :
+                                                                        node.type === 'database' ? <Database className="w-5 h-5 text-white" /> :
+                                                                            <Box className="w-5 h-5 text-white" />}
                                                 </div>
                                             </div>
 
                                             {/* Node Content Card */}
                                             <div className={`absolute top-16 left-1/2 -translate-x-1/2 w-64 p-5 rounded-[24px] bg-[#111827]/95 backdrop-blur-2xl border border-white/10 shadow-2xl transition-all duration-500 origin-top ${node.isExpanded ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-4 scale-95 pointer-events-none'}`}>
                                                 <div className="flex items-center justify-between mb-3">
-                                                    <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${node.type === 'security' ? 'bg-red-500/20 text-red-400' : 'bg-blue-500/20 text-blue-400'
+                                                    <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${node.type === 'security' ? 'bg-red-500/20 text-red-400' :
+                                                            node.type === 'devops' ? 'bg-orange-500/20 text-orange-400' :
+                                                                node.type === 'infra' ? 'bg-cyan-500/20 text-cyan-400' :
+                                                                    'bg-blue-500/20 text-blue-400'
                                                         }`}>{node.type}</span>
                                                     <Info className="w-3 h-3 text-slate-500" />
                                                 </div>
@@ -270,25 +300,54 @@ const LiveSessionOverlay: React.FC<LiveSessionOverlayProps> = ({
 
                     {/* Chat/Context Sidebar */}
                     <aside className="w-96 flex flex-col gap-6">
-                        <div className="flex-1 rounded-[40px] bg-[#111827] border border-white/5 p-6 flex flex-col">
-                            <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] mb-6">Neural Chat</span>
+                        <div className="flex-1 rounded-[40px] bg-[#111827] border border-white/5 p-6 flex flex-col overflow-hidden">
+                            <div className="flex items-center justify-between mb-6">
+                                <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em]">Neural Chat</span>
+                                {(targetTitle.toLowerCase().includes('devops') || targetTitle.toLowerCase().includes('software')) && (
+                                    <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-white/5 border border-white/10">
+                                        <Terminal className="w-3 h-3 text-slate-400" />
+                                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Shared Terminal</span>
+                                    </div>
+                                )}
+                            </div>
                             <div className="flex-1 overflow-auto space-y-4 pr-2 custom-scrollbar">
                                 <div className="p-4 rounded-2xl bg-blue-600/10 border border-blue-500/20 text-xs font-medium text-slate-300">
-                                    Coach : "J'ai jeté un œil à votre contrat. Regardons ensemble la fonction de retrait."
+                                    Coach : "J'ai jeté un œil à votre déploiement. Le container est en CrashLoopBackOff."
+                                </div>
+                                <div className="p-4 rounded-[20px] bg-black/40 border border-white/5 font-mono text-[10px] text-green-400/80 p-4 space-y-1">
+                                    <p>$ kubectl get pods</p>
+                                    <p className="text-red-400/70">NAME &nbsp; STATUS &nbsp; RESTARTS</p>
+                                    <p className="text-red-400/90">api-v2-7 &nbsp; Error &nbsp; 5 (2m ago)</p>
+                                    <div className="pt-2 flex items-center gap-2">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                                        <span className="text-blue-400/60 italic">Le coach analyse les logs...</span>
+                                    </div>
                                 </div>
                                 <div className="p-4 rounded-2xl bg-white/5 border border-white/5 text-xs font-medium text-slate-400 text-right">
-                                    Vous : "D'accord, je ne suis pas sûr de la gestion du gas ici."
+                                    Vous : "Ah, je vois. C'est peut-être la variable DATABASE_URL."
                                 </div>
                             </div>
                             <div className="mt-6 p-4 rounded-2xl bg-white/5 border border-white/5 flex items-center gap-3">
-                                <input type="text" placeholder="Message neurale..." className="flex-1 bg-transparent text-xs text-white outline-none" />
+                                <input type="text" placeholder="Entrez une commande ou message..." className="flex-1 bg-transparent text-xs text-white outline-none" />
                                 <button className="p-2.5 rounded-xl bg-blue-600 text-white"><Send className="w-4 h-4" /></button>
                             </div>
                         </div>
 
-                        <div className="p-8 rounded-[40px] bg-gradient-to-br from-blue-600 to-blue-400 text-white shadow-xl shadow-blue-500/20">
-                            <h5 className="font-black text-lg mb-2">Neural Sync</h5>
-                            <p className="text-[10px] font-bold uppercase opacity-80 leading-relaxed">Le coach peut désormais interagir directement avec votre code en temps réel.</p>
+                        <div className="p-8 rounded-[40px] bg-[#111827] border border-white/5 shadow-xl relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-30 transition-opacity">
+                                <Workflow className="w-20 h-20 text-blue-500" />
+                            </div>
+                            <div className="relative z-10">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-8 h-8 rounded-xl bg-blue-600/20 flex items-center justify-center">
+                                        <Activity className="w-4 h-4 text-blue-500" />
+                                    </div>
+                                    <h5 className="font-black text-sm text-white uppercase tracking-widest">Co-Pilote Neural</h5>
+                                </div>
+                                <p className="text-[11px] font-bold text-slate-400 leading-relaxed">
+                                    Espace de co-résolution actif. Votre coach peut visualiser votre terminal et vos logs cloud en direct.
+                                </p>
+                            </div>
                         </div>
                     </aside>
                 </main>
