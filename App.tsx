@@ -29,6 +29,7 @@ import WelcomeOverlay from './components/WelcomeOverlay';
 import DeadlinePlanningBoard from './components/DeadlinePlanningBoard';
 import DeadlineQuickView from './components/DeadlineQuickView';
 import LiveSessionOverlay from './components/LiveSessionOverlay';
+import CongratulationsModal from './components/CongratulationsModal';
 import { UserRole, LearningPath, PathModule, Course, LegacyCourse, Remediation, ProjectPlan, Coach } from './types';
 import { MOCK_LEARNING_PATHS, MOCK_COURSES, MOCK_COACHES } from './constants';
 import api from './services/api';
@@ -100,6 +101,15 @@ const App: React.FC = () => {
     coach: Coach;
   } | null>(null);
 
+  // Congratulations Modal State
+  const [showCongratsModal, setShowCongratsModal] = useState(false);
+  const [congratsData, setCongratsData] = useState<{
+    title: string;
+    type: 'course' | 'module' | 'badge';
+    score?: number;
+    badgeName?: string;
+  } | null>(null);
+
   // Legacy State (for admin/coach views)
   const [legacyCourses, setLegacyCourses] = useState<LegacyCourse[]>([]);
   const [availablePaths, setAvailablePaths] = useState<LearningPath[]>([]);
@@ -147,15 +157,12 @@ const App: React.FC = () => {
 
       // 1. User Feedback
       if (passed) {
-        toast.success(
-          `🌟 SUCCÈS NEURAL : Audit Validé !\n\nFélicitations ! Vous avez validé "${ideContext.title}" avec un score de ${result.score}%.\n\nLa suite de votre parcours est désormais débloquée.`,
-          {
-            position: 'top-center',
-            autoClose: 6000,
-            theme: 'dark',
-            style: { fontSize: '14px', fontWeight: 'bold' }
-          }
-        );
+        setCongratsData({
+          title: ideContext.title,
+          type: ideContext.type === 'course' ? 'course' : 'module',
+          score: result.score
+        });
+        setShowCongratsModal(true);
       } else {
         toast.error(
           `⚠️ ÉCHEC DE L'AUDIT\n\nVotre soumission n'a pas atteint les standards requis (Score: ${result.score}%).\n\n${ideContext.type === 'course' ? 'Un cours de remédiation a été généré.' : 'Veuillez revoir les concepts du module et réessayer.'}`,
@@ -362,10 +369,6 @@ const App: React.FC = () => {
       />
     );
   }
-
-
-
-  // Fetch data from API
 
   const renderContent = () => {
     // V2: Remediation View (Fallback for top-level access if needed)
@@ -902,6 +905,16 @@ const App: React.FC = () => {
           }}
         />
       )}
+
+      {/* Congratulations Modal */}
+      <CongratulationsModal
+        isVisible={showCongratsModal}
+        onClose={() => setShowCongratsModal(false)}
+        title={congratsData?.title || ''}
+        type={congratsData?.type || 'course'}
+        score={congratsData?.score}
+        badgeName={congratsData?.badgeName}
+      />
 
       {/* Toast Notifications Container */}
       <ToastContainer aria-label="Notifications" />

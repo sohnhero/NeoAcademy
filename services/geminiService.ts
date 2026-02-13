@@ -26,11 +26,11 @@ export const askTutor = async (question: string, context?: string, customContext
   try {
     const systemInstruction = customContext
       ? `INSTRUCTION SYSTÈME CUSTOM : ${customContext}\n\nContexte Standard : ${context}`
-      : `Tu es le "Tuteur Neural" de NeoAcademy AI, un LMS Web3 haut de gamme. 
-                 Ton ton est sophistiqué, technique et encourageant. 
-                 Tu aides les apprenants à combler le fossé entre la théorie abstraite de la blockchain et l'implémentation pratique.
+      : `Tu es le "Tuteur Neural" de NeoAcademy AI, un LMS Web3 d'élite basé sur une architecture de neurones artificiels. 
+                 Ton ton est sophistiqué, hautement technique mais pédagogue, inspirant la confiance et l'excellence.
+                 Tu ne te contentes pas de répondre factuellement ; tu contextualises chaque concept dans l'écosystème Web3 actuel (DeFi, ZK-Proofs, MEV, Gouvernance).
                  
-                 CONTEXTE (Module Actuel) : ${context || 'Apprentissage Web3 Général'}`;
+                 CONTEXTE D'IMMERSION (Module Actuel) : ${context || 'Ingénierie Blockchain Globale'}`;
 
     const ai = getAI();
     if (!ai) throw new Error("AI client not initialized");
@@ -38,14 +38,14 @@ export const askTutor = async (question: string, context?: string, customContext
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `${systemInstruction}
-                 REQUÊTE UTILISATEUR : ${question}
+                 REQUÊTE DE L'APPRENANT : ${question}
                  
-                 INSTRUCTIONS :
-                 1. Utilise une terminologie technique professionnelle en FRANÇAIS (ex: mentionne "trie d'état", "objets binaires larges", "stockage éphémère" si approprié).
-                 2. Fournis des extraits de code en Solidity ou Rust si cela aide à clarifier la logique.
-                 3. Garde un formatage propre avec des en-têtes et des listes markdown.
-                 4. Si l'utilisateur pose une question non technique, redirige-le poliment vers le parcours d'apprentissage.
-                 5. RÉPONDS EXCLUSIVEMENT EN FRANÇAIS.`,
+                 DIRECTIVES CRITIQUES :
+                 1. Utilise une terminologie technique de pointe en FRANÇAIS (ex: "calldata", "storage slot collision", "shadowing de variables").
+                 2. Architecture tes réponses avec des sections claires (Théorie, Exemple Pratique, Sécurité).
+                 3. Propose des extraits de code optimisés (Yul/Inline Assembly si pertinent pour l'optimisation de gas).
+                 4. Si la question est trop évasive, utilise la méthode socratique pour guider l'apprenant.
+                 5. RÉPONDS EXCLUSIVEMENT EN FRANÇAIS AVEC UNE PRÉCISION CHIRURGICALE.`,
       config: {
         temperature: 0.4,
         topP: 0.9,
@@ -90,12 +90,12 @@ export const evaluateModule = async (
                  ${userAnswer}
                  ---
                  
-                 EXIGENCES DE L'AUDIT (EN FRANÇAIS) :
-                 1. Évalue si l'apprenant a synthétisé le cœur technique du module.
-                 2. Vérifie la compréhension du "pourquoi".
+                 EXIGENCES DE L'AUDIT (CRITÈRES D'ÉLITE) :
+                 1. Rigueur Technique : L'apprenant a-t-il saisi les nuances architecturales (ex: gestion de la mémoire, risques de réentrance, optimisation des calculs) ?
+                 2. Synthèse : La réponse démontre-t-elle une capacité à relier la théorie à l'impact sur le réseau principal (Mainnet) ?
                  3. ${strictnessInstruction}
-                 4. Ignore les fautes d'orthographe mineures.
-                 5. FOURNIS LE FEEDBACK ET LES ÉTAPES SUIVANTES EN FRANÇAIS.`;
+                 4. Neutralité : Ignore les erreurs de forme, concentre-toi sur la substance logique.
+                 5. FEEDBACK UNIVERSEL : Rédige un audit constructif, technique et motivant en FRANÇAIS.`;
 
     const finalPrompt = customPrompt ? `${customPrompt}\n\n${basePrompt}` : basePrompt;
 

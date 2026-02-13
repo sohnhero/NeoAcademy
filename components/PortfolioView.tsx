@@ -4,8 +4,9 @@ import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer } fro
 import {
   Award, Share2, Download, ExternalLink, Hexagon, Globe, Code, Shield,
   CheckCircle2, ShieldCheck, Target, TrendingUp, Zap, Trophy, Star,
-  Terminal, Database, Unlock, Fuel, ChevronRight
+  Terminal, Database, Unlock, Fuel, ChevronRight, X, BrainCircuit, Globe2, Lock
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { MOCK_BADGES, MOCK_STATS } from '../constants';
 
 const PortfolioView: React.FC = () => {
@@ -226,124 +227,148 @@ const PortfolioView: React.FC = () => {
         </div>
       </div>
 
-      {/* Detail Credential Modal - Refined Premium Design */}
-      {selectedCredential && (
-        <div className="fixed inset-0 bg-black/95 backdrop-blur-xl z-[100] flex items-center justify-center p-6 animate-in fade-in duration-500">
-          <div className="border rounded-[60px] max-w-lg w-full p-12 shadow-[0_0_150px_rgba(37,99,235,0.15)] relative transition-all duration-700 overflow-hidden group/modal"
-            style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
-
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
-
-            <button
+      {/* Detail Credential Modal - Premium Neural Overhaul */}
+      <AnimatePresence>
+        {selectedCredential && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               onClick={() => setSelectedCredential(null)}
-              className="absolute top-10 right-10 p-4 rounded-3xl border hover:bg-red-500/10 hover:border-red-500/40 transition-all z-20 group/close"
-              style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}
+              className="absolute inset-0 bg-black/90 backdrop-blur-2xl"
+            />
+
+            {/* Modal Container */}
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative w-full max-w-lg bg-[#0a0f1d] border border-white/10 rounded-[40px] overflow-hidden shadow-[0_0_100px_rgba(59,130,246,0.2)] max-h-[95vh] overflow-y-auto"
             >
-              <X className="w-6 h-6 group-hover/close:rotate-90 transition-transform" />
-            </button>
-
-            <div className="relative z-10 space-y-12">
-              <div className="flex flex-col items-center gap-8">
-                <div className={`w-32 h-32 rounded-[45px] flex items-center justify-center border-2 shadow-2xl relative overflow-hidden group-hover/modal:scale-110 transition-transform duration-700`}
-                  style={{
-                    backgroundColor: 'var(--bg-primary)',
-                    borderColor: selectedCredential.type === 'certification' ? 'rgba(234,179,8,0.3)' : 'var(--border-color)',
-                    color: selectedCredential.type === 'certification' ? '#eab308' : selectedCredential.type === 'module' ? '#10b981' : '#3b82f6'
-                  }}>
-                  {selectedCredential.type === 'certification' ? <Trophy className="w-16 h-16" /> :
-                    selectedCredential.type === 'module' ? <Award className="w-16 h-16" /> :
-                      <Zap className="w-16 h-16" />}
-                  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent"></div>
-                </div>
-
-                <div className="text-center space-y-3">
-                  <h3 className="text-4xl font-black tracking-tighter" style={{ color: 'var(--text-primary)' }}>{selectedCredential.name}</h3>
-                  <div className="flex items-center justify-center gap-3">
-                    <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/10 shadow-lg ${selectedCredential.type === 'certification' ? 'bg-yellow-500/10 text-yellow-500' :
-                      selectedCredential.type === 'module' ? 'bg-emerald-500/10 text-emerald-500' :
-                        'bg-blue-500/10 text-blue-500'
-                      }`}>
-                      {selectedCredential.type.replace('-', ' ')}
-                    </span>
-                  </div>
-                </div>
+              {/* Dynamic Accent Background */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1], rotate: [0, 45, 0] }}
+                  transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                  className={`absolute -top-1/2 -right-1/2 w-full h-full rounded-full blur-[120px] opacity-20 ${selectedCredential.type === 'certification' ? 'bg-yellow-500' :
+                    selectedCredential.type === 'module' ? 'bg-emerald-500' : 'bg-blue-500'
+                    }`}
+                />
               </div>
 
-              <div className="space-y-8 rounded-[40px] p-10 border shadow-inner relative overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
-                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-3xl rounded-full"></div>
-
-                <p className="text-base text-center font-medium leading-relaxed opacity-80 italic" style={{ color: 'var(--text-secondary)' }}>
-                  "{selectedCredential.description}"
-                </p>
-
-                <div className="pt-8 grid grid-cols-2 gap-6 border-t border-white/5">
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-500">Date de Fusion</span>
-                    <p className="font-mono text-sm" style={{ color: 'var(--text-primary)' }}>{selectedCredential.dateEarned}</p>
-                  </div>
-                  <div className="space-y-1.5 text-right">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-500">Autorité</span>
-                    <p className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>NeoAcademy Engine</p>
-                  </div>
-                </div>
-
-                <div className="pt-6 space-y-3">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-500 text-center">Identifiant Haché (TX)</p>
-                  <div className="p-4 bg-black/40 rounded-2xl font-mono text-[11px] text-center opacity-70 break-all select-all hover:opacity-100 transition-opacity" style={{ color: 'var(--text-muted)' }}>
-                    0x2b8e7d8f9a0c1b2d3e4f5g6h7i8j9k0l1m2n3o4p
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-4">
-                <button className="flex-1 py-5 bg-white/5 border border-white/10 text-white font-black text-[11px] uppercase tracking-[0.3em] rounded-2xl hover:bg-white/10 transition-all flex items-center justify-center gap-3">
-                  <ExternalLink className="w-5 h-5" />
-                  <span>Explorer</span>
+              {/* Header Content */}
+              <div className="relative z-10 p-8 flex flex-col items-center text-center">
+                <button
+                  onClick={() => setSelectedCredential(null)}
+                  className="absolute top-8 right-8 text-slate-500 hover:text-white transition-colors p-2"
+                >
+                  <X className="w-5 h-5" />
                 </button>
-                <button className="flex-1 py-5 bg-blue-600 text-white font-black text-[11px] uppercase tracking-[0.3em] rounded-2xl glow-blue hover:bg-blue-500 transition-all shadow-xl shadow-blue-500/20">
-                  Partager
-                </button>
+
+                {/* Badge Visualization */}
+                <div className="relative mb-8">
+                  <motion.div
+                    initial={{ scale: 0, rotate: -20 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.1 }}
+                    className={`w-28 h-28 rounded-[35px] flex items-center justify-center shadow-2xl relative z-10 border-4 border-white/5 bg-gradient-to-br ${selectedCredential.type === 'certification' ? 'from-yellow-400 to-yellow-700 shadow-yellow-500/30' :
+                      selectedCredential.type === 'module' ? 'from-emerald-400 to-emerald-700 shadow-emerald-500/30' :
+                        'from-blue-400 to-blue-700 shadow-blue-500/30'
+                      }`}
+                  >
+                    {selectedCredential.type === 'certification' ? <Trophy className="w-14 h-14 text-white" /> :
+                      selectedCredential.type === 'module' ? <Award className="w-14 h-14 text-white" /> :
+                        <Zap className="w-14 h-14 text-white" />}
+                  </motion.div>
+
+                  {/* Decorative Neural Ring */}
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                    className="absolute -inset-4 border border-dashed border-white/10 rounded-full"
+                  />
+                </div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="space-y-4"
+                >
+                  <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.3em] border border-white/5 ${selectedCredential.type === 'certification' ? 'bg-yellow-500/10 text-yellow-500' :
+                    selectedCredential.type === 'module' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-blue-500/10 text-blue-400'
+                    }`}>
+                    {selectedCredential.type === 'certification' ? 'Certification Or' : 'Validé On-Chain'}
+                  </span>
+                  <h2 className="text-3xl font-black text-white tracking-tighter leading-tight">
+                    {selectedCredential.name}
+                  </h2>
+                  <p className="text-slate-400 text-sm max-w-sm mx-auto font-medium leading-relaxed italic">
+                    "{selectedCredential.description}"
+                  </p>
+                </motion.div>
+
+                {/* Neural Verification Details */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="w-full mt-8 grid grid-cols-1 gap-4"
+                >
+                  <div className="bg-white/5 border border-white/10 rounded-[24px] p-6 text-left relative overflow-hidden group/verify">
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-3">
+                        <BrainCircuit className="w-5 h-5 text-blue-500" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Neural Verification</span>
+                      </div>
+                      <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                    </div>
+
+                    <div className="space-y-6 text-sm">
+                      <div className="flex justify-between items-end border-b border-white/5 pb-4">
+                        <span className="text-slate-500 font-bold text-[11px] uppercase tracking-wider">Autorité de Fusion</span>
+                        <span className="text-white font-black text-xs uppercase tracking-widest">NeoAcademy Engine V2</span>
+                      </div>
+                      <div className="flex justify-between items-end border-b border-white/5 pb-4">
+                        <span className="text-slate-500 font-bold text-[11px] uppercase tracking-wider">Date d'Indexation</span>
+                        <span className="text-white font-mono text-xs">{selectedCredential.dateEarned}</span>
+                      </div>
+                      <div className="pt-2">
+                        <span className="text-slate-500 font-bold text-[11px] uppercase tracking-wider block mb-3">Transaction ID (Hachage)</span>
+                        <div className="p-4 bg-black/60 rounded-2xl font-mono text-[10px] text-blue-400/80 break-all select-all border border-blue-500/10 group-hover/verify:border-blue-500/30 transition-all">
+                          0x{Math.random().toString(16).substring(2, 10)}...{Math.random().toString(16).substring(2, 15)}6fb2c9
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="w-full grid grid-cols-2 gap-4 mt-8"
+                >
+                  <button className="py-5 bg-white/5 border border-white/10 text-white font-black text-[11px] uppercase tracking-[0.3em] rounded-[24px] hover:bg-white/10 transition-all flex items-center justify-center gap-3 group">
+                    <Share2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                    <span>Propager</span>
+                  </button>
+                  <button className={`py-5 text-white font-black text-[11px] uppercase tracking-[0.3em] rounded-[24px] transition-all shadow-xl flex items-center justify-center gap-3 group ${selectedCredential.type === 'certification' ? 'bg-yellow-600 hover:bg-yellow-500 shadow-yellow-600/20' :
+                    'bg-blue-600 hover:bg-blue-500 shadow-blue-600/20'
+                    }`}>
+                    <Globe2 className="w-5 h-5 group-hover:animate-spin-slow" />
+                    <span>Explorer</span>
+                  </button>
+                </motion.div>
               </div>
-            </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 };
-
-// Internal Lock Icon
-const Lock = ({ className }: { className?: string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-  </svg>
-);
-
-// Internal X Icon
-const X = ({ className }: { className?: string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <line x1="18" y1="6" x2="6" y2="18"></line>
-    <line x1="6" y1="6" x2="18" y2="18"></line>
-  </svg>
-);
 
 export default PortfolioView;

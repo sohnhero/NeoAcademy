@@ -3,8 +3,10 @@ import React, { useState, useMemo } from 'react';
 import {
   ChevronRight, ChevronDown, Lock, CheckCircle2, Circle, MessageSquare,
   BookOpen, Target, Sparkles, Send, Zap, ArrowRight, ShieldCheck,
-  Users, X, Play, FileText, BarChart3, Headphones, Code, Award, Terminal
+  Users, X, Play, FileText, BarChart3, Headphones, Code, Award, Terminal,
+  Lightbulb, BrainCircuit, RefreshCw
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Course, LearningPath, PathModule, Remediation, ProjectPlan } from '../types';
 import { askTutor, evaluateModule } from '../services/geminiService';
 import RemediationView from './RemediationView';
@@ -111,6 +113,17 @@ const CourseView: React.FC<CourseViewProps> = ({
       activeCourse.llmConfig?.tutorContext
     );
     setChatMessages(prev => [...prev, { role: 'assistant', content: tutorResponse || '' }]);
+  };
+
+  const neuralHooks = [
+    "Explique-moi ce concept avec une analogie.",
+    "Quels sont les risques de sécurité ici ?",
+    "Comment optimiser le Gas pour cette logique ?",
+    "Donne-moi un exemple d'implémentation."
+  ];
+
+  const handleHookClick = (hook: string) => {
+    setChatInput(hook);
   };
 
   // Visibility logic: hide bot during validation exercises
@@ -493,53 +506,104 @@ const CourseView: React.FC<CourseViewProps> = ({
         </div>
       )}
 
-      {/* Tutor Modal */}
-      {isChatOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[70] flex items-center justify-center p-4 transition-all duration-500">
-          <div className="border border-blue-500/20 w-full max-w-2xl h-[80vh] rounded-[48px] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
-            <header className="p-8 border-b flex items-center justify-between" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
-              <div className="flex items-center space-x-5">
-                <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                  <Sparkles className="w-6 h-6 text-white" />
+      {/* Neural Hub - Premium Floating Tutor */}
+      <AnimatePresence>
+        {isChatOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: 20, scale: 0.95 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 20, scale: 0.95 }}
+            className="fixed bottom-24 right-8 w-[450px] h-[650px] z-[70] flex flex-col overflow-hidden rounded-[40px] border border-blue-500/20 shadow-[0_40px_100px_rgba(0,0,0,0.6)] backdrop-blur-2xl bg-[#0a0f1d]/95"
+          >
+            {/* Header */}
+            <header className="p-6 border-b border-white/5 bg-gradient-to-r from-blue-600/10 to-purple-600/10 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                  <BrainCircuit className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>Tuteur IA Neural</h3>
-                  <p className="text-[10px] text-blue-500 font-mono font-bold uppercase tracking-widest">Expert Contextuel : {activeModule.title}</p>
+                  <h3 className="text-sm font-black text-white uppercase tracking-widest">Neural Hub</h3>
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                    <p className="text-[9px] text-blue-400 font-bold uppercase tracking-wider">Expert: {activeModule.title}</p>
+                  </div>
                 </div>
               </div>
               <button
                 onClick={() => setIsChatOpen(false)}
-                className="hover:text-white p-2 border rounded-xl hover:bg-red-500/10 hover:border-red-500/50 transition-all"
-                style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
+                className="hover:bg-white/5 p-2 rounded-xl transition-colors"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 text-slate-400" />
               </button>
             </header>
-            <div className="flex-1 overflow-y-auto p-10 space-y-8 scrollbar-thin">
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
               {chatMessages.length === 0 && (
-                <div className="text-center py-20 opacity-40">
-                  <Sparkles className="w-12 h-12 mx-auto mb-4" />
-                  <p className="font-bold uppercase tracking-[0.2em] text-xs">Analyse du module terminée.</p>
-                  <p className="text-sm mt-2 max-w-xs mx-auto">Je maîtrise les spécificités de "{activeModule.title}". Comment puis-je vous aider ?</p>
+                <div className="h-full flex flex-col items-center justify-center text-center px-6 opacity-60">
+                  <div className="w-20 h-20 rounded-full bg-blue-500/10 flex items-center justify-center mb-6 border border-blue-500/20">
+                    <Sparkles className="w-10 h-10 text-blue-400" />
+                  </div>
+                  <h4 className="text-white font-black uppercase text-sm mb-2">Analyse de Contexte Terminée</h4>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    Je suis prêt à vous assister sur les spécificités techniques de <strong>{activeModule.title}</strong>. Que souhaitez-vous approfondir ?
+                  </p>
                 </div>
               )}
               {chatMessages.map((msg, i) => (
-                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] p-6 rounded-[32px] ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-tr-none' : 'border rounded-tl-none font-medium'}`} style={{ backgroundColor: msg.role === 'assistant' ? 'var(--bg-secondary)' : undefined, borderColor: msg.role === 'assistant' ? 'var(--border-color)' : undefined, color: msg.role === 'assistant' ? 'var(--text-primary)' : undefined }}>
-                    <div className="text-sm prose prose-sm prose-invert">{msg.content}</div>
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  key={i}
+                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div className={`max-w-[85%] p-4 rounded-3xl ${msg.role === 'user'
+                    ? 'bg-blue-600 text-white rounded-tr-none shadow-lg shadow-blue-500/10'
+                    : 'bg-white/5 border border-white/10 text-slate-200 rounded-tl-none font-medium'
+                    }`}>
+                    <div className="text-[13px] prose prose-sm prose-invert leading-relaxed">{msg.content}</div>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
-            <form onSubmit={handleChat} className="p-8 border-t" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
-              <div className="flex items-center space-x-4 rounded-3xl border px-6 py-2" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
-                <input type="text" value={chatInput} onChange={(e) => setChatInput(e.target.value)} placeholder="Posez une question à l'expert..." className="flex-1 bg-transparent border-none outline-none py-4 text-sm" style={{ color: 'var(--text-primary)' }} />
-                <button type="submit" className="bg-blue-600 p-3 rounded-2xl shadow-lg shadow-blue-500/20 active:scale-90 transition-transform"><Send className="w-4 h-4 text-white" /></button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+
+            {/* Footer / Input */}
+            <div className="p-6 border-t border-white/5 bg-[#0f172a]/50">
+              {/* Neural Hooks (Suggestions) */}
+              {chatMessages.length === 0 && (
+                <div className="flex flex-wrap gap-2 mb-6">
+                  {neuralHooks.map((hook, i) => (
+                    <button
+                      key={i}
+                      onClick={() => handleHookClick(hook)}
+                      className="text-[10px] font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-full hover:bg-blue-500/20 transition-all flex items-center gap-2"
+                    >
+                      <Lightbulb className="w-3 h-3" />
+                      {hook}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <form onSubmit={handleChat} className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl px-4 py-1 group focus-within:border-blue-500/50 transition-all">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  placeholder="Posez votre question technique..."
+                  className="flex-1 bg-transparent border-none outline-none py-3 text-[13px] text-white placeholder:text-slate-600"
+                />
+                <button
+                  type="submit"
+                  className="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all"
+                >
+                  <Send className="w-4 h-4 text-white" />
+                </button>
+              </form>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
