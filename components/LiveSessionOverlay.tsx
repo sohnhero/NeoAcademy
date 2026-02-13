@@ -3,8 +3,24 @@ import {
     Video, VideoOff, Mic, MicOff, PhoneOff, Maximize2, Minimize2,
     MoreHorizontal, Share2, MessageSquare, BrainCircuit, Activity,
     User, Sparkles, Zap, Send, Settings, PenTool, Eraser, StickyNote,
-    MousePointer2, Plus, GripVertical
+    MousePointer2, Plus, GripVertical, Wand2, Link2, Box, Info, Target,
+    Layers, Cpu, ShieldCheck
 } from 'lucide-react';
+
+interface NeuralNode {
+    id: string;
+    x: number;
+    y: number;
+    title: string;
+    content: string;
+    type: 'logic' | 'security' | 'architecture' | 'ai-insight';
+    isExpanded: boolean;
+}
+
+interface NeuralConnection {
+    from: string;
+    to: string;
+}
 
 interface LiveSessionOverlayProps {
     sessionType: 'module' | 'final';
@@ -28,6 +44,17 @@ const LiveSessionOverlay: React.FC<LiveSessionOverlayProps> = ({
     const [activeTab, setActiveTab] = useState<'video' | 'chat' | 'whiteboard'>('video');
     const [syncHealth, setSyncHealth] = useState(98);
     const [elapsedTime, setElapsedTime] = useState(0);
+    const [isMagicWandActive, setIsMagicWandActive] = useState(false);
+
+    // Neural Board State
+    const [nodes, setNodes] = useState<NeuralNode[]>([
+        { id: 'n1', x: 200, y: 150, title: 'Withdraw Pattern', content: 'Centralized logic for user funds extraction.', type: 'architecture', isExpanded: false },
+        { id: 'n2', x: 450, y: 200, title: 'Reentrancy Guard', content: 'Prevention mechanism for recursive calls.', type: 'security', isExpanded: false }
+    ]);
+    const [connections, setConnections] = useState<NeuralConnection[]>([
+        { from: 'n1', to: 'n2' }
+    ]);
+    const [boardScale, setBoardScale] = useState(1);
 
     useEffect(() => {
         const timer = setInterval(() => setElapsedTime(prev => prev + 1), 1000);
@@ -42,6 +69,28 @@ const LiveSessionOverlay: React.FC<LiveSessionOverlayProps> = ({
             clearInterval(healthTimer);
         };
     }, []);
+
+    const handleMagicWand = () => {
+        setIsMagicWandActive(true);
+        setTimeout(() => {
+            const newNode: NeuralNode = {
+                id: `n${Date.now()}`,
+                x: 300 + Math.random() * 100,
+                y: 300 + Math.random() * 100,
+                title: 'AI Audit Insight',
+                content: 'Potential gas optimization identified in loop operations.',
+                type: 'ai-insight',
+                isExpanded: true
+            };
+            setNodes(prev => [...prev, newNode]);
+            setConnections(prev => [...prev, { from: 'n1', to: newNode.id }]);
+            setIsMagicWandActive(false);
+        }, 1500);
+    };
+
+    const toggleNodeExpansion = (id: string) => {
+        setNodes(prev => prev.map(n => n.id === id ? { ...n, isExpanded: !n.isExpanded } : n));
+    };
 
     const formatElapsedTime = (seconds: number) => {
         const m = Math.floor(seconds / 60);
@@ -104,61 +153,116 @@ const LiveSessionOverlay: React.FC<LiveSessionOverlayProps> = ({
                                 </div>
                             </div>
                         ) : (
-                            <div className="h-full flex flex-col bg-[#0B0F19] relative group">
-                                {/* Neural Board Canvas Simulated */}
-                                <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:24px_24px] opacity-30" />
+                            <div className="h-full flex flex-col bg-[#0B0F19] relative overflow-hidden group">
+                                {/* Neural Board Canvas */}
+                                <div
+                                    className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:32px_32px] transition-transform duration-500"
+                                    style={{ transform: `scale(${boardScale})` }}
+                                />
 
-                                {/* Board Toolbar */}
-                                <div className="absolute top-8 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 p-2 rounded-2xl bg-[#111827]/80 backdrop-blur-xl border border-white/10 shadow-2xl">
+                                {/* Board Toolbar - Enhanced */}
+                                <div className="absolute top-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 p-2 rounded-2xl bg-[#111827]/90 backdrop-blur-xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
                                     <button className="p-3 rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-500/20"><MousePointer2 className="w-4 h-4" /></button>
                                     <button className="p-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all"><PenTool className="w-4 h-4" /></button>
-                                    <button className="p-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all"><Eraser className="w-4 h-4" /></button>
+                                    <button
+                                        onClick={handleMagicWand}
+                                        disabled={isMagicWandActive}
+                                        className={`p-3 rounded-xl transition-all ${isMagicWandActive ? 'bg-purple-600 animate-pulse text-white' : 'text-purple-400 hover:bg-purple-500/10'}`}
+                                    >
+                                        <Wand2 className="w-4 h-4" />
+                                    </button>
                                     <div className="w-px h-6 bg-white/10 mx-1" />
                                     <button className="p-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all"><StickyNote className="w-4 h-4" /></button>
-                                    <button className="p-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all"><Plus className="w-4 h-4" /></button>
+                                    <button
+                                        onClick={() => setNodes([])}
+                                        className="p-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-all"
+                                    ><Eraser className="w-4 h-4" /></button>
                                 </div>
 
-                                {/* Simulated Board Content */}
-                                <div className="flex-1 flex items-center justify-center relative p-20">
-                                    <div className="relative animate-in zoom-in-95 duration-700">
-                                        {/* Floating Notes */}
-                                        <div className="absolute -top-32 -left-32 w-48 p-4 rounded-2xl bg-yellow-500/90 shadow-2xl rotate-[-4deg] border border-white/20">
-                                            <div className="flex items-center gap-2 mb-2 opacity-50">
-                                                <GripVertical className="w-3 h-3" />
-                                                <span className="text-[8px] font-black uppercase tracking-widest text-black">Apprenant</span>
-                                            </div>
-                                            <p className="text-[11px] font-bold text-black leading-tight">Vérifier l'overflow sur le mapping des balances.</p>
-                                        </div>
+                                {/* Dynamic Connections (SVG Layer) */}
+                                <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
+                                    {connections.map((conn, idx) => {
+                                        const fromNode = nodes.find(n => n.id === conn.from);
+                                        const toNode = nodes.find(n => n.id === conn.to);
+                                        if (!fromNode || !toNode) return null;
+                                        return (
+                                            <line
+                                                key={idx}
+                                                x1={fromNode.x} y1={fromNode.y}
+                                                x2={toNode.x} y2={toNode.y}
+                                                stroke="rgba(59, 130, 246, 0.2)"
+                                                strokeWidth="2"
+                                                strokeDasharray="4 4"
+                                                className="animate-dash"
+                                            />
+                                        );
+                                    })}
+                                </svg>
 
-                                        <div className="absolute -top-10 -right-40 w-56 p-5 rounded-3xl bg-blue-600/90 shadow-2xl rotate-[2deg] border border-white/20">
-                                            <div className="flex items-center gap-2 mb-2 opacity-60">
-                                                <GripVertical className="w-3 h-3" />
-                                                <span className="text-[8px] font-black uppercase tracking-widest text-white">Coach</span>
+                                {/* Smart Nodes Rendering */}
+                                <div className="flex-1 relative">
+                                    {nodes.map(node => (
+                                        <div
+                                            key={node.id}
+                                            style={{ left: node.x, top: node.y }}
+                                            className={`absolute -translate-x-1/2 -translate-y-1/2 z-10 transition-all duration-500 group/node`}
+                                        >
+                                            <div
+                                                onClick={() => toggleNodeExpansion(node.id)}
+                                                className={`p-1 rounded-full cursor-pointer transition-all duration-500 ${node.isExpanded ? 'scale-110' : 'hover:scale-105'}`}
+                                            >
+                                                <div className={`w-12 h-12 rounded-full flex items-center justify-center border-4 border-[#0B0F19] shadow-2xl transition-colors ${node.type === 'security' ? 'bg-red-600' :
+                                                        node.type === 'architecture' ? 'bg-blue-600' :
+                                                            node.type === 'ai-insight' ? 'bg-purple-600' : 'bg-slate-600'
+                                                    }`}>
+                                                    {node.type === 'security' ? <ShieldCheck className="w-5 h-5 text-white" /> :
+                                                        node.type === 'architecture' ? <Layers className="w-5 h-5 text-white" /> :
+                                                            node.type === 'ai-insight' ? <Cpu className="w-5 h-5 text-white" /> :
+                                                                <Box className="w-5 h-5 text-white" />}
+                                                </div>
                                             </div>
-                                            <p className="text-[11px] font-bold text-white leading-tight italic">"L'utilisation d'OpenZeppelin SafeERC20 est recommandée ici pour plus de sécurité."</p>
-                                        </div>
 
-                                        {/* Brainstorming Diagram Simulation */}
-                                        <div className="flex flex-col items-center gap-12">
-                                            <div className="px-8 py-4 rounded-3xl bg-slate-800 border-2 border-blue-500/40 text-sm font-black text-white shadow-2xl relative">
-                                                Withdraw Function
-                                                <div className="absolute h-12 w-0.5 bg-blue-500/40 -bottom-12 left-1/2 -translate-x-1/2" />
+                                            {/* Node Content Card */}
+                                            <div className={`absolute top-16 left-1/2 -translate-x-1/2 w-64 p-5 rounded-[24px] bg-[#111827]/95 backdrop-blur-2xl border border-white/10 shadow-2xl transition-all duration-500 origin-top ${node.isExpanded ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-4 scale-95 pointer-events-none'}`}>
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${node.type === 'security' ? 'bg-red-500/20 text-red-400' : 'bg-blue-500/20 text-blue-400'
+                                                        }`}>{node.type}</span>
+                                                    <Info className="w-3 h-3 text-slate-500" />
+                                                </div>
+                                                <h5 className="text-sm font-black text-white mb-2">{node.title}</h5>
+                                                <p className="text-[10px] leading-relaxed text-slate-400 font-medium">{node.content}</p>
+
+                                                <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
+                                                    <div className="flex -space-x-2">
+                                                        <div className="w-5 h-5 rounded-full bg-slate-700 border border-[#0B0F19]" />
+                                                        <div className="w-5 h-5 rounded-full bg-blue-600 border border-[#0B0F19]" />
+                                                    </div>
+                                                    <button className="text-[9px] font-black text-blue-500 uppercase tracking-widest hover:text-blue-400">Détails</button>
+                                                </div>
                                             </div>
-                                            <div className="flex gap-16">
-                                                <div className="px-6 py-3 rounded-2xl bg-slate-900 border border-white/10 text-xs font-bold text-slate-400">Security Check</div>
-                                                <div className="px-6 py-3 rounded-2xl bg-slate-900 border border-white/10 text-xs font-bold text-slate-400">Transfer Logic</div>
-                                            </div>
+
+                                            {/* Hover Indicators */}
+                                            <div className="absolute inset-0 w-24 h-24 -translate-x-1/2 -translate-y-1/2 bg-blue-500/10 rounded-full scale-0 group-hover/node:scale-100 transition-transform duration-500 pointer-events-none" />
                                         </div>
-                                    </div>
+                                    ))}
                                 </div>
 
                                 {/* Board Footer / AI Insights */}
-                                <div className="absolute bottom-8 left-8 right-8 flex items-center justify-between pointer-events-none">
-                                    <div className="px-4 py-2 rounded-xl bg-blue-500/10 backdrop-blur-md border border-blue-500/20 flex items-center gap-3">
-                                        <Sparkles className="w-4 h-4 text-blue-400" />
-                                        <span className="text-[10px] font-black text-blue-300 uppercase tracking-widest">Co-Pilote Neural Actif</span>
+                                <div className="absolute bottom-8 left-8 right-8 flex items-center justify-between pointer-events-none z-20">
+                                    <div className="px-5 py-2.5 rounded-2xl bg-[#111827]/80 backdrop-blur-xl border border-blue-500/30 flex items-center gap-3 shadow-2xl pointer-events-auto group/ai">
+                                        <div className="w-8 h-8 rounded-xl bg-purple-600/20 flex items-center justify-center border border-purple-500/30">
+                                            <Sparkles className="w-4 h-4 text-purple-400 animate-pulse" />
+                                        </div>
+                                        <div>
+                                            <p className="text-[9px] font-black text-purple-400 uppercase tracking-widest leading-none mb-1">Co-Pilote Neural v2.4</p>
+                                            <p className="text-[10px] font-bold text-white uppercase tracking-tighter opacity-70">Simulation d'architecture active</p>
+                                        </div>
                                     </div>
-                                    <div className="text-[10px] font-bold text-slate-600 uppercase tracking-[0.2em]">Espace collaboratif synchronisé</div>
+
+                                    <div className="flex items-center gap-4 pointer-events-auto">
+                                        <button onClick={() => setBoardScale(s => Math.min(2, s + 0.1))} className="p-3 rounded-xl bg-white/5 text-slate-400 hover:text-white border border-white/5"><Plus className="w-4 h-4" /></button>
+                                        <button onClick={() => setBoardScale(s => Math.max(0.5, s - 0.1))} className="p-3 rounded-xl bg-white/5 text-slate-400 hover:text-white border border-white/5"><Plus className="w-4 h-4 rotate-45" /></button>
+                                    </div>
                                 </div>
                             </div>
                         )}
