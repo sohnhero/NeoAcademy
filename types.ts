@@ -355,3 +355,25 @@ export interface StudentProfile {
   skills: { skill: string; value: number }[];
   blockInfo?: BlockInfo;
 }
+
+// =====================================================
+// AI DIAGNOSTIC TEST SYSTEM
+// =====================================================
+
+export interface DiagnosticQuestion {
+  id: string;
+  type: 'mcq' | 'open';
+  question: string;
+  options?: string[];     // For MCQ only
+  correctAnswer?: string; // For MCQ only
+  topic: string;
+}
+
+export interface DiagnosticResult {
+  level: 'débutant' | 'intermédiaire' | 'avancé';
+  score: number;
+  gaps: string[];
+  strengths: string[];
+  recommendations: string[];
+  adaptedModuleNotes: string;
+}

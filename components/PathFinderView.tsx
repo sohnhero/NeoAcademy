@@ -20,9 +20,16 @@ import {
     RefreshCw,
     Filter,
     Clock,
-    Star
+    Star,
+    FileQuestion,
+    TrendingUp,
+    ShieldAlert,
+    GraduationCap,
+    ChevronRight,
+    BarChart3
 } from 'lucide-react';
-import { LearningPath } from '../types';
+import { LearningPath, DiagnosticQuestion, DiagnosticResult } from '../types';
+import { generateDiagnosticTest, evaluateDiagnostic } from '../services/geminiService';
 import { MOCK_LEARNING_PATHS, PREDEFINED_PATHS_CATALOG } from '../constants';
 
 interface PathFinderViewProps {
@@ -55,6 +62,13 @@ const ANALYSIS_STEPS = [
     { text: 'Construction du parcours personnalisé...', icon: Sparkles }
 ];
 
+const DIAGNOSTIC_STEPS = [
+    { text: 'Analyse du contexte sélectionné...', icon: Brain },
+    { text: 'Calibration du niveau de difficulté...', icon: Target },
+    { text: 'Génération des questions diagnostiques...', icon: FileQuestion },
+    { text: 'Préparation du test personnalisé...', icon: Sparkles }
+];
+
 const PathFinderView: React.FC<PathFinderViewProps> = ({ onPathConfirmed, availablePaths = [] }) => {
     const [selectedFlow, setSelectedFlow] = useState<FlowType>(null);
 
@@ -77,6 +91,17 @@ const PathFinderView: React.FC<PathFinderViewProps> = ({ onPathConfirmed, availa
     const [certifiedCategory, setCertifiedCategory] = useState('Tous');
     const certifiedCategories = ['Tous', 'Développement', 'Sécurité', 'Infrastructure', 'DeFi'];
 
+    // ===== DIAGNOSTIC TEST STATE =====
+    const [diagnosticPhase, setDiagnosticPhase] = useState<'idle' | 'generating' | 'testing' | 'evaluating' | 'results'>('idle');
+    const [diagnosticStep, setDiagnosticStep] = useState(0);
+    const [diagnosticQuestions, setDiagnosticQuestions] = useState<DiagnosticQuestion[]>([]);
+    const [diagnosticAnswers, setDiagnosticAnswers] = useState<Record<string, string>>({});
+    const [diagnosticResults, setDiagnosticResults] = useState<DiagnosticResult | null>(null);
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [pendingPath, setPendingPath] = useState<LearningPath | null>(null);
+    const [diagnosticContext, setDiagnosticContext] = useState('');
+    const [diagnosticFlowType, setDiagnosticFlowType] = useState<'ai' | 'modular' | 'certified'>('ai');
+
     // Analysis animation effect
     useEffect(() => {
         if (isAnalyzing && analysisStep < ANALYSIS_STEPS.length) {
@@ -92,6 +117,54 @@ const PathFinderView: React.FC<PathFinderViewProps> = ({ onPathConfirmed, availa
             }, 500);
         }
     }, [isAnalyzing, analysisStep]);
+
+    // Diagnostic generation animation effect
+    useEffect(() => {
+        if (diagnosticPhase === 'generating' && diagnosticStep < DIAGNOSTIC_STEPS.length) {
+            const timer = setTimeout(() => {
+                setDiagnosticStep(prev => prev + 1);
+            }, 700);
+            return () => clearTimeout(timer);
+        } else if (diagnosticPhase === 'generating' && diagnosticStep >= DIAGNOSTIC_STEPS.length) {
+            // Kick off actual generation
+            (async () => {
+                const result = await generateDiagnosticTest(diagnosticContext, diagnosticFlowType);
+                setDiagnosticQuestions(result.questions || []);
+                setDiagnosticPhase('testing');
+                setDiagnosticStep(0);
+                setCurrentQuestionIndex(0);
+            })();
+        }
+    }, [diagnosticPhase, diagnosticStep]);
+
+    // ===== DIAGNOSTIC HANDLERS =====
+    const startDiagnostic = (path: LearningPath, context: string, flowType: 'ai' | 'modular' | 'certified') => {
+        setPendingPath(path);
+        setDiagnosticContext(context);
+        setDiagnosticFlowType(flowType);
+        setDiagnosticAnswers({});
+        setDiagnosticResults(null);
+        setDiagnosticStep(0);
+        setCurrentQuestionIndex(0);
+        setDiagnosticPhase('generating');
+    };
+
+    const handleDiagnosticAnswer = (questionId: string, answer: string) => {
+        setDiagnosticAnswers(prev => ({ ...prev, [questionId]: answer }));
+    };
+
+    const handleSubmitDiagnostic = async () => {
+        setDiagnosticPhase('evaluating');
+        const results = await evaluateDiagnostic(diagnosticQuestions, diagnosticAnswers, diagnosticContext);
+        setDiagnosticResults(results);
+        setDiagnosticPhase('results');
+    };
+
+    const handleConfirmAfterDiagnostic = () => {
+        if (pendingPath) {
+            onPathConfirmed(pendingPath);
+        }
+    };
 
     // AI Flow: Submit profile for analysis
     const handleSubmitProfile = () => {
@@ -157,6 +230,308 @@ const PathFinderView: React.FC<PathFinderViewProps> = ({ onPathConfirmed, availa
         m.category.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    // ===== DIAGNOSTIC TEST UI (must be checked BEFORE flow-specific renders) =====
+    if (diagnosticPhase !== 'idle') {
+        return (
+            <div className="min-h-screen p-6" style={{ backgroundColor: '#020617' }}>
+                <div className="max-w-3xl mx-auto">
+                    {/* Back Button */}
+                    <button
+                        onClick={() => {
+                            setDiagnosticPhase('idle');
+                            setDiagnosticQuestions([]);
+                            setDiagnosticAnswers({});
+                            setDiagnosticResults(null);
+                            setPendingPath(null);
+                        }}
+                        className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest mb-12 text-slate-500 hover:text-blue-400 transition-colors"
+                    >
+                        <ArrowLeft className="w-4 h-4" /> Retour
+                    </button>
+
+                    {/* PHASE: Generating Test */}
+                    {diagnosticPhase === 'generating' && (
+                        <div className="border border-slate-800 rounded-3xl p-12 bg-slate-900/50">
+                            <div className="text-center mb-10">
+                                <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-blue-500/30">
+                                    <FileQuestion className="w-10 h-10 text-white" />
+                                </div>
+                                <h2 className="text-3xl font-black tracking-tight mb-3 text-white">
+                                    Génération du Test Diagnostic
+                                </h2>
+                                <p className="text-slate-400 text-sm">L'IA prépare un test adapté à votre choix de parcours</p>
+                            </div>
+
+                            <div className="flex flex-col items-center">
+                                <div className="relative mb-10">
+                                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center animate-pulse shadow-2xl shadow-blue-500/40">
+                                        <Brain className="w-12 h-12 text-white" />
+                                    </div>
+                                    <div className="absolute inset-0 rounded-full border-4 border-purple-500/30 animate-ping" />
+                                </div>
+
+                                <div className="space-y-4 w-full max-w-md">
+                                    {DIAGNOSTIC_STEPS.map((step, idx) => {
+                                        const StepIcon = step.icon;
+                                        const isActive = idx === diagnosticStep;
+                                        const isComplete = idx < diagnosticStep;
+                                        return (
+                                            <div
+                                                key={idx}
+                                                className={`flex items-center gap-4 p-4 rounded-xl transition-all duration-500 ${isActive ? 'bg-purple-500/10 border border-purple-500/30' : isComplete ? 'opacity-50' : 'opacity-20'}`}
+                                            >
+                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${isComplete ? 'bg-purple-500 text-white' : isActive ? 'bg-purple-500/20 text-purple-400' : 'bg-slate-800 text-slate-500'}`}>
+                                                    {isComplete ? <CheckCircle className="w-5 h-5" /> : <StepIcon className="w-5 h-5" />}
+                                                </div>
+                                                <span className={`font-medium ${isActive ? 'text-purple-400' : 'text-slate-400'}`}>{step.text}</span>
+                                                {isActive && <Loader2 className="w-4 h-4 text-purple-400 animate-spin ml-auto" />}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* PHASE: Taking the Test */}
+                    {diagnosticPhase === 'testing' && diagnosticQuestions.length > 0 && (
+                        <div>
+                            {/* Header */}
+                            <div className="text-center mb-10">
+                                <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-purple-500/20 bg-purple-500/5 mb-6">
+                                    <FileQuestion className="w-4 h-4 text-purple-500" />
+                                    <span className="text-xs font-bold uppercase tracking-[0.2em] text-purple-400">Test Diagnostic</span>
+                                </div>
+                                <h2 className="text-3xl font-black tracking-tight mb-3 text-white">
+                                    Évaluons votre Niveau
+                                </h2>
+                                <p className="text-slate-400 text-sm">Répondez aux questions pour personnaliser votre parcours</p>
+
+                                {/* Progress Bar */}
+                                <div className="flex items-center gap-3 mt-8 max-w-md mx-auto">
+                                    <span className="text-xs font-bold text-purple-400">{currentQuestionIndex + 1}/{diagnosticQuestions.length}</span>
+                                    <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
+                                            style={{ width: `${((currentQuestionIndex + 1) / diagnosticQuestions.length) * 100}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Current Question Card */}
+                            {(() => {
+                                const q = diagnosticQuestions[currentQuestionIndex];
+                                if (!q) return null;
+                                return (
+                                    <div className="border border-slate-800 rounded-3xl p-8 bg-slate-900/50 mb-6">
+                                        <div className="flex items-center gap-3 mb-6">
+                                            <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                                                {q.topic}
+                                            </span>
+                                            <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-slate-800 text-slate-400">
+                                                {q.type === 'mcq' ? 'QCM' : 'Question Ouverte'}
+                                            </span>
+                                        </div>
+
+                                        <h3 className="text-xl font-bold text-white mb-8 leading-relaxed">{q.question}</h3>
+
+                                        {q.type === 'mcq' && q.options ? (
+                                            <div className="space-y-3">
+                                                {q.options.map((option, i) => {
+                                                    const isSelected = diagnosticAnswers[q.id] === option;
+                                                    return (
+                                                        <button
+                                                            key={i}
+                                                            onClick={() => handleDiagnosticAnswer(q.id, option)}
+                                                            className={`w-full text-left p-5 rounded-2xl border transition-all duration-300 flex items-center gap-4 group ${isSelected
+                                                                ? 'bg-blue-500/10 border-blue-500/50 text-white'
+                                                                : 'bg-slate-800/30 border-slate-700/50 text-slate-300 hover:border-blue-500/30 hover:bg-slate-800/50'}`}
+                                                        >
+                                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-all ${isSelected
+                                                                ? 'bg-blue-500 text-white'
+                                                                : 'bg-slate-700 text-slate-400 group-hover:bg-blue-500/20 group-hover:text-blue-400'}`}>
+                                                                {String.fromCharCode(65 + i)}
+                                                            </div>
+                                                            <span className="font-medium text-sm">{option}</span>
+                                                            {isSelected && <CheckCircle className="w-5 h-5 text-blue-400 ml-auto" />}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        ) : (
+                                            <textarea
+                                                value={diagnosticAnswers[q.id] || ''}
+                                                onChange={(e) => handleDiagnosticAnswer(q.id, e.target.value)}
+                                                placeholder="Rédigez votre réponse ici..."
+                                                className="w-full h-40 bg-slate-800/50 border border-slate-700 rounded-2xl p-5 text-white placeholder-slate-500 outline-none focus:border-purple-500 transition-colors resize-none text-sm leading-relaxed"
+                                            />
+                                        )}
+                                    </div>
+                                );
+                            })()}
+
+                            {/* Navigation */}
+                            <div className="flex gap-4">
+                                {currentQuestionIndex > 0 && (
+                                    <button
+                                        onClick={() => setCurrentQuestionIndex(prev => prev - 1)}
+                                        className="px-8 py-4 border border-slate-700 bg-slate-800/50 text-white rounded-2xl font-bold text-sm transition-all hover:border-blue-500/50 flex items-center gap-2"
+                                    >
+                                        <ArrowLeft className="w-4 h-4" /> Précédent
+                                    </button>
+                                )}
+                                {currentQuestionIndex < diagnosticQuestions.length - 1 ? (
+                                    <button
+                                        onClick={() => setCurrentQuestionIndex(prev => prev + 1)}
+                                        disabled={!diagnosticAnswers[diagnosticQuestions[currentQuestionIndex]?.id]}
+                                        className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-400 hover:to-purple-400 disabled:opacity-40 disabled:cursor-not-allowed text-white py-4 rounded-2xl font-black uppercase tracking-widest text-sm transition-all flex items-center justify-center gap-3 shadow-xl shadow-blue-500/20"
+                                    >
+                                        Question Suivante <ChevronRight className="w-5 h-5" />
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={handleSubmitDiagnostic}
+                                        disabled={Object.keys(diagnosticAnswers).length < diagnosticQuestions.length}
+                                        className="flex-1 bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-400 hover:to-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white py-4 rounded-2xl font-black uppercase tracking-widest text-sm transition-all flex items-center justify-center gap-3 shadow-xl shadow-purple-500/20"
+                                    >
+                                        <Send className="w-5 h-5" /> Soumettre le Test
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* PHASE: Evaluating */}
+                    {diagnosticPhase === 'evaluating' && (
+                        <div className="border border-slate-800 rounded-3xl p-12 bg-slate-900/50 text-center">
+                            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center mx-auto mb-8 animate-pulse shadow-2xl shadow-purple-500/40">
+                                <BarChart3 className="w-12 h-12 text-white" />
+                            </div>
+                            <h2 className="text-3xl font-black tracking-tight mb-3 text-white">
+                                Analyse en cours...
+                            </h2>
+                            <p className="text-slate-400 text-sm mb-8">L'IA évalue vos réponses et calibre votre parcours</p>
+                            <Loader2 className="w-8 h-8 text-purple-400 animate-spin mx-auto" />
+                        </div>
+                    )}
+
+                    {/* PHASE: Results */}
+                    {diagnosticPhase === 'results' && diagnosticResults && (
+                        <div>
+                            {/* Results Header */}
+                            <div className="text-center mb-10">
+                                <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-emerald-500/20 bg-emerald-500/5 mb-6">
+                                    <CheckCircle className="w-4 h-4 text-emerald-500" />
+                                    <span className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-400">Diagnostic Terminé</span>
+                                </div>
+                                <h2 className="text-3xl font-black tracking-tight mb-3 text-white">
+                                    Résultats de votre Diagnostic
+                                </h2>
+                                <p className="text-slate-400 text-sm">Votre parcours sera adapté en fonction de ces résultats</p>
+                            </div>
+
+                            {/* Score & Level Card */}
+                            <div className="border border-slate-800 rounded-3xl p-8 bg-slate-900/50 mb-6">
+                                <div className="flex items-center justify-between mb-8">
+                                    <div>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-2">Niveau Détecté</span>
+                                        <span className={`text-3xl font-black uppercase tracking-wider ${diagnosticResults.level === 'avancé' ? 'text-emerald-400' : diagnosticResults.level === 'intermédiaire' ? 'text-blue-400' : 'text-yellow-400'}`}>
+                                            {diagnosticResults.level}
+                                        </span>
+                                    </div>
+                                    <div className="text-right">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-2">Score Global</span>
+                                        <span className="text-5xl font-black text-white">{diagnosticResults.score}<span className="text-xl text-slate-500">/100</span></span>
+                                    </div>
+                                </div>
+
+                                {/* Score Bar */}
+                                <div className="h-3 bg-slate-800 rounded-full overflow-hidden">
+                                    <div
+                                        className={`h-full rounded-full transition-all duration-1000 ${diagnosticResults.score >= 70 ? 'bg-gradient-to-r from-emerald-500 to-emerald-400' : diagnosticResults.score >= 40 ? 'bg-gradient-to-r from-blue-500 to-blue-400' : 'bg-gradient-to-r from-yellow-500 to-yellow-400'}`}
+                                        style={{ width: `${diagnosticResults.score}%` }}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Gaps & Strengths */}
+                            <div className="grid md:grid-cols-2 gap-6 mb-6">
+                                {/* Strengths */}
+                                <div className="border border-emerald-500/20 rounded-3xl p-6 bg-emerald-500/5">
+                                    <div className="flex items-center gap-3 mb-5">
+                                        <TrendingUp className="w-5 h-5 text-emerald-400" />
+                                        <h4 className="font-bold text-white text-sm">Points Forts</h4>
+                                    </div>
+                                    <ul className="space-y-3">
+                                        {diagnosticResults.strengths.map((s, i) => (
+                                            <li key={i} className="text-sm text-emerald-300/80 flex items-start gap-2">
+                                                <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+                                                {s}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+
+                                {/* Gaps */}
+                                <div className="border border-yellow-500/20 rounded-3xl p-6 bg-yellow-500/5">
+                                    <div className="flex items-center gap-3 mb-5">
+                                        <ShieldAlert className="w-5 h-5 text-yellow-400" />
+                                        <h4 className="font-bold text-white text-sm">Lacunes Identifiées</h4>
+                                    </div>
+                                    <ul className="space-y-3">
+                                        {diagnosticResults.gaps.map((g, i) => (
+                                            <li key={i} className="text-sm text-yellow-300/80 flex items-start gap-2">
+                                                <AlertCircle className="w-4 h-4 text-yellow-500 mt-0.5 shrink-0" />
+                                                {g}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+
+                            {/* Recommendations */}
+                            <div className="border border-blue-500/20 rounded-3xl p-6 bg-blue-500/5 mb-6">
+                                <div className="flex items-center gap-3 mb-5">
+                                    <GraduationCap className="w-5 h-5 text-blue-400" />
+                                    <h4 className="font-bold text-white text-sm">Recommandations d'Adaptation</h4>
+                                </div>
+                                <ul className="space-y-3">
+                                    {diagnosticResults.recommendations.map((r, i) => (
+                                        <li key={i} className="text-sm text-blue-300/80 flex items-start gap-2">
+                                            <Zap className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
+                                            {r}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+
+                            {/* Adapted Notes */}
+                            <div className="border border-slate-800 rounded-3xl p-6 bg-slate-900/50 mb-8">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <Brain className="w-5 h-5 text-purple-400" />
+                                    <h4 className="font-bold text-white text-sm">Plan d'Adaptation IA</h4>
+                                </div>
+                                <p className="text-sm text-slate-400 leading-relaxed">
+                                    {diagnosticResults.adaptedModuleNotes}
+                                </p>
+                            </div>
+
+                            {/* Final Confirm */}
+                            <button
+                                onClick={handleConfirmAfterDiagnostic}
+                                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-400 hover:to-purple-500 text-white py-5 rounded-2xl font-black uppercase tracking-widest text-sm transition-all flex items-center justify-center gap-3 shadow-xl shadow-blue-500/20"
+                            >
+                                <CheckCircle className="w-5 h-5" />
+                                Confirmer et Démarrer le Parcours Adapté
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
     // Main selection screen
     if (!selectedFlow) {
         return (
@@ -203,7 +578,7 @@ const PathFinderView: React.FC<PathFinderViewProps> = ({ onPathConfirmed, availa
                             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center mb-8 shadow-lg shadow-blue-500/25 group-hover:shadow-blue-500/40 transition-shadow">
                                 <Puzzle className="w-8 h-8 text-white" />
                             </div>
-                            <h3 className="text-2xl font-black mb-3 text-white">Module Builder</h3>
+                            <h3 className="text-2xl font-black mb-3 text-white">Parcours modulaire</h3>
                             <p className="text-sm text-slate-400 mb-6 leading-relaxed">
                                 Construisez votre parcours module par module. L'IA analysera la cohérence de vos choix.
                             </p>
@@ -220,7 +595,7 @@ const PathFinderView: React.FC<PathFinderViewProps> = ({ onPathConfirmed, availa
                             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-400 to-blue-500 flex items-center justify-center mb-8 shadow-lg shadow-blue-500/25 group-hover:shadow-blue-500/40 transition-shadow">
                                 <Award className="w-8 h-8 text-white" />
                             </div>
-                            <h3 className="text-2xl font-black mb-3 text-white">Certified Tracks</h3>
+                            <h3 className="text-2xl font-black mb-3 text-white">Nos parcours</h3>
                             <p className="text-sm text-slate-400 mb-6 leading-relaxed">
                                 Choisissez parmi nos parcours certifiants prédéfinis, conçus par des experts.
                             </p>
@@ -380,13 +755,13 @@ const PathFinderView: React.FC<PathFinderViewProps> = ({ onPathConfirmed, availa
                                 </div>
                             </div>
 
-                            {/* Confirm Button */}
+                            {/* Confirm Button → Now triggers diagnostic */}
                             <button
-                                onClick={() => onPathConfirmed(generatedPath)}
+                                onClick={() => startDiagnostic(generatedPath, profileInput, 'ai')}
                                 className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white py-5 rounded-2xl font-black uppercase tracking-widest text-sm transition-all flex items-center justify-center gap-3 shadow-xl shadow-blue-500/20"
                             >
-                                <CheckCircle className="w-5 h-5" />
-                                Valider ce Parcours
+                                <FileQuestion className="w-5 h-5" />
+                                Passer le Test Diagnostic
                             </button>
                         </>
                     )}
@@ -540,11 +915,20 @@ const PathFinderView: React.FC<PathFinderViewProps> = ({ onPathConfirmed, availa
 
                                     {moduleAnalysis?.coherent && (
                                         <button
-                                            onClick={handleConfirmModularPath}
+                                            onClick={() => {
+                                                const customPath: LearningPath = {
+                                                    ...MOCK_LEARNING_PATHS[0],
+                                                    id: `custom-${Date.now()}`,
+                                                    title: 'Mon Parcours Personnalisé',
+                                                    type: 'custom',
+                                                    progress: 0
+                                                };
+                                                startDiagnostic(customPath, selectedModules.map(m => m.title).join(', '), 'modular');
+                                            }}
                                             className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white py-5 rounded-2xl font-black uppercase tracking-widest text-sm transition-all flex items-center justify-center gap-3 shadow-xl shadow-blue-500/20"
                                         >
-                                            <CheckCircle className="w-5 h-5" />
-                                            Confirmer ce Parcours
+                                            <FileQuestion className="w-5 h-5" />
+                                            Passer le Test Diagnostic
                                         </button>
                                     )}
                                 </>
@@ -737,12 +1121,12 @@ const PathFinderView: React.FC<PathFinderViewProps> = ({ onPathConfirmed, availa
                                         skills: selectedCertifiedPath.skills || [],
                                         image: selectedCertifiedPath.image || ''
                                     };
-                                    onPathConfirmed(fullPath);
+                                    startDiagnostic(fullPath, `${selectedCertifiedPath.title} — ${(selectedCertifiedPath.skills || []).join(', ')}`, 'certified');
                                 }}
                                 className="w-full bg-blue-600 hover:bg-blue-500 text-white py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-sm transition-all flex items-center justify-center gap-3 shadow-2xl shadow-blue-600/40 transform hover:-translate-y-1 active:scale-95"
                             >
-                                <Award className="w-5 h-5" />
-                                S'inscrire au Parcours
+                                <FileQuestion className="w-5 h-5" />
+                                Passer le Test Diagnostic
                             </button>
                         </div>
                     )}

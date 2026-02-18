@@ -187,3 +187,149 @@ export const generateModuleContent = async (adminPrompt: string, moduleTitle: st
     return null;
   }
 };
+
+/**
+ * Generate a diagnostic test based on the learner's chosen path context.
+ * Returns 5 MCQ questions and 1 open-ended question.
+ */
+export const generateDiagnosticTest = async (context: string, flowType: 'ai' | 'modular' | 'certified') => {
+  try {
+    const flowContext = flowType === 'ai'
+      ? `L'apprenant a décrit son objectif de carrière comme suit : "${context}". Génère un test diagnostic pour évaluer son niveau actuel dans les domaines pertinents à cet objectif.`
+      : flowType === 'modular'
+        ? `L'apprenant a sélectionné les modules suivants : ${context}. Génère un test diagnostic pour évaluer son niveau dans ces domaines spécifiques.`
+        : `L'apprenant a choisi le parcours certifiant : "${context}". Génère un test diagnostic pour évaluer son niveau dans les compétences requises par ce parcours.`;
+
+    const prompt = `Tu es un expert en pédagogie Web3 et blockchain. ${flowContext}
+
+OBJECTIF : Générer un test diagnostic de 6 questions pour évaluer précisément le niveau de l'apprenant.
+
+CONTRAINTES :
+- 5 questions à choix multiples (QCM) avec exactement 4 options chacune
+- 1 question ouverte qui teste la compréhension profonde
+- Les questions doivent couvrir différents niveaux de difficulté (débutant, intermédiaire, avancé)
+- Chaque question doit être liée à un sujet/topic précis
+- Les questions doivent être en FRANÇAIS
+- Les options des QCM doivent être plausibles (pas de réponses évidentes)`;
+
+    const ai = getAI();
+    if (!ai) throw new Error("AI client not initialized");
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            questions: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  id: { type: Type.STRING, description: "ID unique de la question (ex: q1, q2...)" },
+                  type: { type: Type.STRING, description: "Type : 'mcq' ou 'open'" },
+                  question: { type: Type.STRING, description: "L'énoncé de la question" },
+                  options: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Les 4 options pour les QCM" },
+                  correctAnswer: { type: Type.STRING, description: "La bonne réponse pour les QCM" },
+                  topic: { type: Type.STRING, description: "Le sujet/domaine testé" }
+                },
+                required: ['id', 'type', 'question', 'topic']
+              },
+              description: "Les 6 questions du test diagnostic"
+            }
+          },
+          required: ['questions']
+        },
+        temperature: 0.7,
+        maxOutputTokens: 2048,
+      }
+    });
+
+    const jsonStr = response.text?.trim() || '{"questions":[]}';
+    return JSON.parse(jsonStr);
+  } catch (error) {
+    console.error("Erreur Diagnostic Test Generation:", error);
+    // Fallback: return hardcoded questions so the flow doesn't break
+    return {
+      questions: [
+        { id: 'q1', type: 'mcq', question: 'Qu\'est-ce qu\'un smart contract ?', options: ['Un contrat juridique numérique', 'Un programme auto-exécutant sur la blockchain', 'Un protocole de consensus', 'Une clé privée'], correctAnswer: 'Un programme auto-exécutant sur la blockchain', topic: 'Fondamentaux Blockchain' },
+        { id: 'q2', type: 'mcq', question: 'Quel est le rôle du gas dans Ethereum ?', options: ['Stocker des données', 'Payer les frais de transaction', 'Valider les blocs', 'Créer des tokens'], correctAnswer: 'Payer les frais de transaction', topic: 'Ethereum' },
+        { id: 'q3', type: 'mcq', question: 'Que signifie DeFi ?', options: ['Definite Finance', 'Decentralized Finance', 'Digital Finance', 'Distributed Finance'], correctAnswer: 'Decentralized Finance', topic: 'DeFi' },
+        { id: 'q4', type: 'mcq', question: 'Quelle vulnérabilité permet à un attaquant de rappeler un contrat avant la fin de l\'exécution ?', options: ['Overflow', 'Reentrancy', 'Front-running', 'Phishing'], correctAnswer: 'Reentrancy', topic: 'Sécurité' },
+        { id: 'q5', type: 'mcq', question: 'Quel standard définit les tokens non-fongibles (NFTs) ?', options: ['ERC-20', 'ERC-721', 'ERC-1155', 'ERC-777'], correctAnswer: 'ERC-721', topic: 'Standards' },
+        { id: 'q6', type: 'open', question: 'Expliquez en quelques phrases comment fonctionne un mécanisme de consensus Proof-of-Stake et quels avantages il offre par rapport au Proof-of-Work.', topic: 'Consensus' }
+      ]
+    };
+  }
+};
+
+/**
+ * Evaluate diagnostic test answers and determine the learner's level, gaps, and strengths.
+ */
+export const evaluateDiagnostic = async (
+  questions: any[],
+  answers: Record<string, string>,
+  pathContext: string
+) => {
+  try {
+    const formattedQA = questions.map((q, i) => {
+      const answer = answers[q.id] || '(pas de réponse)';
+      return `Q${i + 1} [${q.topic}] (${q.type}): ${q.question}\nRéponse de l'apprenant: ${answer}${q.type === 'mcq' ? `\nBonne réponse: ${q.correctAnswer}` : ''}`;
+    }).join('\n\n');
+
+    const prompt = `Tu es un expert pédagogue Web3. Évalue les réponses d'un apprenant à un test diagnostic.
+
+CONTEXTE DU PARCOURS : ${pathContext}
+
+QUESTIONS ET RÉPONSES :
+${formattedQA}
+
+INSTRUCTIONS :
+1. Évalue chaque réponse avec précision
+2. Détermine le niveau global de l'apprenant
+3. Identifie ses lacunes et ses points forts
+4. Propose des recommandations concrètes pour adapter son parcours
+5. Tout doit être en FRANÇAIS`;
+
+    const ai = getAI();
+    if (!ai) throw new Error("AI client not initialized");
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-pro-preview',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            level: { type: Type.STRING, description: "Niveau global: 'débutant', 'intermédiaire', ou 'avancé'" },
+            score: { type: Type.NUMBER, description: "Score sur 100" },
+            gaps: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Liste des lacunes identifiées" },
+            strengths: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Liste des points forts" },
+            recommendations: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Recommandations d'adaptation du parcours" },
+            adaptedModuleNotes: { type: Type.STRING, description: "Notes détaillées pour l'adaptation des modules du parcours" }
+          },
+          required: ['level', 'score', 'gaps', 'strengths', 'recommendations', 'adaptedModuleNotes']
+        },
+        temperature: 0.3,
+        maxOutputTokens: 1500,
+      }
+    });
+
+    const jsonStr = response.text?.trim() || '{}';
+    return JSON.parse(jsonStr);
+  } catch (error) {
+    console.error("Erreur Diagnostic Evaluation:", error);
+    return {
+      level: 'intermédiaire',
+      score: 50,
+      gaps: ['Évaluation indisponible — le nœud neural est en maintenance.'],
+      strengths: ['Motivation à apprendre détectée.'],
+      recommendations: ['Suivre le parcours standard avec un suivi renforcé.'],
+      adaptedModuleNotes: 'Parcours standard recommandé. Le test diagnostic n\'a pas pu être analysé.'
+    };
+  }
+};
+

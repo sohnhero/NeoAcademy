@@ -207,7 +207,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
               </button>
 
               {isNotificationOpen && (
-                <div className="absolute right-0 mt-4 w-80 bg-slate-950/90 backdrop-blur-xl border border-slate-800 rounded-[24px] shadow-2xl p-4 animate-in fade-in zoom-in duration-200 z-50 overflow-hidden" style={{ backgroundColor: 'var(--glass-bg)', borderColor: 'var(--border-color)' }}>
+                <div className="absolute right-0 mt-4 w-80 bg-slate-950 border border-slate-800 rounded-[24px] shadow-2xl p-4 animate-in fade-in zoom-in duration-200 z-50 overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
                   <div className="flex items-center justify-between mb-4 px-2">
                     <h4 className="text-sm font-bold tracking-tight">Notifications</h4>
                     <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest cursor-pointer hover:text-blue-400">Marquer tout lu</span>
@@ -247,7 +247,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
               </div>
 
               {isProfileOpen && (
-                <div className="absolute right-0 mt-4 w-64 bg-slate-950/90 backdrop-blur-xl border border-slate-800 rounded-[24px] shadow-2xl p-2 animate-in fade-in zoom-in duration-200 z-50 overflow-hidden" style={{ backgroundColor: 'var(--glass-bg)', borderColor: 'var(--border-color)' }}>
+                <div className="absolute right-0 mt-4 w-64 bg-slate-950 border border-slate-800 rounded-[24px] shadow-2xl p-2 animate-in fade-in zoom-in duration-200 z-50 overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
                   <div className="p-4 border-b border-slate-900/10 mb-2">
                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Connecté en tant que</p>
                     <p className="text-sm font-bold">alex.cipher@neo.ai</p>
