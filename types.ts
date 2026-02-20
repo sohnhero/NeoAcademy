@@ -377,3 +377,46 @@ export interface DiagnosticResult {
   recommendations: string[];
   adaptedModuleNotes: string;
 }
+
+// =====================================================
+// PAYMENT & SUBSCRIPTION SYSTEM
+// =====================================================
+
+export type SubscriptionTier = 'free' | 'starter' | 'pro' | 'elite';
+
+export interface SubscriptionPlan {
+  id: string;
+  tier: SubscriptionTier;
+  name: string;
+  price: number;
+  yearlyPrice?: number;
+  freeModulesCount: number;
+  features: string[];
+  isPopular?: boolean;
+  coachSessionsIncluded: number;
+}
+
+export interface UserSubscription {
+  currentTier: SubscriptionTier;
+  planName: string;
+  startDate?: string;
+  nextBillingDate?: string;
+  isActive: boolean;
+}
+
+export interface CoachRate {
+  id: string;
+  durationMinutes: number;
+  label: string;
+  price: number;
+  description: string;
+}
+
+export interface PaymentRecord {
+  id: string;
+  date: string;
+  description: string;
+  amount: number;
+  type: 'subscription' | 'coach_session';
+  status: 'completed' | 'pending' | 'failed';
+}

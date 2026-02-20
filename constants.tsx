@@ -1,5 +1,5 @@
 
-import { LearningPath, PathModule, Course, Badge, LearnerProgress, InsightLLM, ExitProfile, Coach, LegacyCourse, Module } from './types';
+import { LearningPath, PathModule, Course, Badge, LearnerProgress, InsightLLM, ExitProfile, Coach, LegacyCourse, Module, SubscriptionPlan, CoachRate, PaymentRecord } from './types';
 
 // =====================================================
 // EXIT PROFILES
@@ -989,3 +989,97 @@ export const MOCK_ADMIN_DASHBOARD_DATA = {
   ],
   executiveSummary: `**Synthèse Hebdomadaire IA :** Progression solide sur fondamentaux EVM.`
 };
+
+// =====================================================
+// PAYMENT & SUBSCRIPTION SYSTEM
+// =====================================================
+
+
+export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
+  {
+    id: 'plan-starter',
+    tier: 'starter',
+    name: 'Starter',
+    price: 9900,
+    yearlyPrice: 99000,
+    freeModulesCount: 4,
+    coachSessionsIncluded: 0,
+    features: [
+      'Accès aux 4 premiers modules',
+      'Tuteur IA illimité',
+      'Portfolio numérique',
+      'Badges de compétences',
+      'Support communautaire'
+    ]
+  },
+  {
+    id: 'plan-pro',
+    tier: 'pro',
+    name: 'Pro',
+    price: 19900,
+    yearlyPrice: 199000,
+    freeModulesCount: 99,
+    coachSessionsIncluded: 2,
+    isPopular: true,
+    features: [
+      'Accès à tous les modules',
+      'Tuteur IA illimité',
+      'Portfolio numérique avancé',
+      '2 sessions coach/mois incluses',
+      'Projets finaux & certifications',
+      'Accès prioritaire aux nouveautés',
+      'IDE collaboratif'
+    ]
+  },
+  {
+    id: 'plan-elite',
+    tier: 'elite',
+    name: 'Elite',
+    price: 39900,
+    yearlyPrice: 399000,
+    freeModulesCount: 99,
+    coachSessionsIncluded: 8,
+    features: [
+      'Tout le plan Pro',
+      '8 sessions coach/mois incluses',
+      'Mentorat personnalisé',
+      'Revue de code prioritaire',
+      'Accès anticipé aux parcours',
+      'Certificat vérifié on-chain',
+      'Réseau alumni exclusif',
+      'Support prioritaire 24/7'
+    ]
+  }
+];
+
+export const COACH_RATES: CoachRate[] = [
+  {
+    id: 'rate-30',
+    durationMinutes: 30,
+    label: '30 minutes',
+    price: 7500,
+    description: 'Session flash — idéale pour débloquer un point technique précis'
+  },
+  {
+    id: 'rate-60',
+    durationMinutes: 60,
+    label: '1 heure',
+    price: 12500,
+    description: 'Session standard — revue de code, audit, ou architecture ensemble'
+  },
+  {
+    id: 'rate-90',
+    durationMinutes: 90,
+    label: '1h30',
+    price: 17500,
+    description: 'Session approfondie — pair programming ou préparation projet final'
+  }
+];
+
+export const MOCK_PAYMENT_HISTORY: PaymentRecord[] = [
+  { id: 'pay-1', date: '2026-02-15', description: 'Abonnement Pro — Mensuel', amount: 19900, type: 'subscription', status: 'completed' },
+  { id: 'pay-2', date: '2026-02-10', description: 'Session Coach — 1h avec Amadou D.', amount: 12500, type: 'coach_session', status: 'completed' },
+  { id: 'pay-3', date: '2026-01-15', description: 'Abonnement Pro — Mensuel', amount: 19900, type: 'subscription', status: 'completed' },
+  { id: 'pay-4', date: '2026-01-08', description: 'Session Coach — 30min avec Fatou S.', amount: 7500, type: 'coach_session', status: 'completed' },
+  { id: 'pay-5', date: '2025-12-15', description: 'Abonnement Starter — Mensuel', amount: 9900, type: 'subscription', status: 'completed' }
+];

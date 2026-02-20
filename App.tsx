@@ -30,7 +30,8 @@ import DeadlinePlanningBoard from './components/DeadlinePlanningBoard';
 import DeadlineQuickView from './components/DeadlineQuickView';
 import LiveSessionOverlay from './components/LiveSessionOverlay';
 import CongratulationsModal from './components/CongratulationsModal';
-import { UserRole, LearningPath, PathModule, Course, LegacyCourse, Remediation, ProjectPlan, Coach } from './types';
+import SubscriptionView from './components/SubscriptionView';
+import { UserRole, LearningPath, PathModule, Course, LegacyCourse, Remediation, ProjectPlan, Coach, UserSubscription, SubscriptionTier } from './types';
 import { MOCK_LEARNING_PATHS, MOCK_COURSES, MOCK_COACHES } from './constants';
 import api from './services/api';
 import { evaluateModule } from './services/geminiService';
@@ -109,6 +110,25 @@ const App: React.FC = () => {
     score?: number;
     badgeName?: string;
   } | null>(null);
+
+  // Subscription State
+  const [userSubscription, setUserSubscription] = useState<UserSubscription>({
+    currentTier: 'free',
+    planName: 'Gratuit',
+    isActive: true
+  });
+
+  const handleUpgradeSubscription = (tier: SubscriptionTier) => {
+    const planNames: Record<SubscriptionTier, string> = { free: 'Gratuit', starter: 'Starter', pro: 'Pro', elite: 'Elite' };
+    setUserSubscription({
+      currentTier: tier,
+      planName: planNames[tier],
+      startDate: new Date().toISOString().split('T')[0],
+      nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      isActive: true
+    });
+    toast.success(`🎉 Abonnement ${planNames[tier]} activé avec succès !`, { theme: 'dark' });
+  };
 
   // Legacy State (for admin/coach views)
   const [legacyCourses, setLegacyCourses] = useState<LegacyCourse[]>([]);
@@ -588,6 +608,14 @@ const App: React.FC = () => {
       case 'portfolio':
         return <PortfolioView />;
 
+      case 'subscription':
+        return (
+          <SubscriptionView
+            subscription={userSubscription}
+            onUpgrade={handleUpgradeSubscription}
+          />
+        );
+
       case 'profile':
         return (
           <LearningPathView
@@ -639,6 +667,8 @@ const App: React.FC = () => {
                 }
               }
             }}
+            userSubscription={userSubscription}
+            onNavigateToSubscription={() => setActiveTab('subscription')}
           />
         );
 

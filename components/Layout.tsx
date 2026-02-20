@@ -115,6 +115,12 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
                 active={activeTab === 'portfolio'}
                 onClick={() => setActiveTab('portfolio')}
               />
+              <SidebarItem
+                icon={CreditCard}
+                label={isCollapsed ? "" : "Abonnement"}
+                active={activeTab === 'subscription'}
+                onClick={() => setActiveTab('subscription')}
+              />
             </>
           )}
 

@@ -17,7 +17,7 @@ import {
   Play
 } from 'lucide-react';
 import { MOCK_LEARNING_PATHS } from '../constants';
-import { LearningPath, PathModule, Course } from '../types';
+import { LearningPath, PathModule, Course, UserSubscription } from '../types';
 
 interface MilestoneNodeProps {
   status: 'completed' | 'active' | 'locked';
@@ -49,10 +49,10 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
 
       <div className="relative z-10">
         <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-500 border-2 ${isCompleted
-            ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20 border-blue-600'
-            : isActive
-              ? 'animate-pulse'
-              : ''
+          ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20 border-blue-600'
+          : isActive
+            ? 'animate-pulse'
+            : ''
           }`} style={{
             backgroundColor: !isCompleted ? 'var(--bg-primary)' : undefined,
             borderColor: !isCompleted ? (isActive ? 'var(--accent-primary)' : 'var(--border-color)') : undefined,
@@ -101,17 +101,32 @@ interface LearningPathViewProps {
   onNavigateToCourse?: (moduleId: string, courseId: string) => void;
   onNavigateToExam?: (moduleId: string) => void;
   onNavigateToFinalProject?: () => void;
+  userSubscription?: UserSubscription;
+  onNavigateToSubscription?: () => void;
 }
 
 const LearningPathView: React.FC<LearningPathViewProps> = ({
   learningPath = MOCK_LEARNING_PATHS[0],
   onNavigateToCourse,
   onNavigateToExam,
-  onNavigateToFinalProject
+  onNavigateToFinalProject,
+  userSubscription,
+  onNavigateToSubscription
 }) => {
   const [expandedModule, setExpandedModule] = useState<string | null>(
     learningPath.modules.find(m => m.status === 'in-progress')?.id || null
   );
+
+  // Determine free module limit based on subscription tier
+  const getFreeModuleCount = () => {
+    if (!userSubscription) return 99;
+    switch (userSubscription.currentTier) {
+      case 'free': return 2;
+      case 'starter': return 4;
+      default: return 99;
+    }
+  };
+  const freeModuleLimit = getFreeModuleCount();
 
   const getModuleStatus = (module: PathModule): 'completed' | 'active' | 'locked' => {
     if (module.status === 'completed') return 'completed';
@@ -170,16 +185,41 @@ const LearningPathView: React.FC<LearningPathViewProps> = ({
           const isExpanded = expandedModule === module.id;
           const status = getModuleStatus(module);
           const Icon = getModuleIcon(idx);
+          const isPremiumLocked = idx >= freeModuleLimit;
           const activeCourse = module.courses.find(c => c.status === 'in-progress' || (c.status === 'not-started' && !c.isLocked));
           const allCoursesComplete = module.courses.every(c => c.status === 'completed');
-          const nextAction = allCoursesComplete && module.exam && module.exam.status !== 'completed'
-            ? () => onNavigateToExam?.(module.id)
-            : activeCourse
-              ? () => onNavigateToCourse?.(module.id, activeCourse.id)
-              : undefined;
+          const nextAction = isPremiumLocked
+            ? undefined
+            : allCoursesComplete && module.exam && module.exam.status !== 'completed'
+              ? () => onNavigateToExam?.(module.id)
+              : activeCourse
+                ? () => onNavigateToCourse?.(module.id, activeCourse.id)
+                : undefined;
 
           return (
-            <div key={module.id}>
+            <div key={module.id} className="relative">
+              {/* Premium Lock Overlay */}
+              {isPremiumLocked && (
+                <div className="absolute inset-0 z-20 flex items-center justify-center" style={{ pointerEvents: 'auto' }}>
+                  <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm rounded-2xl" />
+                  <div className="relative z-10 text-center px-6">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center mx-auto mb-4 shadow-xl shadow-yellow-500/20">
+                      <Lock className="w-7 h-7 text-white" />
+                    </div>
+                    <p className="text-white font-black text-sm mb-1">Contenu Premium</p>
+                    <p className="text-slate-400 text-xs mb-4">Passez à un abonnement supérieur pour débloquer</p>
+                    {onNavigateToSubscription && (
+                      <button
+                        onClick={onNavigateToSubscription}
+                        className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs font-black uppercase tracking-widest hover:shadow-lg hover:shadow-yellow-500/20 transition-all hover:-translate-y-0.5 active:scale-95"
+                      >
+                        Voir les Plans
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <MilestoneNode
                 status={status}
                 title={module.title}
@@ -209,7 +249,7 @@ const LearningPathView: React.FC<LearningPathViewProps> = ({
                         <div
                           key={course.id}
                           className={`p-4 rounded-xl border transition-all cursor-pointer hover:border-blue-500/30 ${course.status === 'completed' ? 'bg-green-500/5 border-green-500/20' :
-                              course.status === 'in-progress' ? 'bg-blue-500/5 border-blue-500/20' : ''
+                            course.status === 'in-progress' ? 'bg-blue-500/5 border-blue-500/20' : ''
                             }`}
                           style={{
                             backgroundColor: course.isLocked ? 'var(--bg-primary)' : undefined,
@@ -243,8 +283,8 @@ const LearningPathView: React.FC<LearningPathViewProps> = ({
                       {module.exam && (
                         <div
                           className={`p-4 rounded-xl border-2 transition-all ${module.exam.status === 'completed' ? 'bg-purple-500/5 border-purple-500/30' :
-                              allCoursesComplete ? 'bg-purple-500/10 border-purple-500/30 cursor-pointer hover:border-purple-400' :
-                                'opacity-50'
+                            allCoursesComplete ? 'bg-purple-500/10 border-purple-500/30 cursor-pointer hover:border-purple-400' :
+                              'opacity-50'
                             }`}
                           style={{ borderColor: !allCoursesComplete && module.exam.status !== 'completed' ? 'var(--border-color)' : undefined }}
                           onClick={() => allCoursesComplete && module.exam?.status !== 'completed' && onNavigateToExam?.(module.id)}
@@ -274,10 +314,10 @@ const LearningPathView: React.FC<LearningPathViewProps> = ({
           <div className="relative flex gap-8 group mt-8">
             <div className="relative z-10">
               <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-500 border-2 ${learningPath.finalProject.status === 'completed'
-                  ? 'bg-yellow-500 text-white shadow-lg shadow-yellow-500/20 border-yellow-500'
-                  : learningPath.modules.every(m => m.status === 'completed')
-                    ? 'bg-yellow-500/20 border-yellow-500/50 text-yellow-500'
-                    : ''
+                ? 'bg-yellow-500 text-white shadow-lg shadow-yellow-500/20 border-yellow-500'
+                : learningPath.modules.every(m => m.status === 'completed')
+                  ? 'bg-yellow-500/20 border-yellow-500/50 text-yellow-500'
+                  : ''
                 }`}
                 style={{
                   backgroundColor: !learningPath.modules.every(m => m.status === 'completed') && learningPath.finalProject.status !== 'completed' ? 'var(--bg-primary)' : undefined,
