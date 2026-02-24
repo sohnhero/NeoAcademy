@@ -7,7 +7,7 @@ import {
   Lightbulb, BrainCircuit, RefreshCw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Course, LearningPath, PathModule, Remediation, ProjectPlan } from '../types';
+import { Course, LearningPath, PathModule, Remediation, ProjectPlan, UserSubscription } from '../types';
 import { askTutor, evaluateModule } from '../services/geminiService';
 import RemediationView from './RemediationView';
 import DeadlineQuickView from './DeadlineQuickView';
@@ -28,6 +28,8 @@ interface CourseViewProps {
   onSelectCourse?: () => void;
   onRemediationComplete?: () => void;
   onOpenPlanning?: (type: 'module' | 'final', id: string, deadline: string, title: string, initialPlan?: ProjectPlan) => void;
+  userSubscription?: UserSubscription;
+  onNavigateToSubscription?: () => void;
 }
 
 const CourseView: React.FC<CourseViewProps> = ({
@@ -45,10 +47,23 @@ const CourseView: React.FC<CourseViewProps> = ({
   onSelectRemediation,
   onSelectCourse,
   onRemediationComplete,
-  onOpenPlanning
+  onOpenPlanning,
+  userSubscription,
+  onNavigateToSubscription
 }) => {
   // Local state for sidebar accordions
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set([activeModuleId]));
+
+  // Determine free module limit based on subscription tier
+  const getFreeModuleCount = () => {
+    if (!userSubscription) return 99;
+    switch (userSubscription.currentTier) {
+      case 'free': return 2;
+      case 'starter': return 4;
+      default: return 99;
+    }
+  };
+  const freeModuleLimit = getFreeModuleCount();
   const [userSubmission, setUserSubmission] = useState('');
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [evaluationResult, setEvaluationResult] = useState<any>(null);
@@ -145,10 +160,11 @@ const CourseView: React.FC<CourseViewProps> = ({
         </div>
 
         <div className="space-y-2">
-          {learningPath.modules.map((m) => {
+          {learningPath.modules.map((m, idx) => {
             const isExpanded = expandedModules.has(m.id);
             const isCompleted = m.status === 'completed';
-            const isLocked = m.isLocked && !isCompleted;
+            const isPremiumLocked = idx >= freeModuleLimit;
+            const isLocked = (m.isLocked || isPremiumLocked) && !isCompleted;
             const isActive = activeModuleId === m.id;
 
             return (
@@ -161,6 +177,8 @@ const CourseView: React.FC<CourseViewProps> = ({
                   <div className="flex-shrink-0">
                     {isCompleted ? (
                       <CheckCircle2 className="w-5 h-5 text-green-500" />
+                    ) : isPremiumLocked ? (
+                      <Lock className="w-5 h-5 text-yellow-500" />
                     ) : isLocked ? (
                       <Lock className="w-5 h-5 opacity-30" style={{ color: 'var(--text-muted)' }} />
                     ) : (
@@ -170,8 +188,11 @@ const CourseView: React.FC<CourseViewProps> = ({
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className={`text-[11px] block uppercase font-black tracking-wider truncate transition-colors ${isActive ? 'text-blue-500' : 'text-slate-400'}`}>
+                    <span className={`text-[11px] block uppercase font-black tracking-wider truncate transition-colors ${isActive ? 'text-blue-500' : isPremiumLocked ? 'text-yellow-600' : 'text-slate-400'}`}>
                       {m.title}
+                      {isPremiumLocked && (
+                        <span className="ml-2 text-[8px] bg-yellow-500/10 text-yellow-500 px-1.5 py-0.5 rounded border border-yellow-500/20">PREMIUM</span>
+                      )}
                     </span>
                     <span className="text-[9px] opacity-70 uppercase tracking-widest font-mono" style={{ color: 'var(--text-muted)' }}>
                       {m.duration} • {m.courses.length} Cours
@@ -197,19 +218,23 @@ const CourseView: React.FC<CourseViewProps> = ({
                               if (!isCourseLocked) {
                                 onNavigate(m.id, c.id);
                                 onSelectCourse?.();
+                              } else if (isPremiumLocked && onNavigateToSubscription) {
+                                onNavigateToSubscription();
                               }
                             }}
-                            disabled={isCourseLocked}
+                            disabled={isCourseLocked && !isPremiumLocked}
                             className={`w-full flex items-center gap-3 py-2.5 px-3 rounded-lg text-left transition-all ${isCourseActive
                               ? 'bg-blue-600/20 border border-blue-500/30'
                               : isCourseLocked
-                                ? 'opacity-40 grayscale cursor-not-allowed'
+                                ? 'opacity-40 grayscale cursor-not-allowed group'
                                 : 'hover:bg-white/5'
                               }`}
                           >
                             <div className="flex-shrink-0">
                               {isCourseCompleted ? (
                                 <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+                              ) : isPremiumLocked ? (
+                                <Lock className="w-3.5 h-3.5 text-yellow-600" />
                               ) : isCourseLocked ? (
                                 <Lock className="w-3.5 h-3.5" style={{ color: 'var(--text-muted)' }} />
                               ) : isCourseActive ? (

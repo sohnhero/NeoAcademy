@@ -541,6 +541,8 @@ const App: React.FC = () => {
             setPlanningContext({ type, id, deadline, title, initialPlan, subBlocks });
             setShowPlanningBoard(true);
           }}
+          userSubscription={userSubscription}
+          onNavigateToSubscription={() => setActiveTab('subscription')}
         />
       );
     }

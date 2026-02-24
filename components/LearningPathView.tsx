@@ -4,17 +4,19 @@ import {
   Shield,
   Cpu,
   Code,
-  Zap,
   Lock,
   CheckCircle2,
   ArrowRight,
   Terminal,
   Layers,
+  ShieldCheck,
+  Award,
+  Zap,
+  Play,
+  Sparkles,
   Activity,
   BookOpen,
-  Award,
-  ChevronRight,
-  Play
+  ChevronRight
 } from 'lucide-react';
 import { MOCK_LEARNING_PATHS } from '../constants';
 import { LearningPath, PathModule, Course, UserSubscription } from '../types';
@@ -27,6 +29,8 @@ interface MilestoneNodeProps {
   isLast?: boolean;
   onClick?: () => void;
   badge?: { name: string };
+  isPremium?: boolean;
+  onNavigateToSubscription?: () => void;
 }
 
 const MilestoneNode: React.FC<MilestoneNodeProps> = ({
@@ -36,7 +40,9 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
   icon: Icon,
   isLast,
   onClick,
-  badge
+  badge,
+  isPremium,
+  onNavigateToSubscription
 }) => {
   const isActive = status === 'active';
   const isCompleted = status === 'completed';
@@ -50,24 +56,31 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
       <div className="relative z-10">
         <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-500 border-2 ${isCompleted
           ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20 border-blue-600'
-          : isActive
-            ? 'animate-pulse'
-            : ''
+          : isPremium
+            ? 'bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border-yellow-500/50 text-yellow-500'
+            : isActive
+              ? 'animate-pulse'
+              : ''
           }`} style={{
-            backgroundColor: !isCompleted ? 'var(--bg-primary)' : undefined,
-            borderColor: !isCompleted ? (isActive ? 'var(--accent-primary)' : 'var(--border-color)') : undefined,
-            color: !isCompleted ? (isActive ? 'var(--accent-primary)' : 'var(--text-muted)') : undefined
+            backgroundColor: (!isCompleted && !isPremium) ? 'var(--bg-primary)' : undefined,
+            borderColor: (!isCompleted && !isPremium) ? (isActive ? 'var(--accent-primary)' : 'var(--border-color)') : undefined,
+            color: (!isCompleted && !isPremium) ? (isActive ? 'var(--accent-primary)' : 'var(--text-muted)') : undefined
           }}>
-          {isCompleted ? <CheckCircle2 className="w-8 h-8" /> : <Icon className="w-7 h-7" />}
+          {isCompleted ? <CheckCircle2 className="w-8 h-8" /> : isPremium ? <Lock className="w-7 h-7" /> : <Icon className="w-7 h-7" />}
         </div>
       </div>
 
       <div className="pb-16 pt-2 flex-1">
         <div className="flex items-center gap-3 mb-2">
-          <h4 className="text-xl font-black tracking-tight" style={{ color: status === 'locked' ? 'var(--text-muted)' : 'var(--text-primary)' }}>
+          <h4 className="text-xl font-black tracking-tight" style={{ color: (status === 'locked' || isPremium) ? 'var(--text-muted)' : 'var(--text-primary)' }}>
             {title}
           </h4>
-          {status === 'locked' && <Lock className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />}
+          {(status === 'locked' && !isPremium) && <Lock className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />}
+          {isPremium && (
+            <span className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 text-yellow-500 text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest border border-yellow-500/20 flex items-center gap-1">
+              <Sparkles className="w-3 h-3" /> Premium
+            </span>
+          )}
           {isActive && (
             <span className="bg-blue-500/10 text-blue-500 text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest border border-blue-500/20">
               En Cours
@@ -79,9 +92,18 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
             </span>
           )}
         </div>
-        <p className="text-sm leading-relaxed max-w-md font-medium" style={{ color: status === 'locked' ? 'var(--text-muted)' : 'var(--text-secondary)' }}>
-          {desc}
+        <p className="text-sm leading-relaxed max-w-md font-medium" style={{ color: (status === 'locked' || isPremium) ? 'var(--text-muted)' : 'var(--text-secondary)' }}>
+          {isPremium ? "Ce contenu est réservé aux membres premium. Passez à l'étape supérieure pour débloquer ce module." : desc}
         </p>
+
+        {isPremium && onNavigateToSubscription && (
+          <button
+            onClick={onNavigateToSubscription}
+            className="mt-6 flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs font-black uppercase tracking-widest hover:shadow-lg hover:shadow-yellow-500/20 transition-all hover:-translate-y-0.5 active:scale-95 shadow-xl shadow-yellow-500/10"
+          >
+            Débloquer <Zap className="w-4 h-4" />
+          </button>
+        )}
 
         {isActive && onClick && (
           <button
@@ -198,28 +220,6 @@ const LearningPathView: React.FC<LearningPathViewProps> = ({
 
           return (
             <div key={module.id} className="relative">
-              {/* Premium Lock Overlay */}
-              {isPremiumLocked && (
-                <div className="absolute inset-0 z-20 flex items-center justify-center" style={{ pointerEvents: 'auto' }}>
-                  <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm rounded-2xl" />
-                  <div className="relative z-10 text-center px-6">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center mx-auto mb-4 shadow-xl shadow-yellow-500/20">
-                      <Lock className="w-7 h-7 text-white" />
-                    </div>
-                    <p className="text-white font-black text-sm mb-1">Contenu Premium</p>
-                    <p className="text-slate-400 text-xs mb-4">Passez à un abonnement supérieur pour débloquer</p>
-                    {onNavigateToSubscription && (
-                      <button
-                        onClick={onNavigateToSubscription}
-                        className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs font-black uppercase tracking-widest hover:shadow-lg hover:shadow-yellow-500/20 transition-all hover:-translate-y-0.5 active:scale-95"
-                      >
-                        Voir les Plans
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-
               <MilestoneNode
                 status={status}
                 title={module.title}
@@ -228,6 +228,8 @@ const LearningPathView: React.FC<LearningPathViewProps> = ({
                 isLast={idx === learningPath.modules.length - 1 && !learningPath.finalProject}
                 onClick={nextAction}
                 badge={module.badge}
+                isPremium={isPremiumLocked}
+                onNavigateToSubscription={onNavigateToSubscription}
               />
 
               {/* Expanded Courses */}
