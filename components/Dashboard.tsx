@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer } from 'recharts';
-import { Play, Award, TrendingUp, Clock, ArrowRight, Zap, ChevronRight, Target, History, Trophy, BookOpen, AlertTriangle, CheckCircle2, Lock } from 'lucide-react';
+import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area } from 'recharts';
+import { Play, Award, TrendingUp, Clock, ArrowRight, Zap, ChevronRight, Target, History, Trophy, BookOpen, AlertTriangle, CheckCircle2, Lock, ShieldAlert, GraduationCap, Flame } from 'lucide-react';
 import { MOCK_BADGES, MOCK_STATS, MOCK_DAILY_GOALS, MOCK_RECENT_ACTIVITY, MOCK_LEARNING_PATHS } from '../constants';
 import { LearningPath, PathModule, Course, ProjectPlan } from '../types';
 import DeadlineQuickView from './DeadlineQuickView';
@@ -164,8 +164,136 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
-      {/* Daily Goals & Activity Row */}
+      {/* NEW SECTION: Student Analytics (Level, Evolution, Gaps) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-10">
+
+        {/* Evolution Chart */}
+        <section className="col-span-1 lg:col-span-2 border p-8 rounded-[40px] flex flex-col transition-colors" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-xl font-bold tracking-tight flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
+              <TrendingUp className="w-5 h-5 text-blue-500" /> Évolution du Score
+            </h3>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-blue-500">En direct</span>
+            </div>
+          </div>
+
+          <div className="flex-1 min-h-[250px] relative">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={MOCK_STATS.evolutionData || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  stroke="var(--text-muted)"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                  dy={10}
+                />
+                <YAxis
+                  stroke="var(--text-muted)"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                  dx={-10}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'var(--bg-primary)',
+                    borderColor: 'var(--border-color)',
+                    borderRadius: '12px',
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                  }}
+                  itemStyle={{ color: 'var(--text-primary)' }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="score"
+                  stroke="#3b82f6"
+                  strokeWidth={3}
+                  fillOpacity={1}
+                  fill="url(#colorScore)"
+                  activeDot={{ r: 6, fill: '#3b82f6', stroke: 'var(--bg-primary)', strokeWidth: 3 }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
+
+        {/* Real Level & Skills Matrix */}
+        <section className="border p-8 rounded-[40px] flex flex-col transition-colors relative overflow-hidden group" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 blur-[50px] rounded-full group-hover:bg-purple-500/20 transition-colors duration-500"></div>
+
+          <h3 className="text-xl font-bold tracking-tight flex items-center gap-3 mb-2 relative z-10" style={{ color: 'var(--text-primary)' }}>
+            <Flame className="w-5 h-5 text-purple-500" /> Profil Technique
+          </h3>
+          <p className="text-sm font-bold text-purple-500 mb-6 relative z-10">{MOCK_STATS.currentLevel}</p>
+
+          <div className="flex-1 min-h-[200px] -mx-4 relative z-10">
+            <ResponsiveContainer width="100%" height="100%">
+              <RadarChart cx="50%" cy="50%" outerRadius="70%" data={MOCK_STATS.skillMatrix}>
+                <PolarGrid stroke="var(--border-color)" />
+                <PolarAngleAxis dataKey="skill" tick={{ fill: 'var(--text-muted)', fontSize: 10, fontWeight: 'bold' }} />
+                <Radar
+                  name="Niveau"
+                  dataKey="value"
+                  stroke="#a855f7"
+                  fill="#a855f7"
+                  fillOpacity={0.3}
+                />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
+
+      </div>
+
+      {/* Gaps List & Daily Goals Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-10">
+
+        {/* Identified Gaps */}
+        <section className="border p-8 rounded-[40px] flex flex-col transition-colors" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold tracking-tight flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
+              <ShieldAlert className="w-5 h-5 text-orange-500" /> Lacunes à Combler
+            </h3>
+          </div>
+
+          <div className="space-y-4 flex-1">
+            {MOCK_STATS.identifiedGaps?.map((gap, idx) => (
+              <div key={idx} className="p-4 rounded-2xl border bg-orange-500/5 transition-colors" style={{ borderColor: 'var(--border-color)' }}>
+                <div className="flex items-start justify-between mb-2">
+                  <h4 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>{gap.topic}</h4>
+                  <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-lg ${gap.severity === 'high' ? 'bg-red-500/10 text-red-500' :
+                    gap.severity === 'medium' ? 'bg-orange-500/10 text-orange-500' :
+                      'bg-yellow-500/10 text-yellow-500'
+                    }`}>
+                    {gap.severity === 'high' ? 'Critique' : gap.severity === 'medium' ? 'Important' : 'Mineur'}
+                  </span>
+                </div>
+                {gap.recommendedModule && (
+                  <button className="text-xs font-bold text-blue-500 hover:text-blue-400 mt-2 flex items-center gap-1 transition-colors">
+                    Réviser : {gap.recommendedModule} <ChevronRight className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+            ))}
+            {(!MOCK_STATS.identifiedGaps || MOCK_STATS.identifiedGaps.length === 0) && (
+              <div className="text-center py-6">
+                <CheckCircle2 className="w-8 h-8 text-green-500 mx-auto mb-2 opacity-50" />
+                <p className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>Aucune lacune majeure détectée.</p>
+              </div>
+            )}
+          </div>
+        </section>
+
         {/* Daily Goals */}
         <section className="lg:col-span-2 border p-8 rounded-[40px] flex flex-col transition-colors" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
           <div className="flex items-center justify-between mb-8">
@@ -229,6 +357,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </section>
       </div>
+
     </div>
   );
 };

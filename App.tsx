@@ -10,6 +10,7 @@ import CourseLibraryView from './components/CourseLibraryView';
 import PortfolioView from './components/PortfolioView';
 import LearningPathView from './components/LearningPathView';
 import PathFinderView from './components/PathFinderView';
+import PathOnboardingFlow from './components/PathOnboardingFlow';
 import RemediationView from './components/RemediationView';
 import ModuleExamView from './components/ModuleExamView';
 import FinalProjectView from './components/FinalProjectView';
@@ -44,6 +45,8 @@ const App: React.FC = () => {
   // New user flow state
   const [isNewUser, setIsNewUser] = useState(false);
   const [showPathFinder, setShowPathFinder] = useState(false);
+  const [showOnboardingFlow, setShowOnboardingFlow] = useState(false);
+  const [pendingLearningPath, setPendingLearningPath] = useState<LearningPath | null>(null);
 
   useEffect(() => {
     document.documentElement.classList.remove('light-mode');
@@ -380,12 +383,33 @@ const App: React.FC = () => {
   if (showPathFinder && userRole === 'apprenant') {
     return (
       <PathFinderView
-        onPathConfirmed={handlePathConfirmed}
+        onPathConfirmed={(path) => {
+          setPendingLearningPath(path);
+          setShowPathFinder(false);
+          setShowOnboardingFlow(true);
+        }}
         onBack={() => {
           setIsAuthenticated(false);
           setShowPathFinder(false);
         }}
         availablePaths={availablePaths}
+      />
+    );
+  }
+
+  if (showOnboardingFlow && userRole === 'apprenant') {
+    return (
+      <PathOnboardingFlow
+        onComplete={(path) => {
+          // Once onboarding is done, we can start the learning path
+          handlePathConfirmed(path);
+          setShowOnboardingFlow(false);
+        }}
+        onBack={() => {
+          setShowOnboardingFlow(false);
+          setShowPathFinder(true); // Go back to path selection
+        }}
+        initialPath={pendingLearningPath}
       />
     );
   }

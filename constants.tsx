@@ -799,6 +799,18 @@ export const MOCK_STATS: LearnerProgress = {
     { skill: 'DeFi', value: 60 },
     { skill: 'ZK Proofs', value: 40 }
   ],
+  currentLevel: 'Intermédiaire - Niveau 3',
+  identifiedGaps: [
+    { topic: 'Sécurité Smart Contracts', severity: 'high', recommendedModule: 'Sécurité des Contrats' },
+    { topic: 'Optimisation Gas', severity: 'medium', recommendedModule: 'Optimisation Avancée' },
+    { topic: 'Architecture DeFi', severity: 'low' }
+  ],
+  evolutionData: [
+    { date: 'Semaine 1', score: 65 },
+    { date: 'Semaine 2', score: 72 },
+    { date: 'Semaine 3', score: 85 },
+    { date: 'Semaine 4', score: 91 }
+  ],
   currentPath: MOCK_LEARNING_PATHS[0]
 };
 

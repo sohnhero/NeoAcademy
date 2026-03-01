@@ -223,6 +223,9 @@ export interface LearnerProgress {
   completedCourses: number;
   avgScore: number;
   skillMatrix: { skill: string; value: number }[];
+  currentLevel?: string;
+  identifiedGaps?: { topic: string; severity: 'high' | 'medium' | 'low'; recommendedModule?: string }[];
+  evolutionData?: { date: string; score: number }[];
   currentPath?: LearningPath;
 }
 
