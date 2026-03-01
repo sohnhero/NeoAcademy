@@ -173,9 +173,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
 
     return (
         <div className="min-h-screen bg-[#030712] text-white overflow-hidden font-sans selection:bg-blue-500/30 relative">
-            {/* Grainy Noise Overlay */}
-            <div className="fixed inset-0 z-[1] pointer-events-none opacity-[0.03] mix-blend-overlay bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
-
             {/* Premium Ambient Background */}
             <div className="fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/10 via-[#030712] to-[#030712]"></div>
 
