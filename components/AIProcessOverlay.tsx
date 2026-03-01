@@ -1,6 +1,5 @@
-
 import React, { useEffect, useState } from 'react';
-import { Cpu, Zap, ShieldCheck, BrainCircuit, Search, Loader2 } from 'lucide-react';
+import { Cpu, Zap, ShieldCheck, BrainCircuit, Loader2 } from 'lucide-react';
 
 interface AIProcessOverlayProps {
     isVisible: boolean;
@@ -14,29 +13,36 @@ const AIProcessOverlay: React.FC<AIProcessOverlayProps> = ({ isVisible, type, on
 
     const statusMap = {
         analysis: [
-            "Synchronisation avec l'EVM...",
-            "Analyse du bytecode...",
-            "Vérification des invariants...",
-            "Génération du feedback socratique..."
+            "Lecture du code...",
+            "Analyse de la complexité...",
+            "Vérification des standards...",
+            "Synthèse des résultats..."
         ],
         generation: [
-            "Consultation de la base de connaissances...",
-            "Structuration du parcours personnalisé...",
-            "Optimisation de la courbe d'apprentissage...",
-            "Finalisation du module..."
+            "Analyse de votre profil...",
+            "Sélection des modules adaptées...",
+            "Structuration du parcours...",
+            "Finalisation..."
         ],
         audit: [
-            "Scan des vulnérabilités (SWC)...",
-            "Analyse du flux de contrôle...",
-            "Vérification de la logique de transfert...",
-            "Calcul du score de sécurité..."
+            "Recherche de vulnérabilités...",
+            "Analyse des flux d'exécution...",
+            "Vérification des règles de sécurité...",
+            "Calcul du score final..."
         ],
         remediation: [
-            "Identification des lacunes...",
-            "Sélection des ressources de soutien...",
-            "Conception de l'exercice de validation...",
-            "Initialisation du cours de remédiation..."
+            "Identification des points de blocage...",
+            "Recherche de ressources adaptées...",
+            "Génération d'un exercice ciblé...",
+            "Préparation de la session..."
         ]
+    };
+
+    const titleMap = {
+        analysis: "Analyse IA en cours",
+        generation: "Génération du parcours",
+        audit: "Audit de sécurité IA",
+        remediation: "Création du soutien"
     };
 
     useEffect(() => {
@@ -46,13 +52,13 @@ const AIProcessOverlay: React.FC<AIProcessOverlayProps> = ({ isVisible, type, on
                 setProgress(prev => {
                     if (prev >= 100) {
                         clearInterval(interval);
-                        setTimeout(() => onComplete?.(), 500);
+                        setTimeout(() => onComplete?.(), 600);
                         return 100;
                     }
-                    return prev + 1;
+                    const increment = prev > 80 ? 1.5 : prev > 40 ? 1 : 0.8;
+                    return Math.min(100, prev + increment);
                 });
             }, 30);
-
             return () => clearInterval(interval);
         }
     }, [isVisible, onComplete]);
@@ -63,64 +69,81 @@ const AIProcessOverlay: React.FC<AIProcessOverlayProps> = ({ isVisible, type, on
         const statusInterval = setInterval(() => {
             const index = Math.floor((progress / 100) * currentStatuses.length);
             setStatusText(currentStatuses[Math.min(index, currentStatuses.length - 1)]);
-        }, 500);
+        }, 400);
         return () => clearInterval(statusInterval);
     }, [isVisible, type, progress]);
 
     if (!isVisible) return null;
 
+    const Icon = type === 'analysis' ? BrainCircuit : type === 'audit' ? ShieldCheck : type === 'generation' ? Zap : Cpu;
+
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-xl transition-all duration-500">
-            {/* Animated Neural Background */}
-            <div className="absolute inset-0 overflow-hidden opacity-20 pointer-events-none">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500/30 rounded-full blur-[120px] animate-pulse" />
-                <div className="absolute top-1/4 left-1/3 w-[300px] h-[300px] bg-purple-500/20 rounded-full blur-[100px] animate-[pulse_4s_infinite]" />
-            </div>
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-slate-900/80 backdrop-blur-md transition-opacity duration-300 font-sans">
+            <div className="relative w-full max-w-sm p-8 bg-[#0a0f1a] rounded-3xl shadow-2xl flex flex-col items-center text-center mx-4 overflow-hidden border border-[#1e293b]">
 
-            <div className="relative w-full max-w-lg p-12 text-center">
-                {/* Central Icon Container */}
-                <div className="relative mx-auto w-32 h-32 mb-10">
-                    <div className="absolute inset-0 bg-blue-500/20 rounded-full animate-ping" />
-                    <div className="absolute inset-2 border-2 border-blue-500/30 rounded-full animate-[spin_3s_linear_infinite]" />
-                    <div className="absolute inset-4 border border-blue-400/20 rounded-full animate-[spin_2s_linear_infinite_reverse]" />
+                {/* Subtle animated background gradient glow */}
+                <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-[#2964ea]/10 to-transparent pointer-events-none" />
 
-                    <div className="relative w-full h-full bg-slate-900 border border-blue-500/50 rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(59,130,246,0.5)]">
-                        {type === 'analysis' && <BrainCircuit className="w-12 h-12 text-blue-400" />}
-                        {type === 'audit' && <ShieldCheck className="w-12 h-12 text-blue-400" />}
-                        {type === 'generation' && <Zap className="w-12 h-12 text-blue-400" />}
-                        {type === 'remediation' && <Cpu className="w-12 h-12 text-blue-400" />}
+                {/* Animated Icon Container */}
+                <div className="relative flex items-center justify-center w-20 h-20 mb-6">
+                    <div className="absolute inset-0 bg-[#2964ea]/20 rounded-2xl rotate-3 animate-[spin_8s_linear_infinite]" />
+                    <div className="absolute inset-0 bg-[#2964ea]/20 rounded-2xl -rotate-3 animate-[spin_6s_linear_infinite_reverse]" />
+                    <div className="relative flex items-center justify-center w-14 h-14 bg-[#0f172a] rounded-xl shadow-inner border border-slate-800">
+                        <Icon className="w-7 h-7 text-[#2964ea]" />
                     </div>
                 </div>
 
-                {/* Text Content */}
-                <div className="space-y-4">
-                    <h2 className="text-3xl font-black text-white tracking-tighter uppercase">
-                        {type === 'audit' ? 'Audit en cours' :
-                            type === 'analysis' ? 'Analyse IA' :
-                                type === 'generation' ? 'Optimisation' : 'Soutien IA'}
-                    </h2>
+                <h2 className="text-xl font-bold text-white mb-2">
+                    {titleMap[type]}
+                </h2>
 
-                    <div className="h-6 flex items-center justify-center gap-2">
-                        <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
-                        <p className="text-blue-400 font-bold text-xs uppercase tracking-widest animate-pulse">
-                            {statusText}
-                        </p>
+                <div className="flex items-center justify-center gap-2 h-6 mb-8 text-[#2964ea]">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <p className="font-medium text-sm animate-pulse">
+                        {statusText}
+                    </p>
+                </div>
+
+                {/* Simulated "Analysis" text block skeleton */}
+                <div className="w-full space-y-2.5 mb-8">
+                    {[0, 1, 2].map((i) => (
+                        <div key={i} className="w-full h-2 bg-slate-800 rounded-full overflow-hidden relative">
+                            <div
+                                className="absolute top-0 left-0 h-full bg-[#2964ea]/30"
+                                style={{
+                                    width: '100%',
+                                    transform: 'translateX(-100%)',
+                                    animation: `skeleton-scan 2s ease-in-out infinite`,
+                                    animationDelay: `${i * 0.3}s`
+                                }}
+                            />
+                        </div>
+                    ))}
+                </div>
+
+                {/* Main Progress Bar */}
+                <div className="w-full">
+                    <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Progression</span>
+                        <span className="text-xs font-bold text-[#2964ea]">{Math.floor(progress)}%</span>
                     </div>
-
-                    {/* Progress Bar Container */}
-                    <div className="relative mt-8 h-1.5 w-full bg-slate-800 rounded-full overflow-hidden border border-white/5">
+                    <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
                         <div
-                            className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-600 via-blue-400 to-blue-600 transition-all duration-300 ease-out shadow-[0_0_20px_rgba(59,130,246,0.8)]"
+                            className="h-full bg-[#2964ea] transition-all duration-100 ease-out rounded-full shadow-[0_0_10px_#2964ea]"
                             style={{ width: `${progress}%` }}
                         />
                     </div>
-
-                    <div className="flex justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-2">
-                        <span>Calcul vectoriel</span>
-                        <span className="text-blue-400">{progress}%</span>
-                    </div>
                 </div>
+
             </div>
+
+            <style>{`
+                @keyframes skeleton-scan {
+                    0% { transform: translateX(-100%); }
+                    50% { transform: translateX(100%); }
+                    100% { transform: translateX(100%); }
+                }
+            `}</style>
         </div>
     );
 };

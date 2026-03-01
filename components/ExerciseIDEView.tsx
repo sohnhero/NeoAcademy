@@ -1,575 +1,993 @@
-import React, { useState, useEffect } from 'react';
-import {
-    X, Play, Save, Terminal, File, Folder, ChevronRight, ChevronDown,
-    Send, Clock, AlertTriangle, CheckCircle2, Code, FileText, Settings,
-    Layout, Maximize2, Minimize2, RotateCcw, Copy, Download, ShieldAlert,
-    Eye, Edit3, Sparkles, User, Target
-} from 'lucide-react';
+import React, { useState, useEffect, useRef } from "react";
 
-import { SimulationEvent } from '../types';
+const GLITCH_CHARS = "!@#$%^&*<>?/\\|{}[]~`";
+
+function GlitchText({ text, active }: { text: string; active: boolean }) {
+    const [display, setDisplay] = useState(text);
+    useEffect(() => {
+        if (!active) { setDisplay(text); return; }
+        let iter = 0;
+        const interval = setInterval(() => {
+            setDisplay(text.split("").map((char, idx) =>
+                idx < iter ? text[idx] : GLITCH_CHARS[Math.floor(Math.random() * GLITCH_CHARS.length)]
+            ).join(""));
+            if (iter >= text.length) clearInterval(interval);
+            iter += 1 / 3;
+        }, 30);
+        return () => clearInterval(interval);
+    }, [active, text]);
+    return <span>{display}</span>;
+}
+
+function ScanlineOverlay() {
+    return (
+        <div className="pointer-events-none fixed inset-0 z-[200] opacity-[0.015]"
+            style={{
+                backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,200,255,0.3) 2px, rgba(0,200,255,0.3) 4px)",
+                backgroundSize: "100% 4px"
+            }} />
+    );
+}
+
+const INITIAL_CODE = `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.19;
+
+/**
+ * @title SecureVault
+ * @notice CRITICAL PRODUCTION CONTRACT — Under Evaluation
+ */
+contract SecureVault {
+    mapping(address => uint256) private _balances;
+    address private _owner;
+    bool private _locked;
+
+    modifier nonReentrant() {
+        require(!_locked, "Reentrant call");
+        _locked = true;
+        _;
+        _locked = false;
+    }
+
+    constructor() {
+        _owner = msg.sender;
+    }
+
+    function deposit() external payable nonReentrant {
+        require(msg.value > 0, "Zero deposit");
+        _balances[msg.sender] += msg.value;
+    }
+
+    function withdraw(uint256 amount) external nonReentrant {
+        require(_balances[msg.sender] >= amount, "Insufficient");
+        _balances[msg.sender] -= amount;
+        // TODO: Fix vulnerability below ↓
+        (bool ok,) = msg.sender.call{value: amount}("");
+        require(ok, "Transfer failed");
+    }
+}`;
+
+const BUGGY_CODE = `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.19;
+
+// ⚠️ CRITICAL BUG INJECTED — REENTRANCY VULNERABILITY DETECTED
+contract SecureVault {
+    mapping(address => uint256) private _balances;
+    address private _owner;
+
+    constructor() {
+        _owner = msg.sender;
+    }
+
+    function deposit() external payable {
+        _balances[msg.sender] += msg.value;
+    }
+
+    // VULNERABLE: Balance not decremented before transfer!
+    function withdraw(uint256 amount) external {
+        require(_balances[msg.sender] >= amount, "Insufficient");
+        (bool ok,) = msg.sender.call{value: amount}("");
+        require(ok, "Transfer failed");
+        _balances[msg.sender] -= amount; // ← EXPLOIT HERE
+    }
+
+    // BACKDOOR: No access control
+    function emergencyDrain() external {
+        payable(msg.sender).transfer(address(this).balance);
+    }
+}`;
+
+const SIMULATION_EVENTS = [
+    { at: 270, type: "client", msg: "Alexandre (CTO Nexion): Le contrat doit être déployé dans 15min. Les investisseurs regardent. C'est 2M€ en jeu. MAINTENANT." },
+    { at: 180, type: "incident", msg: "PROD ALERT: Memory leak detected on node-3. Gas costs spiking 340%. Deploy window closing." },
+    { at: 120, type: "bug", msg: "CRITICAL VULNERABILITY INJECTED BY ATTACKER" },
+    { at: 60, type: "client", msg: "Alexandre: Pourquoi ça prend autant de temps?! Vos concurrents auraient déjà fini. RÉPONDEZ." },
+];
+
+const CONSOLE_INIT = [
+    { type: "system", text: "Neural IDE v4.2.1 — Evaluation Environment Initialized" },
+    { type: "system", text: "Hardhat network started on http://127.0.0.1:8545" },
+    { type: "info", text: "Compiling contracts... solc 0.8.19" },
+    { type: "success", text: "2 contracts compiled successfully" },
+    { type: "warn", text: "WARNING: Contract size approaching limit (22.4kb / 24kb)" },
+    { type: "prompt", text: "" },
+];
+
+const FILE_TREE = [
+    {
+        name: "contracts", type: "folder", open: true, children: [
+            { name: "SecureVault.sol", type: "sol", active: true },
+            {
+                name: "interfaces", type: "folder", children: [
+                    { name: "IVault.sol", type: "sol" },
+                ]
+            },
+        ]
+    },
+    {
+        name: "test", type: "folder", children: [
+            { name: "vault.test.js", type: "js" },
+        ]
+    },
+    {
+        name: "scripts", type: "folder", children: [
+            { name: "deploy.js", type: "js" },
+        ]
+    },
+    { name: "hardhat.config.js", type: "js" },
+    { name: ".env", type: "env" },
+];
+
+const fileIcon = (type: string) => {
+    if (type === "folder") return "📁";
+    if (type === "sol") return "◈";
+    if (type === "js") return "⬡";
+    if (type === "env") return "⚙";
+    return "·";
+};
+
+function FileNode({ node, depth = 0 }: { key?: React.Key; node: any; depth?: number }) {
+    const [open, setOpen] = useState(node.open || false);
+    return (
+        <div>
+            <div
+                onClick={() => node.type === "folder" && setOpen(!open)}
+                className="flex items-center gap-1.5 py-[3px] px-2 cursor-pointer group transition-all duration-150"
+                style={{ paddingLeft: `${8 + depth * 14}px` }}
+            >
+                <span style={{ color: node.active ? "#00d4ff" : node.type === "folder" ? "#4a90d9" : "#556080", fontSize: 11 }}>
+                    {node.type === "folder" ? (open ? "▾" : "▸") : fileIcon(node.type)}
+                </span>
+                <span style={{
+                    fontSize: 11.5,
+                    fontFamily: "'JetBrains Mono', monospace",
+                    color: node.active ? "#00d4ff" : "#8899bb",
+                    fontWeight: node.active ? 600 : 400,
+                }} className="group-hover:text-white transition-colors">
+                    {node.name}
+                </span>
+                {node.active && <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#00d4ff", marginLeft: "auto", boxShadow: "0 0 6px #00d4ff" }} />}
+            </div>
+            {node.children && open && node.children.map((child: any, i: number) => (
+                <FileNode key={i} node={child} depth={depth + 1} />
+            ))}
+        </div>
+    );
+}
+
+import { X, Zap } from "lucide-react";
 
 interface ExerciseIDEViewProps {
     exerciseType: 'course' | 'module' | 'final';
     title: string;
-    description: string;
-    instructions: string[];
-    timeLimit?: number; // in minutes, optional
-    onSubmit: (code: string, output: string) => void;
-    onCancel: () => void;
-    onTestRemediation?: () => void;
     isLiveSession?: boolean;
     coachName?: string;
+    description: string;
+    instructions: string[];
     isSimulationMode?: boolean;
-    simulationEvents?: SimulationEvent[];
+    simulationEvents?: any[];
+    onClose?: () => void;
+    onCancel?: () => void;
+    onSubmit: (code: string, output: number) => void;
+    onTestRemediation?: () => void;
+    timeLimit?: number;
 }
 
-const ExerciseIDEView: React.FC<ExerciseIDEViewProps> = ({
-    exerciseType,
-    title,
-    description,
-    instructions,
-    timeLimit,
-    onSubmit,
-    onCancel,
-    onTestRemediation,
-    isLiveSession,
-    coachName,
-    isSimulationMode,
-    simulationEvents = []
-}) => {
-    const [code, setCode] = useState(exerciseType === 'course' ? `// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+export default function ExerciseIDEView({
+    title, description, instructions, isSimulationMode, simulationEvents,
+    onClose, onCancel, onSubmit, exerciseType, isLiveSession, coachName, timeLimit, onTestRemediation
+}: ExerciseIDEViewProps) {
+    const TOTAL = timeLimit || 300;
+    const [time, setTime] = useState(TOTAL);
+    const [code, setCode] = useState(INITIAL_CODE);
+    const [console_, setConsole] = useState(CONSOLE_INIT);
+    const [panelTab, setPanelTab] = useState("terminal");
+    const [incident, setIncident] = useState(false);
+    const [bugInjected, setBugInjected] = useState(false);
+    const [messages, setMessages] = useState<any[]>([]);
+    const [screenShock, setScreenShock] = useState(false);
+    const [phase, setPhase] = useState("active"); // active | warning | critical | submitted
+    const [compiling, setCompiling] = useState(false);
+    const [score, setScore] = useState<number | null>(null);
+    const [submitted, setSubmitted] = useState(false);
+    const timerRef = useRef<any>(null);
+    const consoleEndRef = useRef<HTMLDivElement>(null);
 
-contract YourContract {
-    // Write your code here...
-    
-    mapping(address => uint256) public balances;
-    
-    function deposit() public payable {
-        balances[msg.sender] += msg.value;
-    }
-    
-    function withdraw(uint256 amount) public {
-        require(balances[msg.sender] >= amount, "Insufficient balance");
-        balances[msg.sender] -= amount;
-        payable(msg.sender).transfer(amount);
-    }
-}` : `# Projet : ${title}\n\n## Description\n${description}\n\n## Rapport d'Analyse\n- [ ] Analyse des pré-requis\n- [ ] Architecture proposée\n- [ ] Implémentation critique\n\n### Notes\nSaisissez votre analyse ici...`);
+    const addLog = (type: string, text: string) => setConsole(p => [...p, { type, text }]);
 
-    const [output, setOutput] = useState('');
-    const [consoleOutput, setConsoleOutput] = useState<string[]>(
-        exerciseType === 'course'
-            ? ['> Environnement Solidity initialisé', '> Prêt pour la compilation...']
-            : ['> Environnement de Projet initialisé', '> Mode : Analyse & Conception', '> En attente de soumission...']
-    );
-    const [activeFile, setActiveFile] = useState(exerciseType === 'course' ? 'contract.sol' : 'project_plan.md');
-    const [timeRemaining, setTimeRemaining] = useState(timeLimit ? timeLimit * 60 : 0);
-    const [isCompiling, setIsCompiling] = useState(false);
-    const [showInstructions, setShowInstructions] = useState(true);
-    const [activeTab, setActiveTab] = useState<'editor' | 'preview' | 'terminal'>('editor');
+    const shock = (duration = 800) => {
+        setScreenShock(true);
+        setTimeout(() => setScreenShock(false), duration);
+    };
 
-    // Simulation State (Chaos Engine)
-    const [clientMessages, setClientMessages] = useState<{ sender: string; text: string; time: string }[]>([]);
-    const [isScreenFlashing, setIsScreenFlashing] = useState(false);
-    const [isChatOpen, setIsChatOpen] = useState(false);
-
-    // File tree structure (dynamic based on type)
-    const fileTree = exerciseType === 'course' ? [
-        {
-            name: 'contracts', type: 'folder', children: [
-                { name: 'contract.sol', type: 'file' },
-                {
-                    name: 'interfaces', type: 'folder', children: [
-                        { name: 'IERC20.sol', type: 'file' }
-                    ]
-                }
-            ]
-        },
-        { name: 'hardhat.config.js', type: 'file' }
-    ] : [
-        { name: 'project_plan.md', type: 'file' },
-        { name: 'architecture.txt', type: 'file' },
-        { name: 'requirements.md', type: 'file' }
-    ];
-
-    // Timer and Chaos Engine Loop
     useEffect(() => {
-        if (!timeLimit) return;
-        const timer = setInterval(() => {
-            setTimeRemaining(prev => {
-                if (prev <= 0) {
-                    clearInterval(timer);
-                    return 0;
+        if (submitted) return;
+        timerRef.current = setInterval(() => {
+            setTime(prev => {
+                if (prev <= 0) { clearInterval(timerRef.current); return 0; }
+                const next = prev - 1;
+                // Use simulation events if provided, else rely on manual triggers or default mock
+                let activeEvents = SIMULATION_EVENTS;
+                if (simulationEvents && simulationEvents.length > 0) {
+                    activeEvents = simulationEvents.map((e: any) => ({
+                        at: e.triggerAtSeconds !== undefined ? e.triggerAtSeconds : e.at,
+                        type: e.type.replace('client_message', 'client').replace('bug_injection', 'bug'),
+                        msg: e.payload !== undefined ? e.payload : (e.msg || e.message)
+                    }));
                 }
-                const newTime = prev - 1;
 
-                // --- Chaos Engine Logic ---
-                if (isSimulationMode && simulationEvents.length > 0) {
-                    const event = simulationEvents.find(e => e.triggerAtSeconds === newTime);
-                    if (event) {
-                        triggerSimulationEvent(event);
+                // Map event "time" or "at" based on the format used
+                const ev = activeEvents.find(e => (e.at === next) || ((e as any).time === TOTAL - next));
+                if (ev && isSimulationMode) {
+                    if (ev.type === "client" || ev.type === "client_msg") {
+                        const ts = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                        setMessages(m => [...m, { sender: ev.type === "client_msg" ? "Manager" : "Alexandre Renaud — CTO Nexion", text: ev.msg, time: ts, urgent: true }]);
+                        setPanelTab("messages");
+                        shock(1200);
                     }
-
-                    // Visual stress when time < 30s
-                    if (newTime <= 30 && newTime > 0) {
-                        setIsScreenFlashing(newTime % 2 === 0);
-                    } else if (newTime === 0) {
-                        setIsScreenFlashing(true);
+                    if (ev.type === "incident") {
+                        setIncident(true);
+                        addLog("fatal", ev.msg);
+                        shock(1500);
+                    }
+                    if (ev.type === "bug") {
+                        setBugInjected(true);
+                        setCode(BUGGY_CODE);
+                        addLog("fatal", "⚠ VULNERABILITY DETECTED — System compromised");
+                        addLog("fatal", "⚠ Unauthenticated access allowed — CRITICAL");
+                        setPanelTab("terminal");
+                        shock(2000);
                     }
                 }
-                // -------------------------
-
-                return newTime;
+                if (next <= 60 && next > 0) setPhase("critical");
+                else if (next <= 120) setPhase("warning");
+                return next;
             });
         }, 1000);
-        return () => clearInterval(timer);
-    }, [timeLimit, isSimulationMode, simulationEvents]);
+        return () => clearInterval(timerRef.current);
+    }, [submitted, isSimulationMode, simulationEvents]);
 
-    const triggerSimulationEvent = (event: SimulationEvent) => {
-        if (event.type === 'bug_injection') {
-            // Overwrite code with buggy version
-            setCode(event.payload);
-            setConsoleOutput(prev => [...prev, '> FATAL ERROR: CRITICAL VULNERABILITY DETECTED IN DEPLOYMENT', '> SYSTEM PANIC!']);
-            setIsScreenFlashing(true);
-            setTimeout(() => setIsScreenFlashing(false), 2000);
-            setActiveTab('terminal'); // Force open terminal
-        } else if (event.type === 'incident') {
-            setConsoleOutput(prev => [...prev, '> SERVER INCIDENT: ' + event.payload]);
-            setIsScreenFlashing(true);
-            setTimeout(() => setIsScreenFlashing(false), 2000);
-        } else if (event.type === 'client_message') {
-            const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            setClientMessages(prev => [...prev, { sender: 'Client VIP', text: event.payload, time: nowTime }]);
-            setIsChatOpen(true);
-            // Flash screen lightly for new message
-            setTimeout(() => setIsScreenFlashing(true), 100);
-            setTimeout(() => setIsScreenFlashing(false), 500);
-        }
-    };
+    useEffect(() => {
+        consoleEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [console_]);
 
-    const formatTime = (seconds: number) => {
-        const h = Math.floor(seconds / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        const s = seconds % 60;
-        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-    };
+    const fmtTime = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
-    const handleAction = async () => {
-        setIsCompiling(true);
-        const actionLabel = exerciseType === 'course' ? 'Compilation' : 'Analyse';
-        setConsoleOutput(prev => [...prev, `> ${actionLabel} en cours...`]);
-
-        await new Promise(resolve => setTimeout(resolve, 1500));
-
-        if (exerciseType === 'course') {
-            setConsoleOutput(prev => [
-                ...prev,
-                '> Compiled successfully',
-                '> Gas estimate: 245,000'
-            ]);
-            setOutput('Succès de la compilation.');
+    const handleRun = async () => {
+        setCompiling(true);
+        addLog("info", "Compiling SecureVault.sol...");
+        await new Promise(r => setTimeout(r, 1400));
+        if (bugInjected && code === BUGGY_CODE) {
+            addLog("fatal", "CompileError: Reentrancy guard missing on withdraw()");
+            addLog("warn", "Slither: 3 HIGH severity issues found");
         } else {
-            setConsoleOutput(prev => [
-                ...prev,
-                '> Analyse de structure terminée',
-                '> Cohérence vérifiée : 100%',
-                '> Prêt pour la soumission finale'
-            ]);
-            setOutput('Le document est prêt à être audité par l\'IA.');
+            addLog("success", "Compiled: 0 errors, 1 warning");
+            addLog("info", "Gas estimate: 248,921 — Deploy cost: ~0.14 ETH");
         }
-        setIsCompiling(false);
+        setCompiling(false);
     };
 
     const handleSubmit = () => {
-        onSubmit(code, output);
+        if (submitted) return;
+        clearInterval(timerRef.current);
+        setSubmitted(true);
+        setPhase("submitted");
+        const s = (bugInjected && code === BUGGY_CODE) ? 42 : 87;
+        setTimeout(() => setScore(s), 800);
     };
 
-    const renderFileTree = (items: any[], depth = 0) => {
-        return items.map((item, idx) => (
-            <div key={idx}>
-                <div
-                    className={`flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-white/5 transition-colors ${activeFile === item.name ? 'bg-blue-600/10 text-blue-400 border-r-2 border-blue-500' : 'text-slate-400'}`}
-                    style={{ paddingLeft: `${12 + depth * 16}px` }}
-                    onClick={() => item.type === 'file' && setActiveFile(item.name)}
-                >
-                    {item.type === 'folder' ? (
-                        <Folder className="w-3.5 h-3.5 text-blue-500/60" />
-                    ) : (
-                        <FileText className="w-3.5 h-3.5 opacity-40" />
-                    )}
-                    <span className="text-[11px] font-medium tracking-tight truncate">{item.name}</span>
-                </div>
-                {item.children && renderFileTree(item.children, depth + 1)}
-            </div>
-        ));
+    const triggerManualChaos = () => {
+        shock(2000);
+        setBugInjected(true);
+        setIncident(true);
+        setCode(BUGGY_CODE);
+        addLog("fatal", "⚠ MANUAL CHAOS INJECTION DETECTED");
+        const ts = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        setMessages(m => [...m, { sender: "SYSTEM DEMO", text: "Production incident forced by presenter.", time: ts, urgent: true }]);
+        setPanelTab("problems");
+        setPhase("critical");
     };
 
-    const [bottomPanelTab, setBottomPanelTab] = useState<'terminal' | 'chat' | 'problems'>('terminal');
+    const timeRatio = time / TOTAL;
+    const timerColor = phase === "critical" ? "#ff2244" : phase === "warning" ? "#ffaa00" : "#00d4ff";
+
+    const bg = screenShock
+        ? "rgba(255,20,50,0.07)"
+        : "#080d18";
+
+    const borderColor = phase === "critical" ? "#ff2244"
+        : phase === "warning" ? "#ffaa00"
+            : incident ? "#ff6600"
+                : "#0a1428";
 
     return (
-        <div className={`fixed inset-0 z-[100] ${isScreenFlashing ? 'bg-red-950/40 ring-2 ring-inset ring-red-500/50' : 'bg-[#0F111A]'} text-slate-300 flex flex-col font-sans selection:bg-blue-500/30 transition-colors duration-300`}>
+        <div className="z-[200]" style={{
+            position: "fixed", inset: 0, background: bg,
+            fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+            color: "#c8d8f0",
+            display: "flex", flexDirection: "column",
+            transition: "background 0.3s",
+            boxShadow: screenShock ? "inset 0 0 80px rgba(255,30,60,0.25)" : "none",
+            border: `1.5px solid ${borderColor}`,
+            overflow: "hidden",
+        }}>
+            <ScanlineOverlay />
 
-            {/* Top Navigation Bar - VS Code Style Menu Bar */}
-            <header className="h-10 bg-[#1A1D27] border-b border-[#2D313F] flex items-center justify-between px-4 text-[11px] font-medium text-slate-400 select-none">
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 text-white">
-                        <div className="w-4 h-4 rounded bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center">
-                            <Code className="w-2.5 h-2.5 text-white" />
-                        </div>
-                        <span className="font-bold tracking-widest uppercase text-[9px] opacity-90">Neural IDE</span>
-                    </div>
-                    <div className="flex items-center gap-4 px-2">
-                        <span className="hover:text-white cursor-pointer transition-colors">File</span>
-                        <span className="hover:text-white cursor-pointer transition-colors">Edit</span>
-                        <span className="hover:text-white cursor-pointer transition-colors">Selection</span>
-                        <span className="hover:text-white cursor-pointer transition-colors">View</span>
-                        <span className="hover:text-white cursor-pointer transition-colors">Go</span>
-                        <span className="hover:text-white cursor-pointer transition-colors">Run</span>
-                        <span className="hover:text-white cursor-pointer transition-colors">Terminal</span>
-                        <span className="hover:text-white cursor-pointer transition-colors">Help</span>
-                    </div>
+            {/* Ambient grid background */}
+            <div style={{
+                position: "absolute", inset: 0, zIndex: 0, pointerEvents: "none",
+                backgroundImage: `
+          linear-gradient(rgba(0,180,255,0.025) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0,180,255,0.025) 1px, transparent 1px)
+        `,
+                backgroundSize: "32px 32px",
+            }} />
+
+            {/* ─── TOP BAR ─────────────────────────────────────────── */}
+            <header style={{
+                height: 44, background: "#060c18",
+                borderBottom: `1px solid ${phase === "critical" ? "rgba(255,34,68,0.5)" : "rgba(0,180,255,0.12)"}`,
+                display: "flex", alignItems: "center", padding: "0 16px",
+                gap: 24, zIndex: 100, position: "relative",
+                transition: "border-color 0.4s",
+            }}>
+                {/* Logo */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{
+                        width: 28, height: 28, borderRadius: 6,
+                        background: "linear-gradient(135deg, #0066ff, #00d4ff)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        boxShadow: "0 0 16px rgba(0,150,255,0.5)",
+                        fontSize: 13, fontWeight: 900, color: "#fff",
+                    }}>N</div>
+                    <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.25em", color: "#4488cc", textTransform: "uppercase" }}>
+                        NeuralIDE
+                    </span>
+                    <span style={{ fontSize: 9, background: "rgba(0,200,255,0.1)", border: "1px solid rgba(0,200,255,0.25)", borderRadius: 3, padding: "1px 6px", color: "#00ccff", letterSpacing: "0.15em" }}>
+                        {exerciseType.toUpperCase()}
+                    </span>
                 </div>
 
-                <div className="flex items-center gap-2">
-                    <div className="flex-1 max-w-[400px] min-w-[200px] h-6 bg-[#252836] border border-[#2D313F] rounded flex items-center px-4 justify-center">
-                        <span className="truncate text-slate-500">{title} — {exerciseType === 'course' ? 'Project' : 'Evaluation'}</span>
-                    </div>
-                </div>
+                {/* Optional Chaos Button */}
+                <button
+                    onClick={triggerManualChaos}
+                    style={{
+                        display: "flex", alignItems: "center", gap: 6,
+                        background: "rgba(255,50,0,0.15)", border: "1px solid rgba(255,50,0,0.4)",
+                        borderRadius: 4, padding: "3px 10px", color: "#ff4422",
+                        fontSize: 9, fontWeight: 800, cursor: "pointer",
+                        marginLeft: 12
+                    }}
+                    className="hover:bg-red-500/20 transition-colors"
+                >
+                    <Zap size={10} /> FORCE INCIDENT (DEMO)
+                </button>
 
-                <div className="flex items-center gap-3">
+                {/* Simulate Fail Button */}
+                {onTestRemediation && (
                     <button
-                        onClick={onCancel}
-                        className="w-8 h-8 flex items-center justify-center hover:bg-red-500/10 hover:text-red-400 rounded transition-colors group"
-                        title="Fermer l'IDE"
+                        onClick={onTestRemediation}
+                        style={{
+                            display: "flex", alignItems: "center", gap: 6,
+                            background: "rgba(255,150,0,0.15)", border: "1px solid rgba(255,150,0,0.4)",
+                            borderRadius: 4, padding: "3px 10px", color: "#ffaa00",
+                            fontSize: 9, fontWeight: 800, cursor: "pointer",
+                        }}
+                        className="hover:bg-orange-500/20 transition-colors"
                     >
-                        <X className="w-3.5 h-3.5" />
+                        SIMULER ÉCHEC
                     </button>
-                    {!showInstructions && (
-                        <button onClick={() => setShowInstructions(true)} className="w-6 h-6 flex items-center justify-center hover:bg-white/10 rounded transition-colors" title="Afficher les instructions">
-                            <Layout className="w-3.5 h-3.5" />
-                        </button>
-                    )}
+                )}
+
+                {/* Menu ghost */}
+                {["File", "Edit", "View", "Run", "Terminal", "Help"].map(m => (
+                    <span key={m} style={{ fontSize: 11, color: "#3a5070", cursor: "pointer", letterSpacing: "0.04em" }}
+                        className="hover:text-blue-300 transition-colors">{m}</span>
+                ))}
+
+                <div style={{ flex: 1 }} />
+
+                {/* Phase indicator */}
+                {(incident || bugInjected) && (
+                    <div style={{
+                        display: "flex", alignItems: "center", gap: 6,
+                        background: "rgba(255,30,60,0.12)", border: "1px solid rgba(255,30,60,0.35)",
+                        borderRadius: 4, padding: "3px 10px",
+                        animation: "pulse 1s infinite",
+                    }}>
+                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#ff2244", boxShadow: "0 0 8px #ff2244" }} />
+                        <span style={{ fontSize: 9, fontWeight: 800, color: "#ff4466", letterSpacing: "0.2em" }}>
+                            <GlitchText text="INCIDENT PROD" active={screenShock} />
+                        </span>
+                    </div>
+                )}
+
+                {/* Timer */}
+                <div style={{
+                    display: "flex", alignItems: "center", gap: 8,
+                    background: `rgba(${phase === "critical" ? "255,30,60" : "0,150,255"},0.08)`,
+                    border: `1px solid ${timerColor}33`,
+                    borderRadius: 6, padding: "4px 14px",
+                    transition: "all 0.4s",
+                }}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <circle cx="7" cy="7" r="6" stroke={timerColor} strokeWidth="1.5" opacity="0.4" />
+                        <path d={`M 7 7 L 7 2.5 A 4.5 4.5 0 ${timeRatio < 0.5 ? "0" : "1"} 1 ${7 + 4.5 * Math.sin(2 * Math.PI * (1 - timeRatio))
+                            } ${7 - 4.5 * Math.cos(2 * Math.PI * (1 - timeRatio))} Z`}
+                            fill={timerColor} opacity="0.6" />
+                    </svg>
+                    <span style={{
+                        fontSize: 15, fontWeight: 800, color: timerColor, letterSpacing: "0.1em",
+                        textShadow: `0 0 12px ${timerColor}88`,
+                        animation: phase === "critical" ? "pulse 0.6s infinite" : "none",
+                    }}>
+                        {fmtTime(time)}
+                    </span>
                 </div>
+
+                {/* Live badge */}
+                {isLiveSession && (
+                    <div style={{
+                        display: "flex", alignItems: "center", gap: 5,
+                        background: "rgba(0,230,100,0.08)", border: "1px solid rgba(0,230,100,0.2)",
+                        borderRadius: 4, padding: "3px 8px",
+                    }}>
+                        <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#00e664", boxShadow: "0 0 6px #00e664", animation: "pulse 2s infinite" }} />
+                        <span style={{ fontSize: 9, color: "#00cc55", letterSpacing: "0.15em" }}>COACH {coachName?.toUpperCase()}</span>
+                    </div>
+                )}
+
+                {/* Close Button */}
+                <button
+                    onClick={() => onClose ? onClose() : (onCancel && onCancel())}
+                    style={{
+                        width: 28, height: 28, borderRadius: 6, cursor: "pointer",
+                        background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        color: "#8899aa", marginLeft: 8
+                    }}
+                    className="hover:bg-white/10 hover:text-white transition-all"
+                >
+                    <X size={14} />
+                </button>
             </header>
 
-            {/* Main Application Area (Activity Bar + Sidebar + Editor) */}
-            <div className="flex-1 flex overflow-hidden">
+            {/* ─── BODY ─────────────────────────────────────────────── */}
+            <div style={{ flex: 1, display: "flex", overflow: "hidden", position: "relative", zIndex: 1 }}>
 
-                {/* Visual Studio Code Style Activity Bar */}
-                <div className="w-12 bg-[#1A1D27] border-r border-[#2D313F] flex flex-col items-center py-4 gap-6 z-10">
-                    <button className="text-white hover:text-white relative group">
-                        <FileText className="w-6 h-6 opacity-80 group-hover:opacity-100 transition-opacity" />
-                        <span className="absolute -left-3 top-0 bottom-0 w-0.5 bg-blue-500 rounded-r-full" />
-                    </button>
-                    <button className="text-slate-500 hover:text-white transition-colors">
-                        <Target className="w-6 h-6 opacity-80" />
-                    </button>
-                    <button className="text-slate-500 hover:text-white transition-colors">
-                        <Code className="w-6 h-6 opacity-80" />
-                    </button>
-                    <button className="text-slate-500 hover:text-white transition-colors relative">
-                        <Terminal className="w-6 h-6 opacity-80" />
-                        {isScreenFlashing && (
-                            <div className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full animate-ping" />
-                        )}
-                    </button>
-                    <div className="flex-1" />
-                    <button className="text-slate-500 hover:text-white transition-colors">
-                        <User className="w-6 h-6 opacity-80" />
-                    </button>
-                    <button className="text-slate-500 hover:text-white transition-colors">
-                        <Settings className="w-6 h-6 opacity-80" />
-                    </button>
+                {/* Activity Bar */}
+                <div style={{
+                    width: 44, background: "#050a14",
+                    borderRight: "1px solid rgba(0,150,255,0.08)",
+                    display: "flex", flexDirection: "column", alignItems: "center",
+                    padding: "12px 0", gap: 20,
+                }}>
+                    {[
+                        { icon: "⊟", label: "Explorer", active: true },
+                        { icon: "⊗", label: "Search" },
+                        { icon: "⊕", label: "Extensions" },
+                        { icon: "⊘", label: "Git" },
+                    ].map(({ icon, active }) => (
+                        <button key={icon} style={{
+                            width: 32, height: 32, borderRadius: 6,
+                            background: active ? "rgba(0,180,255,0.12)" : "transparent",
+                            border: active ? "1px solid rgba(0,180,255,0.2)" : "1px solid transparent",
+                            color: active ? "#00ccff" : "#2a3a54",
+                            fontSize: 16, cursor: "pointer",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            transition: "all 0.2s",
+                        }}>{icon}</button>
+                    ))}
+                    <div style={{ flex: 1 }} />
+                    <div style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg,#1a3a6a,#0a1a34)", border: "1.5px solid rgba(0,150,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "#5580aa" }}>
+                        AP
+                    </div>
                 </div>
 
-                {/* Left Sidebar (Explorer & Instructions) */}
-                <div className="w-64 bg-[#1E212B] border-r border-[#2D313F] flex flex-col flex-shrink-0 z-10 transition-all duration-300">
-                    <div className="h-8 flex items-center px-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 select-none">
-                        Explorer
+                {/* Sidebar */}
+                <div style={{
+                    width: 220, background: "#060c18",
+                    borderRight: "1px solid rgba(0,150,255,0.08)",
+                    display: "flex", flexDirection: "column",
+                    flexShrink: 0,
+                }}>
+                    <div style={{ padding: "10px 12px 6px", fontSize: 9, fontWeight: 800, letterSpacing: "0.2em", color: "#2a4060", borderBottom: "1px solid rgba(0,150,255,0.06)" }}>
+                        EXPLORER
+                    </div>
+                    <div style={{ padding: "6px 0", fontSize: 10, letterSpacing: "0.12em", color: "#1e3050", paddingLeft: 8, marginBottom: 4 }}>
+                        ▾ SECURE_VAULT_EVAL
+                    </div>
+                    <div style={{ flex: 1, overflowY: "auto" }}>
+                        {FILE_TREE.map((node, i) => <FileNode key={i} node={node} />)}
                     </div>
 
-                    {/* File Tree Section */}
-                    <div className="flex-1 overflow-auto scrollbar-thin">
-                        <div className="flex items-center gap-1 px-1 py-1 text-[11px] font-bold text-slate-300 cursor-pointer hover:bg-white/5 select-none uppercase tracking-widest">
-                            <ChevronDown className="w-3.5 h-3.5" />
-                            {exerciseType === 'course' ? 'WORKSPACE' : 'PROJECT_ROOT'}
+                    {/* Instructions Panel */}
+                    <div style={{
+                        borderTop: "1px solid rgba(0,150,255,0.08)",
+                        background: "#040a14",
+                    }}>
+                        <div style={{ padding: "8px 12px 6px", fontSize: 9, fontWeight: 800, letterSpacing: "0.2em", color: "#2a4060", borderBottom: "1px solid rgba(0,150,255,0.06)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span>{title.toUpperCase()}</span>
+                            <span style={{ color: "#00ccff", fontSize: 9 }}>RESUME</span>
                         </div>
-                        <div className="pl-2 pb-4">
-                            {renderFileTree(fileTree)}
+                        <div style={{ padding: "10px 12px", maxHeight: 200, overflowY: "auto" }}>
+                            <p style={{ fontSize: 10.5, color: "#4a90d9", marginBottom: 10, fontStyle: "italic", lineHeight: 1.6 }}>
+                                {description}
+                            </p>
+                            {instructions.map((inst, i) => (
+                                <div key={i} style={{ display: "flex", gap: 8, marginBottom: 7, alignItems: "flex-start" }}>
+                                    <div style={{
+                                        width: 16, height: 16, borderRadius: 4, flexShrink: 0, marginTop: 1,
+                                        background: "rgba(0,180,255,0.06)",
+                                        border: "1px solid rgba(0,180,255,0.2)",
+                                        display: "flex", alignItems: "center", justifyContent: "center",
+                                        fontSize: 8, color: "#0088cc", fontWeight: 800,
+                                    }}>{i + 1}</div>
+                                    <span style={{ fontSize: 10.5, color: "#4a6888", lineHeight: 1.5 }}>{inst}</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
-
-                    {/* Instructions Panel Integrated into Sidebar */}
-                    {showInstructions && (
-                        <div className="h-1/2 border-t border-[#2D313F] flex flex-col bg-[#1A1D27]">
-                            <div className="h-8 flex items-center justify-between px-4 border-b border-[#2D313F]">
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">📝 Instructions</span>
-                                <button onClick={() => setShowInstructions(false)} className="hover:text-white transition-colors">
-                                    <Minimize2 className="w-3 h-3 text-slate-500" />
-                                </button>
-                            </div>
-                            <div className="flex-1 overflow-auto p-4 scrollbar-thin space-y-4">
-                                <div>
-                                    <h4 className="text-white text-xs font-bold mb-2">{title}</h4>
-                                    <p className="text-[11px] text-slate-400 leading-relaxed font-mono">{description}</p>
-                                </div>
-                                <div>
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-blue-500 mb-2 block">TODO LIST</span>
-                                    <ul className="space-y-2">
-                                        {instructions.map((inst, i) => (
-                                            <li key={i} className="flex items-start gap-2 text-[10px] text-slate-300">
-                                                <div className="w-3.5 h-3.5 rounded bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                                    {i + 1}
-                                                </div>
-                                                <span className="leading-snug">{inst}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    )}
                 </div>
 
-                {/* Main Editor Content Area */}
-                <main className={`flex-1 flex flex-col relative min-w-0 transition-all duration-300 bg-[#1E212B]`}>
+                {/* ─── MAIN EDITOR ──────────────────────────────────────── */}
+                <main style={{ flex: 1, display: "flex", flexDirection: "column", background: "#080d18", minWidth: 0, position: "relative" }}>
 
-                    {/* Live Presence Overlay */}
-                    {isLiveSession && (
-                        <>
-                            <div className="absolute inset-0 pointer-events-none border-2 border-indigo-500/20 z-50 animate-pulse" />
-                            <div className="absolute top-[20%] left-[30%] z-[60] pointer-events-none animate-bounce">
-                                <div className="relative">
-                                    <div className="w-0.5 h-6 bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.8)]" />
-                                    <div className="absolute -top-6 -left-2 px-2 py-0.5 rounded bg-indigo-600 text-[9px] font-black text-white whitespace-nowrap shadow-lg">
-                                        {coachName} (Coach)
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="absolute top-[25%] left-[20%] right-[30%] h-6 bg-indigo-500/10 border-y border-indigo-500/30 blur-[1px] z-[55] pointer-events-none" />
-                        </>
+                    {/* Incident Banner */}
+                    {(incident || bugInjected) && (
+                        <div style={{
+                            background: "linear-gradient(90deg, rgba(255,20,50,0.18), rgba(255,60,0,0.12))",
+                            borderBottom: "1px solid rgba(255,30,60,0.4)",
+                            padding: "6px 16px",
+                            display: "flex", alignItems: "center", gap: 10,
+                            animation: "slideDown 0.3s ease",
+                        }}>
+                            <span style={{ fontSize: 14 }}>⚠</span>
+                            <span style={{ fontSize: 10.5, color: "#ff4466", fontWeight: 700, letterSpacing: "0.08em" }}>
+                                {bugInjected
+                                    ? "REENTRANCY VULNERABILITY DÉTECTÉE — emergencyDrain() EXPOSÉE — Corriger immédiatement"
+                                    : "PROD INCIDENT ACTIF — Memory leak sur node-3 — Coûts gas +340%"}
+                            </span>
+                            <div style={{ flex: 1 }} />
+                            <span style={{ fontSize: 9, color: "#ff2244", background: "rgba(255,34,68,0.15)", border: "1px solid rgba(255,34,68,0.3)", borderRadius: 3, padding: "2px 8px", letterSpacing: "0.15em" }}>CRITICAL</span>
+                        </div>
                     )}
 
                     {/* Editor Tabs */}
-                    <div className="h-10 bg-[#1A1D27] flex items-end overflow-hidden select-none border-b border-[transparent]">
-                        <div className="h-9 px-4 bg-[#1E212B] border-t border-blue-500 flex items-center gap-2 cursor-pointer relative group">
-                            <FileText className="w-3.5 h-3.5 text-blue-400" />
-                            <span className="text-[11px] text-blue-100 font-medium tracking-wide">{activeFile}</span>
-                            <div className="w-2 h-2 rounded-full bg-white/10 group-hover:bg-white/20 transition-colors ml-2 flex items-center justify-center">
-                                <X className="w-2 h-2 opacity-0 group-hover:opacity-100" />
-                            </div>
+                    <div style={{
+                        height: 38, background: "#060c18",
+                        borderBottom: "1px solid rgba(0,150,255,0.08)",
+                        display: "flex", alignItems: "flex-end",
+                    }}>
+                        <div style={{
+                            height: 36, padding: "0 16px",
+                            background: "#080d18",
+                            borderTop: "1.5px solid #00aaff",
+                            borderRight: "1px solid rgba(0,150,255,0.08)",
+                            display: "flex", alignItems: "center", gap: 8,
+                            cursor: "pointer",
+                        }}>
+                            <span style={{ fontSize: 10, color: "#0088cc" }}>◈</span>
+                            <span style={{ fontSize: 11.5, color: "#88bbdd", fontWeight: 500 }}>SecureVault.sol</span>
+                            {bugInjected && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ff2244", boxShadow: "0 0 8px #ff2244" }} />}
                         </div>
-                        {activeTab === 'preview' && (
-                            <div className="h-9 px-4 bg-[#1A1D27] hover:bg-[#1E212B]/50 flex items-center gap-2 cursor-pointer transition-colors border-t border-slate-700/50">
-                                <Eye className="w-3.5 h-3.5 text-slate-500" />
-                                <span className="text-[11px] text-slate-400 font-medium tracking-wide">Preview</span>
-                            </div>
-                        )}
-                        <div className="flex-1 border-b border-[#2D313F] h-9" />
-
-                        {/* Tab Actions */}
-                        <div className="flex items-center gap-2 px-4 border-b border-[#2D313F] h-9">
-                            <button onClick={() => setActiveTab('editor')} className={`p-1 rounded hover:bg-white/10 transition-colors ${activeTab === 'editor' ? 'text-white' : 'text-slate-500'}`} title="Code">
-                                <Code className="w-4 h-4" />
-                            </button>
-                            <button onClick={() => setActiveTab('preview')} className={`p-1 rounded hover:bg-white/10 transition-colors ${activeTab === 'preview' ? 'text-white' : 'text-slate-500'}`} title="Preview">
-                                <Layout className="w-4 h-4" />
-                            </button>
+                        <div style={{ flex: 1, borderBottom: "1px solid rgba(0,150,255,0.08)" }} />
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "0 12px", borderBottom: "1px solid rgba(0,150,255,0.08)" }}>
                             <button
-                                onClick={handleAction}
-                                disabled={isCompiling}
-                                className="ml-2 flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded text-[10px] font-bold uppercase tracking-wider transition-all shadow-md active:scale-95 disabled:opacity-50"
-                            >
-                                {isCompiling ? <RotateCcw className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
-                                {exerciseType === 'course' ? 'Run' : 'Check'}
+                                onClick={handleRun}
+                                disabled={compiling}
+                                style={{
+                                    display: "flex", alignItems: "center", gap: 6,
+                                    padding: "4px 14px", borderRadius: 5,
+                                    background: compiling ? "rgba(0,100,200,0.15)" : "rgba(0,120,255,0.15)",
+                                    border: "1px solid rgba(0,150,255,0.35)",
+                                    color: "#00aaff", fontSize: 10, fontWeight: 700,
+                                    letterSpacing: "0.12em", cursor: "pointer",
+                                    transition: "all 0.2s",
+                                }}>
+                                {compiling ? "◌ COMPILING..." : "▶ RUN"}
                             </button>
-                        </div>
-                    </div>
-
-                    {/* Code Editor Area */}
-                    <div className="flex-1 flex overflow-hidden relative">
-                        {/* Line Numbers */}
-                        {activeTab === 'editor' && (
-                            <div className="w-12 bg-[#1E212B] border-r border-transparent flex flex-col text-right pr-4 pt-4 text-[#5C6370] text-[12px] font-mono select-none overflow-hidden h-full">
-                                {code.split('\n').map((_, i) => (
-                                    <div key={i} className="h-6 leading-6">{i + 1}</div>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* Editor Surface */}
-                        <div className="flex-1 relative overflow-auto scrollbar-thin bg-[#1E212B]">
-                            {activeTab === 'editor' ? (
-                                <textarea
-                                    value={code}
-                                    onChange={(e) => setCode(e.target.value)}
-                                    className={`w-full h-full bg-transparent p-4 pt-4 text-[#ABB2BF] font-mono text-[13px] leading-6 resize-none focus:outline-none whitespace-pre ${isScreenFlashing ? 'animate-pulse text-red-100' : ''}`}
-                                    spellCheck={false}
-                                    style={{ tabSize: 4 }}
-                                />
-                            ) : (
-                                <div className="p-8 max-w-3xl mx-auto">
-                                    <article className="prose prose-invert prose-sm">
-                                        <pre className="bg-[#1A1D27] p-6 rounded-lg border border-[#2D313F] text-[#ABB2BF]">{code}</pre>
-                                    </article>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Fake Minimap (Visual embellishment) */}
-                        {activeTab === 'editor' && (
-                            <div className="hidden lg:block w-24 bg-[#1A1D27]/50 border-l border-[#2D313F] overflow-hidden opacity-30 pointer-events-none select-none p-1">
-                                <div className="w-full text-[2px] leading-[3px] text-slate-500 font-mono tracking-tighter mix-blend-screen scale-x-50 origin-left">
-                                    {code}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Integrated Bottom Panel (Terminal / Chat / Output) */}
-                    <div className="h-64 bg-[#1E212B] border-t border-[#2D313F] flex flex-col shadow-[0_-10px_30px_rgba(0,0,0,0.5)] z-20 transition-all duration-300">
-                        {/* Bottom Panel Tabs */}
-                        <div className="h-9 flex items-center px-4 gap-6 select-none border-b border-[#2D313F]">
-                            <button onClick={() => setBottomPanelTab('terminal')} className={`flex items-center gap-2 h-full text-[11px] font-medium tracking-wide uppercase transition-colors relative ${bottomPanelTab === 'terminal' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-slate-500 hover:text-slate-300'}`}>
-                                TERMINAL
-                            </button>
-                            <button onClick={() => setBottomPanelTab('problems')} className={`flex items-center gap-2 h-full text-[11px] font-medium tracking-wide uppercase transition-colors relative ${bottomPanelTab === 'problems' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-slate-500 hover:text-slate-300'}`}>
-                                PROBLEMS {isScreenFlashing && <span className="bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[9px]">1</span>}
-                            </button>
-                            {isSimulationMode && (
-                                <button onClick={() => setBottomPanelTab('chat')} className={`flex items-center gap-2 h-full text-[11px] font-medium tracking-wide uppercase transition-colors relative ${bottomPanelTab === 'chat' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-slate-500 hover:text-slate-300'}`}>
-                                    CLIENT MESSAGES
-                                    {clientMessages.length > 0 && bottomPanelTab !== 'chat' && (
-                                        <span className="bg-amber-500 text-black font-black rounded-full w-4 h-4 flex items-center justify-center text-[9px] animate-bounce">{clientMessages.length}</span>
-                                    )}
-                                </button>
-                            )}
-                            <div className="flex-1" />
-
-                            {/* Final Submit Action Integrated into Panel Header */}
                             <button
                                 onClick={handleSubmit}
-                                className="flex items-center gap-2 px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-[10px] font-black uppercase tracking-widest transition-all shadow-lg active:scale-95"
-                            >
-                                <Send className="w-3 h-3" /> Submit Final
+                                disabled={submitted}
+                                style={{
+                                    display: "flex", alignItems: "center", gap: 6,
+                                    padding: "4px 16px", borderRadius: 5,
+                                    background: submitted ? "rgba(0,200,100,0.1)" : "rgba(0,200,100,0.12)",
+                                    border: `1px solid ${submitted ? "rgba(0,200,100,0.25)" : "rgba(0,200,100,0.4)"}`,
+                                    color: submitted ? "#00aa44" : "#00dd66",
+                                    fontSize: 10, fontWeight: 800,
+                                    letterSpacing: "0.15em", cursor: submitted ? "default" : "pointer",
+                                    transition: "all 0.2s",
+                                }}>
+                                {submitted ? "✓ SUBMITTED" : "⇪ SUBMIT"}
                             </button>
                         </div>
+                    </div>
 
-                        {/* Bottom Panel Content */}
-                        <div className="flex-1 overflow-auto bg-[#1A1D27] p-2 scrollbar-thin font-mono text-[12px]">
-                            {bottomPanelTab === 'terminal' && (
-                                <div className="text-[#ABB2BF] space-y-1 p-2">
-                                    {consoleOutput.map((line, i) => (
-                                        <div key={i} className={`flex ${line.includes('FATAL') || line.includes('INCIDENT') ? 'text-red-400 font-bold bg-red-500/10 p-1 -mx-1 px-2 border-l-2 border-red-500' : ''}`}>
-                                            <span className="text-green-400 select-none mr-3 ml-1">visitor@neural~ %</span>
-                                            <span className="whitespace-pre-wrap">{line.replace('> ', '')}</span>
-                                        </div>
-                                    ))}
-                                    <div className="flex items-center animate-pulse">
-                                        <span className="text-green-400 select-none mr-3 ml-1">visitor@neural~ %</span>
-                                        <div className="w-2 h-4 bg-slate-500" />
-                                    </div>
+                    {/* Code + Score overlay */}
+                    <div style={{ flex: 1, display: "flex", overflow: "hidden", position: "relative" }}>
+
+                        {/* Line numbers */}
+                        <div style={{
+                            width: 52, background: "#060c18", paddingTop: 16,
+                            textAlign: "right", paddingRight: 12, paddingLeft: 8,
+                            fontSize: 11.5, color: "#1e3050", fontFamily: "monospace",
+                            lineHeight: "22px", userSelect: "none", overflowY: "hidden",
+                            borderRight: "1px solid rgba(0,150,255,0.06)",
+                        }}>
+                            {code.split("\\n").map((_, i) => (
+                                <div key={i} style={{ lineHeight: "22px" }}>{i + 1}</div>
+                            ))}
+                        </div>
+
+                        {/* Textarea */}
+                        <textarea
+                            value={code}
+                            onChange={e => setCode(e.target.value)}
+                            style={{
+                                flex: 1, background: "transparent",
+                                padding: "16px 16px 16px 12px",
+                                fontSize: 12.5, lineHeight: "22px",
+                                color: bugInjected && screenShock ? "#ff8899" : "#a8c4e0",
+                                fontFamily: "'JetBrains Mono', monospace",
+                                resize: "none", outline: "none", border: "none",
+                                caretColor: "#00d4ff",
+                                overflowY: "auto",
+                                transition: "color 0.3s",
+                            }}
+                            spellCheck={false}
+                        />
+
+                        {/* Score overlay */}
+                        {score !== null && (
+                            <div style={{
+                                position: "absolute", inset: 0,
+                                background: "rgba(4,10,20,0.92)",
+                                backdropFilter: "blur(8px)",
+                                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                                zIndex: 50, gap: 20,
+                                animation: "fadeIn 0.6s ease",
+                            }}>
+                                <div style={{ fontSize: 11, letterSpacing: "0.4em", color: "#2a5080", textTransform: "uppercase" }}>Évaluation Complète</div>
+                                <div style={{
+                                    fontSize: 96, fontWeight: 900, lineHeight: 1,
+                                    color: score >= 70 ? "#00dd88" : score >= 50 ? "#ffaa00" : "#ff3355",
+                                    textShadow: `0 0 40px ${score >= 70 ? "#00dd88" : score >= 50 ? "#ffaa00" : "#ff3355"}66`,
+                                    fontFamily: "monospace",
+                                }}>
+                                    {score}<span style={{ fontSize: 40 }}>%</span>
                                 </div>
-                            )}
-
-                            {bottomPanelTab === 'problems' && (
-                                <div className="p-4 flex flex-col gap-2">
-                                    {isScreenFlashing ? (
-                                        <div className="flex items-start gap-3 text-red-400 bg-red-950/30 p-3 rounded border border-red-900/50">
-                                            <ShieldAlert className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                                            <div>
-                                                <div className="font-bold text-[11px] uppercase tracking-wider mb-1">Critical Vulnerability [E001]</div>
-                                                <div className="text-red-300">Self-destruct mechanism exposed without access control in contract fallback. High severity.</div>
-                                            </div>
+                                <div style={{ display: "flex", gap: 12, flexDirection: "column", alignItems: "center" }}>
+                                    <div style={{ fontSize: 13, color: score >= 70 ? "#00aa55" : "#cc3344", letterSpacing: "0.1em" }}>
+                                        {score >= 70 ? "✓ Vulnérabilité corrigée avec succès" : "✗ Reentrancy non corrigée — Contrat compromis"}
+                                    </div>
+                                    {messages.length > 0 && (
+                                        <div style={{ fontSize: 11, color: "#3a6080" }}>
+                                            {messages.length} message(s) client non traité(s) — −5pts
                                         </div>
-                                    ) : (
-                                        <div className="text-slate-500 text-center mt-10">No problems have been detected in the workspace.</div>
                                     )}
                                 </div>
+                                <div style={{
+                                    display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginTop: 10,
+                                }}>
+                                    {[
+                                        { label: "Sécurité", val: score >= 70 ? "A+" : "F", color: score >= 70 ? "#00dd88" : "#ff3355" },
+                                        { label: "Rapidité", val: time > 120 ? "B" : time > 60 ? "C" : "D", color: "#00aaff" },
+                                        { label: "Pression", val: messages.length === 0 ? "A" : "B", color: "#ffaa00" },
+                                    ].map(({ label, val, color }) => (
+                                        <div key={label} style={{
+                                            background: "rgba(0,150,255,0.05)", border: "1px solid rgba(0,150,255,0.12)",
+                                            borderRadius: 8, padding: "12px 20px", textAlign: "center",
+                                        }}>
+                                            <div style={{ fontSize: 9, color: "#3a6080", letterSpacing: "0.2em", marginBottom: 6 }}>{label.toUpperCase()}</div>
+                                            <div style={{ fontSize: 28, fontWeight: 900, color, fontFamily: "monospace" }}>{val}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <button
+                                    onClick={() => onSubmit(code, score || 0)}
+                                    style={{
+                                        marginTop: 20,
+                                        padding: "12px 32px",
+                                        background: "linear-gradient(90deg, #0088ff, #00bbff)",
+                                        color: "#fff",
+                                        fontWeight: 800,
+                                        letterSpacing: "0.15em",
+                                        borderRadius: 6,
+                                        border: "none",
+                                        cursor: "pointer",
+                                        boxShadow: "0 0 20px rgba(0,150,255,0.4)"
+                                    }}
+                                    className="hover:scale-105 transition-transform"
+                                >
+                                    CONTINUER L'APPRENTISSAGE
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* ─── BOTTOM PANEL ───────────────────────────────────── */}
+                    <div style={{
+                        height: 220, background: "#060c18",
+                        borderTop: `1px solid ${bugInjected ? "rgba(255,34,68,0.3)" : "rgba(0,150,255,0.1)"}`,
+                        display: "flex", flexDirection: "column",
+                        transition: "border-color 0.4s",
+                    }}>
+                        {/* Panel Tabs */}
+                        <div style={{
+                            height: 36, display: "flex", alignItems: "center",
+                            padding: "0 8px", gap: 2,
+                            borderBottom: "1px solid rgba(0,150,255,0.07)",
+                            background: "#050a14",
+                        }}>
+                            {[
+                                { id: "terminal", label: "TERMINAL" },
+                                { id: "problems", label: "PROBLEMS", badge: bugInjected ? 2 : 0, badgeColor: "#ff2244" },
+                                { id: "messages", label: "MESSAGES CLIENT", badge: messages.length, badgeColor: "#ffaa00" },
+                            ].map(({ id, label, badge, badgeColor }) => (
+                                <button key={id} onClick={() => setPanelTab(id)} style={{
+                                    height: 28, padding: "0 12px", borderRadius: 4,
+                                    background: panelTab === id ? "rgba(0,150,255,0.1)" : "transparent",
+                                    border: panelTab === id ? "1px solid rgba(0,150,255,0.2)" : "1px solid transparent",
+                                    color: panelTab === id ? "#00aaff" : "#2a4060",
+                                    fontSize: 9.5, fontWeight: 800, letterSpacing: "0.15em", cursor: "pointer",
+                                    display: "flex", alignItems: "center", gap: 7,
+                                    transition: "all 0.2s",
+                                }}>
+                                    {label}
+                                    {badge > 0 && (
+                                        <span style={{
+                                            background: badgeColor, color: "#000",
+                                            borderRadius: 10, padding: "1px 5px",
+                                            fontSize: 8, fontWeight: 900,
+                                            animation: "pulse 1.5s infinite",
+                                        }}>{badge}</span>
+                                    )}
+                                </button>
+                            ))}
+                            <div style={{ flex: 1 }} />
+                            <span style={{ fontSize: 9, color: "#1a3050" }}>node-1 • 127.0.0.1:8545</span>
+                        </div>
+
+                        {/* Panel Content */}
+                        <div style={{ flex: 1, overflow: "auto", padding: "8px 0" }}>
+
+                            {panelTab === "terminal" && (
+                                <div style={{ fontFamily: "monospace", fontSize: 11.5 }}>
+                                    {console_.map((line, i) => (
+                                        <div key={i} style={{
+                                            padding: "1px 16px",
+                                            color: line.type === "fatal" ? "#ff4466"
+                                                : line.type === "success" ? "#00cc66"
+                                                    : line.type === "warn" ? "#ffaa00"
+                                                        : line.type === "info" ? "#5588bb"
+                                                            : line.type === "system" ? "#2a5070"
+                                                                : "#7799aa",
+                                            background: line.type === "fatal" ? "rgba(255,30,60,0.07)" : "transparent",
+                                            lineHeight: "20px",
+                                        }}>
+                                            <span style={{ color: "#1a4060", marginRight: 8, userSelect: "none" }}>
+                                                {line.type === "prompt" ? "›" : line.type === "fatal" ? "✗" : line.type === "success" ? "✓" : "·"}
+                                            </span>
+                                            {line.type === "prompt"
+                                                ? <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                                                    <span style={{ color: "#00aaff" }}>visitor</span>
+                                                    <span style={{ color: "#1a3a5a" }}>@</span>
+                                                    <span style={{ color: "#0066aa" }}>neural-ide</span>
+                                                    <span style={{ color: "#1a3a5a" }}>:~$</span>
+                                                    <span style={{ display: "inline-block", width: 7, height: 14, background: "#00aaff", animation: "pulse 1s infinite", marginLeft: 4 }} />
+                                                </span>
+                                                : line.text
+                                            }
+                                        </div>
+                                    ))}
+                                    <div ref={consoleEndRef} />
+                                </div>
                             )}
 
-                            {bottomPanelTab === 'chat' && isSimulationMode && (
-                                <div className="h-full flex flex-col p-4 bg-[#1E212B] rounded-lg border border-[#2D313F] shadow-inner font-sans text-sm">
-                                    {clientMessages.length === 0 ? (
-                                        <div className="m-auto text-slate-500 text-center flex flex-col items-center gap-3">
-                                            <User className="w-8 h-8 opacity-20" />
-                                            <span>Aucun message du client. L'environnement est calme... pour l'instant.</span>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-4 overflow-y-auto pr-2">
-                                            {clientMessages.map((msg, i) => (
-                                                <div key={i} className="flex gap-4 p-4 rounded-xl bg-[#252836] border border-[#2D313F] animate-in slide-in-from-bottom-2">
-                                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center flex-shrink-0 shadow-lg cursor-help group relative">
-                                                        <AlertTriangle className="w-5 h-5 text-white" />
-                                                        <div className="absolute -top-8 bg-black/80 px-2 py-1 rounded text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">VIP Client</div>
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <div className="flex items-baseline justify-between mb-1">
-                                                            <span className="font-black text-amber-500 tracking-wide text-xs">{msg.sender}</span>
-                                                            <span className="text-[10px] text-slate-500 font-mono">{msg.time}</span>
-                                                        </div>
-                                                        <p className="text-slate-300 leading-relaxed font-medium">{msg.text}</p>
+                            {panelTab === "problems" && (
+                                <div style={{ padding: "8px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+                                    {bugInjected ? (
+                                        <>
+                                            {[
+                                                { sev: "HIGH", code: "SWC-107", msg: "Reentrancy: balance not decremented before external call in withdraw()", line: 21 },
+                                                { sev: "CRITICAL", code: "SWC-105", msg: "emergencyDrain() — No access control. Anyone can drain the contract", line: 27 },
+                                            ].map((p, i) => (
+                                                <div key={i} style={{
+                                                    display: "flex", gap: 12, padding: "10px 14px", borderRadius: 6,
+                                                    background: "rgba(255,20,50,0.06)", border: "1px solid rgba(255,20,50,0.2)",
+                                                }}>
+                                                    <span style={{
+                                                        fontSize: 8, fontWeight: 900, letterSpacing: "0.1em",
+                                                        background: p.sev === "CRITICAL" ? "#ff2244" : "#ff6600",
+                                                        color: "#fff", borderRadius: 3, padding: "2px 6px",
+                                                        alignSelf: "flex-start", marginTop: 1, flexShrink: 0,
+                                                    }}>{p.sev}</span>
+                                                    <div>
+                                                        <div style={{ fontSize: 11, color: "#ff6677", fontWeight: 600, marginBottom: 3 }}>[{p.code}] line {p.line}</div>
+                                                        <div style={{ fontSize: 10.5, color: "#8899aa", lineHeight: 1.5 }}>{p.msg}</div>
                                                     </div>
                                                 </div>
                                             ))}
+                                        </>
+                                    ) : (
+                                        <div style={{ textAlign: "center", color: "#2a4060", fontSize: 11, paddingTop: 40 }}>
+                                            ✓ No issues detected
                                         </div>
                                     )}
+                                </div>
+                            )}
+
+                            {panelTab === "messages" && (
+                                <div style={{ padding: "8px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
+                                    {messages.length === 0 ? (
+                                        <div style={{ textAlign: "center", color: "#1a3050", fontSize: 11, paddingTop: 40 }}>
+                                            Aucun message. Restez concentré.
+                                        </div>
+                                    ) : messages.map((msg, i) => (
+                                        <div key={i} style={{
+                                            display: "flex", gap: 12, padding: "12px 14px", borderRadius: 8,
+                                            background: "rgba(255,150,0,0.06)", border: "1px solid rgba(255,150,0,0.2)",
+                                            animation: "slideDown 0.3s ease",
+                                        }}>
+                                            <div style={{
+                                                width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
+                                                background: "linear-gradient(135deg, #cc5500, #ff8800)",
+                                                display: "flex", alignItems: "center", justifyContent: "center",
+                                                fontSize: 12, fontWeight: 900, color: "#fff",
+                                                boxShadow: "0 0 12px rgba(255,120,0,0.4)",
+                                            }}>A</div>
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                                                    <span style={{ fontSize: 10, fontWeight: 800, color: "#ffaa00", letterSpacing: "0.05em" }}>
+                                                        {msg.sender}
+                                                    </span>
+                                                    <span style={{ fontSize: 9, color: "#2a4060" }}>{msg.time}</span>
+                                                </div>
+                                                <p style={{ fontSize: 11, color: "#7a9ab8", lineHeight: 1.6, margin: 0 }}>{msg.text}</p>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             )}
                         </div>
                     </div>
                 </main>
+
+                {/* Right Metrics Panel */}
+                <div style={{
+                    width: 200, background: "#060c18",
+                    borderLeft: "1px solid rgba(0,150,255,0.08)",
+                    display: "flex", flexDirection: "column", padding: "12px 0",
+                    gap: 0, flexShrink: 0,
+                }}>
+                    <div style={{ padding: "0 14px 10px", fontSize: 9, fontWeight: 800, letterSpacing: "0.2em", color: "#1a3050" }}>METRICS</div>
+
+                    {[
+                        { label: "CPU", value: screenShock ? 98 : 14, unit: "%", danger: screenShock },
+                        { label: "RAM", value: screenShock ? "15.8" : "2.4", unit: "GB", danger: screenShock },
+                        { label: "GAS EST.", value: "248k", unit: "", danger: false },
+                        { label: "NETWORK", value: "12", unit: "ms", danger: false },
+                    ].map(({ label, value, unit, danger }) => (
+                        <div key={label} style={{ padding: "8px 14px", borderBottom: "1px solid rgba(0,150,255,0.04)" }}>
+                            <div style={{ fontSize: 8.5, color: "#1a3050", letterSpacing: "0.15em", marginBottom: 4 }}>{label}</div>
+                            <div style={{ fontSize: 16, fontWeight: 800, color: danger ? "#ff4466" : "#3399cc", fontFamily: "monospace", letterSpacing: "0.05em" }}>
+                                {value}<span style={{ fontSize: 10, color: danger ? "#cc2244" : "#1a5070" }}>{unit}</span>
+                            </div>
+                            <div style={{ height: 3, background: "rgba(0,100,200,0.1)", borderRadius: 2, marginTop: 5 }}>
+                                <div style={{
+                                    height: "100%", borderRadius: 2,
+                                    background: danger ? "#ff2244" : "linear-gradient(90deg, #0055cc, #00aaff)",
+                                    width: `${typeof value === "number" ? value : 40}%`,
+                                    boxShadow: danger ? "0 0 6px #ff2244" : "0 0 4px #00aaff44",
+                                    transition: "width 1s, background 0.3s",
+                                }} />
+                            </div>
+                        </div>
+                    ))}
+
+                    <div style={{ padding: "12px 14px", borderBottom: "1px solid rgba(0,150,255,0.04)" }}>
+                        <div style={{ fontSize: 8.5, color: "#1a3050", letterSpacing: "0.15em", marginBottom: 8 }}>SIMULATION</div>
+                        {[
+                            { label: "Client pressure", active: messages.length > 0 },
+                            { label: "Prod incident", active: incident },
+                            { label: "Bug injection", active: bugInjected },
+                            { label: "Time stress", active: phase === "critical" || phase === "warning" },
+                        ].map(({ label, active }) => (
+                            <div key={label} style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 6 }}>
+                                <div style={{
+                                    width: 6, height: 6, borderRadius: "50%",
+                                    background: active ? "#ff4466" : "#1a3050",
+                                    boxShadow: active ? "0 0 6px #ff4466" : "none",
+                                    transition: "all 0.4s",
+                                }} />
+                                <span style={{ fontSize: 9.5, color: active ? "#cc3355" : "#1e3a5a", letterSpacing: "0.06em" }}>{label}</span>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div style={{ padding: "12px 14px" }}>
+                        <div style={{ fontSize: 8.5, color: "#1a3050", letterSpacing: "0.15em", marginBottom: 8 }}>PROGRESS</div>
+                        <div style={{ position: "relative", width: "100%" }}>
+                            <svg viewBox="0 0 100 100" style={{ width: "100%", transform: "rotate(-90deg)" }}>
+                                <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(0,100,200,0.1)" strokeWidth="8" />
+                                <circle cx="50" cy="50" r="40" fill="none"
+                                    stroke={phase === "critical" ? "#ff2244" : "#00aaff"}
+                                    strokeWidth="8"
+                                    strokeDasharray={`${2 * Math.PI * 40 * timeRatio} ${2 * Math.PI * 40}`}
+                                    strokeLinecap="round"
+                                    style={{ filter: `drop-shadow(0 0 4px ${phase === "critical" ? "#ff2244" : "#00aaff"})`, transition: "stroke 0.4s" }}
+                                />
+                            </svg>
+                            <div style={{
+                                position: "absolute", inset: 0, display: "flex", flexDirection: "column",
+                                alignItems: "center", justifyContent: "center",
+                            }}>
+                                <span style={{ fontSize: 18, fontWeight: 900, color: timerColor, fontFamily: "monospace" }}>{Math.round(timeRatio * 100)}%</span>
+                                <span style={{ fontSize: 8, color: "#1a3050" }}>TIME LEFT</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            {/* Bottom Status Bar - VS Code Style */}
-            <footer className={`h-6 ${isScreenFlashing ? 'bg-red-600' : 'bg-blue-600'} flex items-center justify-between px-3 text-white text-[10px] select-none transition-colors duration-300`}>
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1.5 hover:bg-white/20 px-1.5 rounded cursor-pointer transition-colors h-full">
-                        <Code className="w-3.5 h-3.5" />
-                        <span>main*</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 hover:bg-white/20 px-1.5 rounded cursor-pointer transition-colors h-full opacity-80">
-                        <RotateCcw className="w-3 h-3" />
-                        <span>0 ↓ 1 ↑</span>
-                    </div>
-                    {isScreenFlashing && (
-                        <div className="flex items-center gap-1.5 px-2 bg-black/20 font-bold uppercase tracking-widest animate-pulse h-full text-red-100">
-                            <AlertTriangle className="w-3.5 h-3.5" /> INCIDENT PRODUCTION
-                        </div>
-                    )}
-                </div>
-
-                <div className="flex items-center gap-4 h-full">
-                    {timeLimit && (
-                        <div className={`flex items-center gap-1.5 px-2 h-full font-mono font-bold font-black ${timeRemaining < 300 ? 'bg-red-500 animate-pulse border-x border-white/20' : 'opacity-90'}`}>
-                            <Clock className="w-3 h-3" />
-                            {formatTime(timeRemaining)}
-                        </div>
-                    )}
-
-                    {/* System Resources Simulation */}
-                    <div className="flex items-center gap-2 hover:bg-white/20 px-1.5 rounded cursor-pointer transition-colors h-full opacity-90 border-l border-white/20 pl-4">
-                        <span className="font-mono">CPU: <span className={isScreenFlashing ? 'font-black text-red-200' : ''}>{isScreenFlashing ? '98' : '12'}%</span></span>
-                        <span className="font-mono">RAM: <span className={isScreenFlashing ? 'font-black text-red-200' : ''}>{isScreenFlashing ? '15.8' : '2.4'}GB</span></span>
-                    </div>
-
-                    <div className="flex items-center hover:bg-white/20 px-1.5 rounded cursor-pointer transition-colors h-full opacity-80 border-l border-white/20 pl-4">
-                        UTF-8
-                    </div>
-                    <div className="flex items-center hover:bg-white/20 px-1.5 rounded cursor-pointer transition-colors h-full opacity-80 border-l border-white/20 pl-4">
-                        {exerciseType === 'course' ? 'Solidity' : 'Markdown'}
-                    </div>
-                    <button
-                        onClick={onTestRemediation}
-                        className="flex items-center hover:bg-white/20 px-1.5 rounded cursor-pointer transition-colors h-full opacity-60 ml-2"
-                        title="Injecter une erreur (Debug V2)"
-                    >
-                        <ShieldAlert className="w-3.5 h-3.5" />
-                    </button>
-                </div>
+            {/* ─── STATUS BAR ─────────────────────────────────────────── */}
+            <footer style={{
+                height: 24, background: phase === "critical" ? "#3a0010" : "#050a14",
+                borderTop: `1px solid ${phase === "critical" ? "rgba(255,34,68,0.4)" : "rgba(0,150,255,0.1)"}`,
+                display: "flex", alignItems: "center", padding: "0 12px",
+                fontSize: 9.5, color: "#2a4060",
+                gap: 16, userSelect: "none",
+                transition: "all 0.4s",
+            }}>
+                <span style={{ color: "#0055aa" }}>⌥ main*</span>
+                <span>Solidity 0.8.19</span>
+                <span>UTF-8</span>
+                <span>LF</span>
+                <div style={{ flex: 1 }} />
+                {phase === "critical" && (
+                    <span style={{ color: "#ff4466", fontWeight: 800, letterSpacing: "0.15em", animation: "pulse 0.8s infinite" }}>
+                        ⚠ TEMPS CRITIQUE
+                    </span>
+                )}
+                <span style={{ color: "#1e4060" }}>Spaces: 4</span>
+                <span style={{ color: "#1e4060" }}>Ln {code.split("\\n").length}, Col 1</span>
+                <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#00dd66", boxShadow: "0 0 6px #00dd66" }} />
             </footer>
+
+            <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800;900&display=swap');
+    @keyframes pulse { 0 %, 100 % { opacity: 1 } 50 % { opacity: 0.5 } }
+    @keyframes slideDown { from{ transform: translateY(-6px); opacity: 0 } to{ transform: translateY(0); opacity: 1 } }
+    @keyframes fadeIn { from{ opacity: 0 } to{ opacity: 1 } }
+        * { box- sizing: border - box;
+}
+        :: -webkit - scrollbar { width: 4px; height: 4px; }
+        :: -webkit - scrollbar - track { background: transparent; }
+        :: -webkit - scrollbar - thumb { background: rgba(0, 150, 255, 0.15); border - radius: 2px; }
+        :: -webkit - scrollbar - thumb:hover { background: rgba(0, 150, 255, 0.3); }
+        textarea { scrollbar - width: thin; scrollbar - color: rgba(0, 150, 255, 0.15) transparent; }
+`}</style>
         </div>
     );
-};
-
-export default ExerciseIDEView;
+}
