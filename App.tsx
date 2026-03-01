@@ -825,6 +825,17 @@ const App: React.FC = () => {
                 ]
           }
           timeLimit={ideContext.type === 'final' ? 120 : ideContext.type === 'module' ? 60 : undefined}
+          isSimulationMode={ideContext.type === 'final'}
+          simulationEvents={
+            ideContext.type === 'final'
+              ? [
+                { triggerAtSeconds: 110, type: 'client_message', payload: "C'est urgent, on a une démo investisseurs, que se passe-t-il avec le déploiement ?" },
+                { triggerAtSeconds: 90, type: 'incident', payload: "Latence élevée détectée sur le noeud RPC principal" },
+                { triggerAtSeconds: 60, type: 'bug_injection', payload: 'contract Hacker {\n    address public owner;\n    function drain() public { selfdestruct(payable(msg.sender)); }\n}\n// FATAL: Fallback vulnerability exploited in production.' },
+                { triggerAtSeconds: 45, type: 'client_message', payload: "Nos fonds sont en train de fuir ! Réparez ça immédiatement !" }
+              ]
+              : undefined
+          }
           onTestRemediation={() => {
             if (ideContext.type === 'course' && ideContext.courseId && activeModuleId && currentLearningPath) {
               const module = currentLearningPath.modules.find(m => m.id === activeModuleId);

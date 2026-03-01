@@ -51,6 +51,14 @@ export interface Exercise {
   tools?: string[];
 }
 
+export type SimulationEventType = 'incident' | 'client_message' | 'bug_injection';
+
+export interface SimulationEvent {
+  triggerAtSeconds: number; // When timeRemaining == this value, trigger it
+  type: SimulationEventType;
+  payload: string; // Message from client, OR error message for terminal, OR buggy code
+}
+
 export interface Remediation {
   id: string;
   courseId: string;
@@ -75,6 +83,36 @@ export interface Badge {
 }
 
 // =====================================================
+// Portfolio (Step 6) - Smart Profiling Data
+// =====================================================
+
+export interface PortfolioProject {
+  id: string;
+  title: string;
+  objective: string;
+  score: number;
+  skills: string[];
+  gitLink: string;
+  completionDate: string;
+  thumbnailUrl: string;
+}
+
+export interface SkillScore {
+  domain: string;
+  masteryLevel: number;
+  verified: boolean;
+}
+
+export interface Recommendation {
+  id: string;
+  author: string;
+  role: string;
+  text: string;
+  date: string;
+  avatarUrl?: string;
+}
+
+// =====================================================
 // Course Level (Lowest in hierarchy)
 // =====================================================
 
@@ -92,6 +130,7 @@ export interface Course {
   badge?: Badge;
   remediation?: Remediation;
   llmConfig?: LLMConfig;
+  isSimulationMode?: boolean;
 }
 
 export interface LLMConfig {
@@ -178,6 +217,8 @@ export interface FinalProject {
   submittedAt?: string;
   feedback?: string;
   plan?: ProjectPlan;
+  isSimulationMode?: boolean;
+  simulationEvents?: SimulationEvent[];
 }
 
 export interface Deliverable {

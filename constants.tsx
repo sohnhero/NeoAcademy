@@ -1,5 +1,5 @@
 
-import { LearningPath, PathModule, Course, Badge, LearnerProgress, InsightLLM, ExitProfile, Coach, LegacyCourse, Module, SubscriptionPlan, CoachRate, PaymentRecord } from './types';
+import { LearningPath, PathModule, Course, Badge, LearnerProgress, InsightLLM, ExitProfile, Coach, LegacyCourse, Module, SubscriptionPlan, CoachRate, PaymentRecord, PortfolioProject, SkillScore, Recommendation } from './types';
 
 // =====================================================
 // EXIT PROFILES
@@ -783,6 +783,70 @@ export const MOCK_BADGES: Badge[] = [
 // =====================================================
 // MOCK STATS & PROGRESS
 // =====================================================
+
+// =====================================================
+// SMART PORTFOLIO MOCK DATA (Step 6)
+// =====================================================
+
+export const MOCK_PORTFOLIO_PROJECTS: PortfolioProject[] = [
+  {
+    id: 'proj-1',
+    title: 'DeFi Lending Protocol v2',
+    objective: 'Conception et déploiement d\'un protocole de prêt décentralisé complet avec liquidation algorithmique.',
+    score: 98,
+    skills: ['Solidity', 'Hardhat', 'Ethers.js', 'Sécurité DeFi'],
+    gitLink: 'github.com/alex-cipher/defilending',
+    completionDate: '2024-02-28',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1639762681485-074b7f4ec651?auto=format&fit=crop&q=80&w=800'
+  },
+  {
+    id: 'proj-2',
+    title: 'Zero-Knowledge Voting System',
+    objective: 'Système de vote anonyme utilisant des preuves à divulgation nulle de connaissance (zk-SNARKs).',
+    score: 94,
+    skills: ['Circom', 'Solidity', 'zk-SNARKs', 'Cryptographie'],
+    gitLink: 'github.com/alex-cipher/zk-voting',
+    completionDate: '2024-01-15',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&q=80&w=800'
+  },
+  {
+    id: 'proj-3',
+    title: 'NFT Marketplace Engine',
+    objective: 'Moteur de place de marché optimisé en gas (EIP-712, EIP-2981) supportant le Lazy Minting.',
+    score: 96,
+    skills: ['ERC-721', 'EIP-712', 'React', 'The Graph'],
+    gitLink: 'github.com/alex-cipher/nft-marketplace',
+    completionDate: '2023-11-05',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800'
+  }
+];
+
+export const MOCK_SKILL_SCORES: SkillScore[] = [
+  { domain: 'Développement Smart Contracts', masteryLevel: 98, verified: true },
+  { domain: 'Sécurité & Audit DeFi', masteryLevel: 92, verified: true },
+  { domain: 'Architecture Web3', masteryLevel: 95, verified: true },
+  { domain: 'Cryptographie ZK', masteryLevel: 85, verified: true },
+  { domain: 'Intégration Frontend', masteryLevel: 88, verified: true },
+];
+
+export const MOCK_RECOMMENDATIONS: Recommendation[] = [
+  {
+    id: 'rec-1',
+    author: 'NeoAcademy Engine',
+    role: 'Intelligence Artificielle d\'Évaluation',
+    text: 'Profil exceptionnel. A démontré une capacité de résolution de problèmes hors normes sous pression lors des simulations d\'incidents en production. Code extrêmement résilient.',
+    date: '2024-03-01',
+    avatarUrl: 'https://i.pravatar.cc/150?u=neo'
+  },
+  {
+    id: 'rec-2',
+    author: 'Sarah Chen',
+    role: 'Lead Architect Web3, ChainAcademy',
+    text: 'Alex possède une compréhension profonde des vecteurs d\'attaque DeFi. Son projet final sur les mécanismes de liquidation était d\'une qualité professionnelle prête pour le mainnet.',
+    date: '2024-02-28',
+    avatarUrl: 'https://i.pravatar.cc/150?u=sarah'
+  }
+];
 
 export const MOCK_STATS: LearnerProgress = {
   totalPaths: 1,

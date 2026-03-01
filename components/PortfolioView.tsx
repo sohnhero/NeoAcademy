@@ -1,28 +1,52 @@
 
-import React, { useState, useMemo } from 'react';
-import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer } from 'recharts';
+import React, { useState, useMemo, useEffect } from 'react';
+import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import {
   Award, Share2, Download, ExternalLink, Hexagon, Globe, Code, Shield,
   CheckCircle2, ShieldCheck, Target, TrendingUp, Zap, Trophy, Star,
-  Terminal, Database, Unlock, Fuel, ChevronRight, X, BrainCircuit, Globe2, Lock
+  Terminal, Database, Unlock, Fuel, ChevronRight, X, BrainCircuit, Globe2, Lock,
+  Briefcase, GraduationCap, Cpu, CheckSquare, Github, MessageSquareQuote, FileText
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MOCK_BADGES, MOCK_STATS } from '../constants';
+import { MOCK_BADGES, MOCK_STATS, MOCK_PORTFOLIO_PROJECTS, MOCK_SKILL_SCORES, MOCK_RECOMMENDATIONS } from '../constants';
 
 const PortfolioView: React.FC = () => {
   const [selectedCredential, setSelectedCredential] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'recommendations' | 'certifications'>('overview');
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportStep, setExportStep] = useState(0);
 
   // Group badges by type
   const certifications = useMemo(() => MOCK_BADGES.filter(b => b.type === 'certification'), []);
   const moduleBadges = useMemo(() => MOCK_BADGES.filter(b => b.type === 'module'), []);
   const courseBadges = useMemo(() => MOCK_BADGES.filter(b => b.type === 'course'), []);
 
+  // Export Animation Logic
+  const handleExport = () => {
+    setIsExporting(true);
+    setExportStep(1);
+  };
+
+  useEffect(() => {
+    if (isExporting) {
+      if (exportStep < 4) {
+        const timer = setTimeout(() => setExportStep(s => s + 1), 1200);
+        return () => clearTimeout(timer);
+      } else {
+        const timer = setTimeout(() => {
+          setIsExporting(false);
+          setExportStep(0);
+        }, 2000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isExporting, exportStep]);
+
   return (
-    <div className="max-w-7xl mx-auto space-y-20 pb-24 px-4 sm:px-6">
+    <div className="max-w-7xl mx-auto space-y-12 pb-24 px-4 sm:px-6">
 
       {/* Identity Node - Hero Section */}
-      <section className="flex flex-col md:flex-row items-center gap-12 border rounded-[60px] p-12 relative overflow-hidden transition-all duration-700 shadow-2xl group"
-        style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
+      <section className="flex flex-col md:flex-row items-center gap-12 border rounded-[60px] p-12 relative overflow-hidden transition-all duration-700 shadow-2xl group bg-[#0F172A] border-blue-500/20">
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-1000"></div>
 
         <div className="relative">
@@ -35,197 +59,324 @@ const PortfolioView: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex-1 text-center md:text-left space-y-6">
+        <div className="flex-1 text-center md:text-left space-y-6 relative z-10">
           <div className="space-y-2">
-            <p className="text-blue-500 font-black text-[10px] uppercase tracking-[0.4em] mb-2 animate-in fade-in slide-in-from-left duration-700">Identité Validée On-Chain</p>
-            <h2 className="text-6xl font-black tracking-tighter" style={{ color: 'var(--text-primary)' }}>Alex Cipher</h2>
+            <p className="text-blue-500 font-black text-[10px] uppercase tracking-[0.4em] mb-2 flex items-center gap-2 justify-center md:justify-start">
+              <BrainCircuit className="w-4 h-4" /> Profil IA Généré & Certifié
+            </p>
+            <h2 className="text-6xl font-black tracking-tighter text-white">Alex Cipher</h2>
           </div>
 
           <div className="flex flex-wrap gap-3 justify-center md:justify-start mb-4 font-mono text-[10px] uppercase tracking-[0.2em] font-bold">
-            <span className="flex items-center space-x-2 px-5 py-2 rounded-2xl border bg-blue-500/5 transition-all duration-500 hover:bg-blue-500/10" style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}>
+            <span className="flex items-center space-x-2 px-5 py-2 rounded-2xl border border-blue-500/30 bg-blue-500/10 text-blue-400">
               <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
               <span>NŒUD MAÎTRE</span>
             </span>
-            <span className="px-5 py-2 rounded-2xl border bg-white/5" style={{ borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}>RANG #1204</span>
-            <span className="px-5 py-2 rounded-2xl border bg-white/5" style={{ borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}>0x7f...3a2b</span>
+            <span className="px-5 py-2 rounded-2xl border border-white/10 bg-white/5 text-slate-400">TOP 1% Coder</span>
+            <span className="px-5 py-2 rounded-2xl border border-white/10 bg-white/5 text-slate-400">0x7f...3a2b</span>
           </div>
 
-          <p className="text-xl max-w-2xl leading-relaxed font-medium" style={{ color: 'var(--text-secondary)' }}>
+          <p className="text-xl max-w-2xl leading-relaxed font-medium text-slate-300">
             Expert en protocoles décentralisés et architecture de smart contracts.
-            Maîtrise complète de l'écosystème Ethereum et des paradigmes Web3.
+            Maîtrise complète de l'écosystème Ethereum, certifié par des simulations d'incidents réels.
           </p>
 
           <div className="pt-4 flex flex-wrap gap-5 justify-center md:justify-start">
-            <button className="flex items-center space-x-3 bg-blue-600 hover:bg-blue-500 text-white px-8 py-5 rounded-2xl transition-all font-black text-xs uppercase tracking-[0.2em] glow-blue-md group/btn active:scale-95">
-              <Download className="w-5 h-5 group-hover/btn:-translate-y-1 transition-transform" />
-              <span>Télécharger Dossier</span>
+            <button
+              onClick={handleExport}
+              disabled={isExporting}
+              className="flex items-center space-x-3 bg-blue-600 hover:bg-blue-500 text-white px-8 py-5 rounded-2xl transition-all font-black text-xs uppercase tracking-[0.2em] shadow-[0_0_30px_rgba(37,99,235,0.3)] active:scale-95 disabled:opacity-80 disabled:scale-100 min-w-[300px] justify-center"
+            >
+              {isExporting ? (
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>
+                    {exportStep === 1 ? 'Compilation des Projets...' :
+                      exportStep === 2 ? 'Validation Cryptographique...' :
+                        exportStep === 3 ? 'Génération du Dossier PDF...' :
+                          'Dossier Prêt !'}
+                  </span>
+                </div>
+              ) : (
+                <>
+                  <Download className="w-5 h-5 animate-bounce-subtle" />
+                  <span>Dossier Entreprise (PDF)</span>
+                </>
+              )}
             </button>
-            <button className="flex items-center space-x-3 border px-8 py-5 rounded-2xl transition-all font-black text-xs uppercase tracking-[0.2em] hover:bg-white/5 active:scale-95"
-              style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>
+            <button className="flex items-center space-x-3 border border-white/10 bg-white/5 px-8 py-5 rounded-2xl transition-all font-black text-xs uppercase tracking-[0.2em] text-slate-300 hover:bg-white/10 active:scale-95">
               <Share2 className="w-5 h-5" />
-              <span>Diffuser Preuves</span>
+              <span>Lien Public</span>
             </button>
           </div>
         </div>
       </section>
 
-      {/* Analytics & Credentials Matrix */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+      {/* Smart Portfolio Tabs */}
+      <div className="flex items-center justify-center gap-2 p-2 bg-[#0F172A] border border-white/10 rounded-full w-max mx-auto overflow-hidden shadow-2xl relative z-20">
+        <button
+          onClick={() => setActiveTab('overview')}
+          className={`flex items-center gap-2 px-6 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'overview' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-500 hover:text-slate-300'}`}
+        >
+          <Target className="w-4 h-4" /> Vue d'Ensemble
+        </button>
+        <button
+          onClick={() => setActiveTab('projects')}
+          className={`flex items-center gap-2 px-6 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'projects' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-500 hover:text-slate-300'}`}
+        >
+          <Briefcase className="w-4 h-4" /> Projets Validés
+        </button>
+        <button
+          onClick={() => setActiveTab('recommendations')}
+          className={`flex items-center gap-2 px-6 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'recommendations' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-500 hover:text-slate-300'}`}
+        >
+          <MessageSquareQuote className="w-4 h-4" /> Avis & Reco
+        </button>
+        <button
+          onClick={() => setActiveTab('certifications')}
+          className={`flex items-center gap-2 px-6 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'certifications' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-500 hover:text-slate-300'}`}
+        >
+          <Trophy className="w-4 h-4" /> Certifications
+        </button>
+      </div>
 
-        {/* Left Column: Skill Matrix & Categorized Badges (8/12) */}
-        <div className="lg:col-span-8 space-y-16">
+      {/* Tab Content */}
+      <AnimatePresence mode="wait">
 
-          {/* Matrice de Compétences (Radar) */}
-          <section className="border p-12 rounded-[50px] shadow-2xl transition-all duration-500 relative overflow-hidden group"
-            style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500/20 to-transparent"></div>
-
-            <div className="flex items-center justify-between mb-12">
-              <div className="space-y-1">
-                <h3 className="text-3xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>Analyse Cognitive IA</h3>
-                <p className="text-xs font-bold uppercase tracking-widest text-blue-500">Cartographie des Nœuds de Savoir</p>
+        {/* OVERVIEW TAB */}
+        {activeTab === 'overview' && (
+          <motion.div
+            key="overview"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+          >
+            {/* Radar Chart */}
+            <section className="bg-[#0F172A] border border-white/5 p-10 rounded-[40px] shadow-2xl relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500/50 to-transparent"></div>
+              <div className="flex items-center justify-between mb-8">
+                <div className="space-y-1">
+                  <h3 className="text-2xl font-black tracking-tight text-white">Analyse Cognitive IA</h3>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-500">Profil de Compétences</p>
+                </div>
+                <div className="p-3 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-500">
+                  <TrendingUp className="w-5 h-5" />
+                </div>
               </div>
-              <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-500 animate-pulse">
-                <TrendingUp className="w-6 h-6" />
+              <div className="h-[400px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart cx="50%" cy="50%" outerRadius="70%" data={MOCK_STATS.skillMatrix}>
+                    <PolarGrid stroke="rgba(255,255,255,0.05)" />
+                    <PolarAngleAxis dataKey="skill" tick={{ fill: "#94a3b8", fontSize: 11, fontWeight: 800, letterSpacing: '0.05em' }} />
+                    <Radar name="Compétence" dataKey="value" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.2} strokeWidth={2} />
+                  </RadarChart>
+                </ResponsiveContainer>
               </div>
-            </div>
+            </section>
 
-            <div className="h-[450px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={MOCK_STATS.skillMatrix}>
-                  <PolarGrid stroke="rgba(255,255,255,0.08)" />
-                  <PolarAngleAxis dataKey="skill" tick={{ fill: "var(--text-muted)", fontSize: 13, fontWeight: 800, letterSpacing: '0.1em' }} />
-                  <Radar name="Compétence" dataKey="value" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.3} strokeWidth={3} />
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>
-          </section>
-
-          {/* Categorized Badges Display */}
-          <section className="space-y-12">
-
-            {/* 1. MODULE BADGES (Mid-tier) */}
-            <div className="space-y-8">
-              <div className="flex items-center gap-4">
-                <div className="w-1.5 h-8 bg-emerald-500 rounded-full"></div>
-                <h3 className="text-2xl font-black tracking-tight uppercase" style={{ color: 'var(--text-primary)' }}>Nœuds de Maîtrise <span className="text-emerald-500">(Modules)</span></h3>
+            {/* Top Skills List */}
+            <section className="bg-[#0F172A] border border-white/5 p-10 rounded-[40px] shadow-2xl flex flex-col">
+              <div className="flex items-center justify-between mb-8">
+                <div className="space-y-1">
+                  <h3 className="text-2xl font-black tracking-tight text-white">Domaines d'Expertise</h3>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500">Scores Prouvés en Simulation</p>
+                </div>
+                <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500">
+                  <CheckSquare className="w-5 h-5" />
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {moduleBadges.map((badge) => (
-                  <div
-                    key={badge.id}
-                    onClick={() => setSelectedCredential(badge)}
-                    className="border p-8 rounded-[35px] hover:border-emerald-500/30 transition-all duration-300 group cursor-pointer relative overflow-hidden bg-gradient-to-br from-transparent to-emerald-500/5 shadow-lg shadow-emerald-500/5 hover:-translate-y-1"
-                    style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}
-                  >
-                    <div className="flex items-center gap-6">
-                      <div className="w-20 h-20 rounded-3xl border flex items-center justify-center text-emerald-400 bg-emerald-500/5 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-500 shadow-inner" style={{ borderColor: 'var(--border-color)' }}>
-                        {badge.icon === 'Award' && <Award className="w-10 h-10" />}
-                        {badge.icon === 'Terminal' && <Terminal className="w-10 h-10" />}
-                        {badge.icon === 'Shield' && <Shield className="w-10 h-10" />}
-                      </div>
-                      <div className="space-y-1">
-                        <h4 className="text-xl font-black tracking-tight group-hover:text-emerald-400 transition-colors" style={{ color: 'var(--text-primary)' }}>{badge.name}</h4>
-                        <p className="text-xs font-mono text-emerald-500/70 font-bold tracking-widest uppercase">SYNCHRONISÉ : {badge.dateEarned}</p>
-                      </div>
+              <div className="flex-1 flex flex-col justify-center space-y-6">
+                {MOCK_SKILL_SCORES.map((skill, idx) => (
+                  <div key={idx} className="space-y-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-bold text-slate-200 flex items-center gap-2">
+                        {skill.verified && <ShieldCheck className="w-4 h-4 text-blue-500" />} {skill.domain}
+                      </span>
+                      <span className="font-mono font-black text-blue-400">{skill.masteryLevel}%</span>
+                    </div>
+                    <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${skill.masteryLevel}%` }}
+                        transition={{ duration: 1, delay: idx * 0.1 }}
+                        className="h-full bg-gradient-to-r from-blue-600 to-indigo-400 rounded-full"
+                      />
                     </div>
                   </div>
                 ))}
               </div>
+            </section>
+          </motion.div>
+        )}
+
+        {/* PROJECTS TAB */}
+        {activeTab === 'projects' && (
+          <motion.div
+            key="projects"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-8"
+          >
+            <div className="flex items-center gap-4 px-4">
+              <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-500">
+                <Code className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-black text-white tracking-tight">Projets Finaux Validés</h3>
+                <p className="text-sm font-medium text-slate-400">Applications complètes développées et auditées en condition réelle.</p>
+              </div>
             </div>
 
-            {/* 2. COURSE BADGES (Lower-tier but sleek) */}
-            <div className="space-y-8">
-              <div className="flex items-center gap-4">
-                <div className="w-1.5 h-8 bg-blue-500 rounded-full"></div>
-                <h3 className="text-2xl font-black tracking-tight uppercase" style={{ color: 'var(--text-primary)' }}>Fragments de Savoir <span className="text-blue-500">(Cours)</span></h3>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
-                {courseBadges.map((badge) => (
-                  <div
-                    key={badge.id}
-                    onClick={() => setSelectedCredential(badge)}
-                    className="border p-5 rounded-[25px] hover:border-blue-500/40 transition-all duration-300 group cursor-pointer flex items-center gap-4 hover:bg-blue-500/5 shadow-sm"
-                    style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}
-                  >
-                    <div className="w-12 h-12 rounded-2xl border flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform shadow-inner" style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--bg-primary)' }}>
-                      {badge.icon === 'Zap' && <Zap className="w-6 h-6" />}
-                      {badge.icon === 'Unlock' && <Unlock className="w-6 h-6" />}
-                      {badge.icon === 'Database' && <Database className="w-6 h-6" />}
-                      {badge.icon === 'Fuel' && <Fuel className="w-6 h-6" />}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {MOCK_PORTFOLIO_PROJECTS.map(project => (
+                <div key={project.id} className="bg-[#0F172A] border border-white/5 rounded-[32px] overflow-hidden group hover:border-blue-500/30 transition-all shadow-xl">
+                  <div className="h-48 relative overflow-hidden">
+                    <img src={project.thumbnailUrl} alt={project.title} className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A] to-transparent"></div>
+                    <div className="absolute bottom-4 left-6 right-6 flex items-end justify-between">
+                      <h4 className="text-2xl font-black text-white leading-tight">{project.title}</h4>
+                      <div className="w-14 h-14 rounded-2xl bg-[#0F172A]/80 backdrop-blur-md border border-white/10 flex flex-col items-center justify-center text-blue-400 font-black shadow-lg">
+                        <span className="text-xs leading-none">SCORE</span>
+                        <span className="text-lg leading-none">{project.score}</span>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="text-sm font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>{badge.name}</h4>
-                      <p className="text-[9px] font-black font-mono text-blue-500/50 uppercase">{badge.dateEarned}</p>
-                    </div>
-                    <ChevronRight className="w-4 h-4 ml-auto text-white/5 group-hover:text-blue-500 transition-colors" />
                   </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        </div>
+                  <div className="p-8 space-y-6">
+                    <p className="text-sm text-slate-300 font-medium leading-relaxed">{project.objective}</p>
 
-        {/* Right Column: PATH CERTIFICATIONS (MINIMALISTIC DISPLAY) (4/12) */}
-        <div className="lg:col-span-4 space-y-12">
-          <section className="space-y-8 sticky top-24">
-            <div className="flex items-center justify-between px-2">
-              <h3 className="text-xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>Certifications</h3>
-              <Trophy className="w-5 h-5 text-yellow-500" />
-            </div>
-
-            <div className="space-y-6">
-              {certifications.map((cert) => (
-                <div
-                  key={cert.id}
-                  onClick={() => setSelectedCredential(cert)}
-                  className="group cursor-pointer active:scale-[0.98] transition-all"
-                >
-                  <div className="relative border rounded-[32px] p-8 flex flex-col items-center text-center gap-6 transition-all duration-500 hover:border-yellow-500/30 shadow-sm hover:shadow-yellow-500/5 overflow-hidden"
-                    style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
-
-                    {/* Subtle Gradient Accent */}
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-500/5 blur-2xl rounded-full translate-x-1/2 -translate-y-1/2"></div>
-
-                    <div className="relative">
-                      <div className="w-24 h-24 rounded-[28px] bg-white/5 border flex items-center justify-center text-yellow-500 group-hover:scale-105 transition-transform duration-500" style={{ borderColor: 'var(--border-color)' }}>
-                        <Trophy className="w-12 h-12" />
+                    <div className="space-y-3">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Stack Technique</span>
+                      <div className="flex flex-wrap gap-2">
+                        {project.skills.map(skill => (
+                          <span key={skill} className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-bold text-slate-300">
+                            {skill}
+                          </span>
+                        ))}
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <h4 className="text-xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
-                        {cert.name}
-                      </h4>
-                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                        {cert.dateEarned}
-                      </p>
-                    </div>
-
-                    <div className="w-full pt-6 border-t border-white/5 flex flex-col gap-3">
-                      <div className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-yellow-500/80">
-                        <ShieldCheck className="w-3.5 h-3.5" />
-                        <span>Vérifié On-Chain</span>
+                    <div className="pt-6 border-t border-white/5 flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-xs font-mono font-bold text-slate-500">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                        Validé le {project.completionDate}
                       </div>
-                      <button className="w-full py-3 bg-white/5 hover:bg-white/10 text-white font-black text-[9px] uppercase tracking-[0.2em] rounded-xl border transition-all" style={{ borderColor: 'var(--border-color)' }}>
-                        Voir Détails
-                      </button>
+                      <a href={`https://${project.gitLink}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-blue-600 hover:text-white text-blue-400 rounded-xl transition-colors font-black text-[10px] uppercase tracking-widest">
+                        <Github className="w-3.5 h-3.5" /> Voir le Code
+                      </a>
                     </div>
                   </div>
                 </div>
               ))}
+            </div>
+          </motion.div>
+        )}
 
-              <div className="p-8 border-2 border-dashed rounded-[32px] flex flex-col items-center justify-center text-center gap-3 opacity-30"
-                style={{ borderColor: 'var(--border-color)' }}>
-                <Lock className="w-6 h-6 text-white/20" />
-                <p className="text-[9px] font-bold uppercase tracking-widest">Prochaine Certification</p>
+        {/* RECOMMENDATIONS TAB */}
+        {activeTab === 'recommendations' && (
+          <motion.div
+            key="recommendations"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-8"
+          >
+            <div className="flex items-center gap-4 px-4">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
+                <MessageSquareQuote className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-black text-white tracking-tight">Recommandations & Avis</h3>
+                <p className="text-sm font-medium text-slate-400">Évaluations laissées par les experts et moteurs de simulation.</p>
               </div>
             </div>
-          </section>
-        </div>
-      </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {MOCK_RECOMMENDATIONS.map(rec => (
+                <div key={rec.id} className="bg-[#0F172A] border border-white/5 p-8 rounded-[32px] relative overflow-hidden group hover:border-white/10 transition-colors">
+                  <MessageSquareQuote className="absolute -top-4 -right-4 w-32 h-32 text-white/5 group-hover:scale-110 transition-transform duration-700" />
+
+                  <div className="relative z-10 space-y-6">
+                    <p className="text-lg text-slate-300 font-medium leading-relaxed italic">
+                      "{rec.text}"
+                    </p>
+                    <div className="flex items-center gap-4 pt-6 border-t border-white/5">
+                      <img src={rec.avatarUrl} alt={rec.author} className="w-12 h-12 rounded-full border-2 border-slate-700" />
+                      <div>
+                        <h4 className="font-black text-white text-sm">{rec.author}</h4>
+                        <p className="text-xs font-bold text-slate-500">{rec.role}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* CERTIFICATIONS TAB */}
+        {activeTab === 'certifications' && (
+          <motion.div
+            key="certifications"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-12"
+          >
+            <div className="flex items-center gap-4 px-4">
+              <div className="w-12 h-12 rounded-2xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-500">
+                <Trophy className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-black text-white tracking-tight">Certifications Officielles & Badges</h3>
+                <p className="text-sm font-medium text-slate-400">Preuves cryptographiques des compétences acquises.</p>
+              </div>
+            </div>
+
+            {/* Certifications (Major) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {certifications.map(cert => (
+                <div key={cert.id} onClick={() => setSelectedCredential(cert)} className="bg-[#0F172A] border border-white/5 p-8 rounded-[32px] flex flex-col items-center text-center gap-4 cursor-pointer hover:border-yellow-500/30 transition-all shadow-lg hover:-translate-y-1 overflow-hidden relative">
+                  <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent"></div>
+                  <div className="w-20 h-20 rounded-2xl bg-yellow-500/10 flex items-center justify-center text-yellow-500 mb-2">
+                    <Trophy className="w-10 h-10" />
+                  </div>
+                  <div>
+                    <h4 className="font-black text-white text-lg">{cert.name}</h4>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-2">{cert.dateEarned}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Module Badges */}
+            <div>
+              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500 mb-6 px-4">Nœuds de Maîtrise (Modules)</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {moduleBadges.map((badge) => (
+                  <div key={badge.id} onClick={() => setSelectedCredential(badge)} className="bg-[#0F172A] border border-white/5 p-6 rounded-[24px] hover:border-emerald-500/30 transition-all cursor-pointer flex items-center gap-4 shadow-md">
+                    <div className="w-14 h-14 rounded-xl flex items-center justify-center text-emerald-400 bg-emerald-500/10 flex-shrink-0">
+                      {badge.icon === 'Award' && <Award className="w-6 h-6" />}
+                      {badge.icon === 'Terminal' && <Terminal className="w-6 h-6" />}
+                      {badge.icon === 'Shield' && <Shield className="w-6 h-6" />}
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-white leading-tight">{badge.name}</h4>
+                      <p className="text-[10px] font-mono text-slate-500 mt-1">{badge.dateEarned}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Detail Credential Modal - Premium Neural Overhaul */}
       <AnimatePresence>
