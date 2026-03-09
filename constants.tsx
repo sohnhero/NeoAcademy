@@ -254,10 +254,82 @@ export const MOCK_LEARNING_PATHS: LearningPath[] = [
             objectives: ['Variables d\'état', 'Types de données', 'Modificateurs'],
             content: [
               {
-                id: 'content-4-1',
+                id: 'content-c2-1-1',
                 type: 'text',
                 title: 'Introduction à Solidity',
-                content: '### Défi Réel : Gestionnaire de Patrimoine Immobilier\n\nPour ce premier module de code, nous allons concevoir le moteur d\'un "Registry" immobilier. \n\n**Solidity** est un langage orienté contrat. Contrairement à Python ou JavaScript, chaque ligne de code exécutée coûte du "Gas" (de l\'argent réel). \n\nDans ce cours, vous apprendrez à :\n- Déclarer des structures de données pour des "Propriétés".\n- Gérer des listes de "Propriétaires" via des `mapping`.\n- Utiliser les types statiques pour garantir que le prix d\'une transaction ne puisse jamais être négatif.'
+                content: `### Qu'est-ce que Solidity ?
+
+Solidity est un langage orienté objet, de haut niveau, conçu pour l'implémentation de **Smart Contracts**. Il est très influencé par le C++, Python et JavaScript et a été créé spécifiquement pour la [[Machine Virtuelle Ethereum (EVM)||Peux-tu m\'expliquer en détail ce qu\'est l\'EVM et comment elle fonctionne ?]].
+
+Un contrat intelligent est un programme qui régit le comportement d'un compte au sein de l'état Ethereum. Avec Solidity, vous pouvez créer des contrats pour des utilisations telles que le vote à la majorité aveugle, le financement participatif, les enchères à l'aveugle et les portefeuilles multi-signatures.
+
+### Pragma et Versioning
+
+Tout fichier Solidity doit commencer par un "Pragma de version". Cela indique au compilateur quelle version de Solidity il doit utiliser. Cela évite que votre contrat ne soit compilé avec un compilateur plus récent qui pourrait introduire un comportement inattendu.
+
+\`\`\`solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+\`\`\`
+
+Le symbole \`^\` (caret) indique que le compilateur doit utiliser la version \`0.8.20\` ou toute version ultérieure qui ne casse pas la compatibilité (ex: \`0.8.24\`), mais pas une version majeure comme \`0.9.0\`.
+
+### Structure d'un Contrat
+
+Un contrat en Solidity est similaire à une \`class\` dans un langage orienté objet. Il peut contenir des variables d'état, des fonctions, des modificateurs de fonctions, des événements, des erreurs, et des types structurels.
+
+\`\`\`solidity
+contract SimpleStorage {
+    uint256 storedData; // Variable d'état
+
+    function set(uint256 x) public {
+        storedData = x;
+    }
+
+    function get() public view returns (uint256) {
+        return storedData;
+    }
+}
+\`\`\`
+
+Dans cet exemple, \`storedData\` est une variable d'état de type \`uint256\` (un entier non signé de 256 bits). La fonction \`set\` permet de modifier cette variable. C'est une fonction qui change l'état de la blockchain et nécessite donc du [[Gas||Comment est calculé le gaz sur Ethereum et pourquoi est-ce nécessaire ?]] pour être exécutée.
+
+La fonction \`get\` permet de lire la valeur de la variable. Le mot-clé \`view\` indique que la fonction ne modifie pas l'état, sa simple lecture depuis le réseau est donc gratuite.`
+              },
+              {
+                id: 'content-c2-1-2',
+                type: 'video',
+                title: 'Les Types de Variables en Solidity',
+                content: 'Vidéo explicative sur les types de base et de référence.',
+                mediaUrl: 'https://example.com/video-solidity-types.mp4',
+                duration: '12 mins'
+              },
+              {
+                id: 'content-c2-1-3',
+                type: 'text',
+                title: 'Les Variables d\'État et les Types',
+                content: `### Types de Base
+
+Solidity est un langage statiquement typé, ce qui signifie que le type de chaque variable doit être spécifié. Voici quelques types courants :
+
+- **Booleans** : \`bool\` (vrai ou faux)
+- **Integers** : \`int\` / \`uint\` (entiers signés et non signés). On utilise très souvent \`uint256\` pour stocker des montants de tokens.
+- **Address** : \`address\` (contient une valeur de 20 octets, la taille d'une adresse Ethereum). C'est un type fondamental pour gérer la sécurité et les fonds.
+
+\`\`\`solidity
+address public owner = 0x1234567890123456789012345678901234567890;
+\`\`\`
+
+### Visibilité des Fonctions et Variables
+
+Il est crucial de bien définir l'accessibilité de vos variables et fonctions pour des raisons de sécurité.
+
+- \`public\` : accessible depuis l'intérieur *et* depuis l'extérieur du contrat. Pour les variables d'état, le compilateur génère automatiquement une fonction "getter".
+- \`private\` : accessible uniquement depuis le contrat actuel (pas même depuis les contrats dérivés).
+- \`internal\` : similaire à \`private\`, mais également accessible dans les contrats enfants (héritage).
+- \`external\` : ne peut être appelé que depuis l'extérieur du contrat (via une transaction ou depuis un autre contrat).
+
+> ⚠️ Attention : Marquer une variable comme \`private\` n'empêche pas quiconque de lire sa valeur sur la blockchain publique. Cela restreint uniquement son accès par d'autres contrats. Tout l'état sur Ethereum est public par définition. C'est un [[concept de sécurité fondamental||Explique moi les risques liés aux variables privées sur Ethereum et comment les développeurs peuvent se tromper]].`
               }
             ],
             exercise: {

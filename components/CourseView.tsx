@@ -53,6 +53,7 @@ const CourseView: React.FC<CourseViewProps> = ({
 }) => {
   // Local state for sidebar accordions
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set([activeModuleId]));
+  const [selectedModel, setSelectedModel] = useState<string>('gpt-4o');
 
   // Determine free module limit based on subscription tier
   const getFreeModuleCount = () => {
@@ -121,10 +122,10 @@ const CourseView: React.FC<CourseViewProps> = ({
     setChatMessages(prev => [...prev, userMsg]);
     setChatInput('');
 
-    // Contextualized as an expert of the CURRENT MODULE
+    // Contextualized as an expert of the CURRENT MODULE using the selected model
     const tutorResponse = await askTutor(
       chatInput,
-      `Vous êtes un expert du module : ${activeModule.title}. Description: ${activeModule.description}. Le cours actuel est : ${activeCourse.title}.`,
+      `Vous êtes un expert du module : ${activeModule.title}. Modèle utilisé: ${selectedModel}. Description: ${activeModule.description}. Le cours actuel est : ${activeCourse.title}.`,
       activeCourse.llmConfig?.tutorContext
     );
     setChatMessages(prev => [...prev, { role: 'assistant', content: tutorResponse || '' }]);
@@ -139,6 +140,67 @@ const CourseView: React.FC<CourseViewProps> = ({
 
   const handleHookClick = (hook: string) => {
     setChatInput(hook);
+  };
+
+  // Advanced Parser for [[Text||Prompt]] AI Tooltips
+  const parseTooltips = (text: string) => {
+    const tooltipRegex = /\[\[(.*?)\|\|(.*?)\]\]/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = tooltipRegex.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push(text.substring(lastIndex, match.index));
+      }
+
+      const displayWord = match[1];
+      const promptToSend = match[2];
+
+      parts.push(
+        <span
+          key={match.index}
+          onClick={() => {
+            setIsChatOpen(true);
+            setChatInput(promptToSend);
+            // Optionally, we could immediately trigger the chat here by calling handleChat manually
+          }}
+          className="relative inline-block cursor-pointer font-bold text-blue-400 border-b border-dashed border-blue-400 group/tooltip hover:text-blue-300 hover:border-blue-300 transition-colors mx-1"
+        >
+          {displayWord}
+
+          {/* Tooltip Visual */}
+          <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 rounded-xl bg-[#0a0f1d] border border-blue-500/30 text-[10px] text-white opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none shadow-2xl flex items-center gap-2">
+            <Sparkles className="w-3 h-3 text-blue-400" />
+            Demander au Coach IA
+          </span>
+        </span>
+      );
+
+      lastIndex = tooltipRegex.lastIndex;
+    }
+
+    if (lastIndex < text.length) {
+      parts.push(text.substring(lastIndex));
+    }
+
+    // Secondary parsing for bold **text**
+    return parts.map((part, i) => {
+      if (typeof part === 'string') {
+        const boldRegex = /\*\*(.*?)\*\*/g;
+        const boldParts = [];
+        let bLastIndex = 0;
+        let bMatch;
+        while ((bMatch = boldRegex.exec(part)) !== null) {
+          if (bMatch.index > bLastIndex) boldParts.push(part.substring(bLastIndex, bMatch.index));
+          boldParts.push(<strong key={`b-${i}-${bMatch.index}`} className="text-white font-bold">{bMatch[1]}</strong>);
+          bLastIndex = boldRegex.lastIndex;
+        }
+        if (bLastIndex < part.length) boldParts.push(part.substring(bLastIndex));
+        return <React.Fragment key={i}>{boldParts.length > 0 ? boldParts : part}</React.Fragment>;
+      }
+      return part;
+    });
   };
 
   // Visibility logic: hide bot during validation exercises
@@ -394,12 +456,49 @@ const CourseView: React.FC<CourseViewProps> = ({
                       </div>
                     )}
                     {block.type === 'text' && (
-                      <article className="prose prose-lg max-w-none leading-relaxed font-medium relative transition-colors duration-500" style={{ color: 'var(--text-secondary)' }}>
-                        {block.content.split('\n').map((para, i) => (
-                          <div key={i} className="mb-6 group relative">
-                            <p>{para.trim()}</p>
-                          </div>
-                        ))}
+                      <article className="prose prose-lg max-w-none leading-relaxed font-medium relative transition-colors duration-500 text-slate-300">
+                        {block.content.split('\n\n').map((para, i) => {
+                          if (para.trim().startsWith('###')) {
+                            return <h3 key={i} className="text-2xl font-bold mt-8 mb-4" style={{ color: 'var(--text-primary)' }}>{para.replace('### ', '')}</h3>;
+                          }
+                          if (para.trim().startsWith('```')) {
+                            const codeContent = para.replace(/```[\w]*\n/g, '').replace(/```/g, '');
+                            return (
+                              <div key={i} className="my-6 rounded-xl bg-[#0f1420]/80 p-4 border border-white/10 font-mono text-sm overflow-x-auto shadow-inner shadow-black/50">
+                                <pre className="text-blue-300"><code>{codeContent}</code></pre>
+                              </div>
+                            );
+                          }
+                          if (para.trim().startsWith('> ⚠️')) {
+                            return (
+                              <div key={i} className="my-6 p-4 rounded-xl border border-yellow-500/20 bg-yellow-500/5 text-yellow-200/90 text-sm">
+                                {para.replace('> ⚠️', '⚠️')}
+                              </div>
+                            );
+                          }
+                          if (para.trim().startsWith('- ')) {
+                            const items = para.split('\n').filter(item => item.startsWith('- '));
+                            return (
+                              <ul key={i} className="list-disc pl-6 space-y-2 my-4">
+                                {items.map((item, index) => {
+                                  const text = item.replace('- ', '');
+                                  return (
+                                    <li key={index} className="pl-2">
+                                      {/* Simple regex parsing for tooltips in lists */}
+                                      {parseTooltips(text)}
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            );
+                          }
+
+                          return (
+                            <div key={i} className="mb-6 group relative">
+                              <p className="text-slate-300 leading-relaxed">{parseTooltips(para)}</p>
+                            </div>
+                          );
+                        })}
                       </article>
                     )}
                   </div>
@@ -554,12 +653,23 @@ const CourseView: React.FC<CourseViewProps> = ({
                   </div>
                 </div>
               </div>
-              <button
-                onClick={() => setIsChatOpen(false)}
-                className="hover:bg-white/5 p-2 rounded-xl transition-colors"
-              >
-                <X className="w-5 h-5 text-slate-400" />
-              </button>
+              <div className="flex items-center gap-3">
+                <select
+                  value={selectedModel}
+                  onChange={(e) => setSelectedModel(e.target.value)}
+                  className="bg-black/40 border border-white/10 text-white text-[10px] font-bold uppercase tracking-widest rounded-xl px-3 py-2 outline-none appearance-none cursor-pointer hover:border-blue-500/50 transition-colors"
+                >
+                  <option value="gpt-4o">GPT-4o</option>
+                  <option value="claude-3-5">Claude 3.5</option>
+                  <option value="gemini-1-5">Gemini 1.5</option>
+                </select>
+                <button
+                  onClick={() => setIsChatOpen(false)}
+                  className="hover:bg-white/5 p-2 rounded-xl transition-colors"
+                >
+                  <X className="w-5 h-5 text-slate-400" />
+                </button>
+              </div>
             </header>
 
             {/* Messages */}
