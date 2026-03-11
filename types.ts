@@ -1,5 +1,5 @@
 
-export type UserRole = 'apprenant' | 'coach' | 'admin';
+export type UserRole = 'apprenant' | 'coach' | 'admin' | 'institutionnel';
 export type BlockType = 'conceptual_misunderstanding' | 'logic_error' | 'missing_context' | 'terminology_confusion';
 export type InterventionMode = 'asynchronous' | 'ai_guided' | 'synchronous';
 

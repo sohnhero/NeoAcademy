@@ -25,6 +25,13 @@ import AdminPathBuilder from './components/AdminPathBuilder';
 import CoachReviewView from './components/CoachReviewView';
 import Auth from './components/Auth';
 import LandingPage from './components/LandingPage';
+import InstitutionalDashboard from './components/InstitutionalDashboard';
+import CertificationProgramView from './components/CertificationProgramView';
+import CompetencyFrameworkView from './components/CompetencyFrameworkView';
+import InstitutionalModuleView from './components/InstitutionalModuleView';
+import InstitutionalEvaluationView from './components/InstitutionalEvaluationView';
+import StudentProgressAnalytics from './components/StudentProgressAnalytics';
+import InstitutionalPortfolioView from './components/InstitutionalPortfolioView';
 import AIProcessOverlay from './components/AIProcessOverlay';
 import WelcomeOverlay from './components/WelcomeOverlay';
 import DeadlinePlanningBoard from './components/DeadlinePlanningBoard';
@@ -596,6 +603,7 @@ const App: React.FC = () => {
           />;
         }
         if (userRole === 'admin') return <AdminDashboard onGoToConfig={() => setActiveTab('admin-config')} />;
+        if (userRole === 'institutionnel') return <InstitutionalDashboard onNavigate={(tab) => setActiveTab(tab)} />;
 
         return (
           <Dashboard
@@ -715,7 +723,16 @@ const App: React.FC = () => {
       case 'admin-config': return <AdminConfigView />;
       case 'admin-content': return <AdminPathBuilder courses={legacyCourses} onUpdateCourses={setLegacyCourses} />;
 
+      // Institutional Specific
+      case 'inst-program': return <CertificationProgramView onNavigateToModule={() => setActiveTab('inst-modules')} onNavigateToCompetencies={() => setActiveTab('inst-competencies')} />;
+      case 'inst-competencies': return <CompetencyFrameworkView />;
+      case 'inst-modules': return <InstitutionalModuleView onBack={() => setActiveTab('inst-program')} onStartEvaluation={() => setActiveTab('inst-evaluations')} />;
+      case 'inst-evaluations': return <InstitutionalEvaluationView onBack={() => setActiveTab('inst-modules')} />;
+      case 'inst-analytics': return <StudentProgressAnalytics />;
+      case 'inst-portfolio': return <InstitutionalPortfolioView />;
+
       default:
+        if (userRole === 'institutionnel') return <InstitutionalDashboard onNavigate={(tab) => setActiveTab(tab)} />;
         return <Dashboard currentPath={currentLearningPath || undefined} onCourseSelect={() => { }} />;
     }
   };

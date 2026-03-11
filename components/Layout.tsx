@@ -19,7 +19,13 @@ import {
   Shield,
   CreditCard,
   Sun,
-  Moon
+  Moon,
+  GraduationCap,
+  Target,
+  Layers,
+  BarChart3,
+  ClipboardCheck,
+  Briefcase
 } from 'lucide-react';
 import { UserRole } from '../types';
 import { MOCK_RECENT_ACTIVITY } from '../constants';
@@ -154,6 +160,47 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
                 label={isCollapsed ? "" : "Gestion Contenu"}
                 active={activeTab === 'admin-content'}
                 onClick={() => setActiveTab('admin-content')}
+              />
+            </>
+          )}
+
+          {role === 'institutionnel' && (
+            <>
+              <SidebarItem
+                icon={GraduationCap}
+                label={isCollapsed ? "" : "Programme"}
+                active={activeTab === 'inst-program'}
+                onClick={() => setActiveTab('inst-program')}
+              />
+              <SidebarItem
+                icon={Layers}
+                label={isCollapsed ? "" : "Compétences"}
+                active={activeTab === 'inst-competencies'}
+                onClick={() => setActiveTab('inst-competencies')}
+              />
+              <SidebarItem
+                icon={BookOpen}
+                label={isCollapsed ? "" : "Modules"}
+                active={activeTab === 'inst-modules'}
+                onClick={() => setActiveTab('inst-modules')}
+              />
+              <SidebarItem
+                icon={ClipboardCheck}
+                label={isCollapsed ? "" : "Évaluations"}
+                active={activeTab === 'inst-evaluations'}
+                onClick={() => setActiveTab('inst-evaluations')}
+              />
+              <SidebarItem
+                icon={BarChart3}
+                label={isCollapsed ? "" : "Analytiques"}
+                active={activeTab === 'inst-analytics'}
+                onClick={() => setActiveTab('inst-analytics')}
+              />
+              <SidebarItem
+                icon={Briefcase}
+                label={isCollapsed ? "" : "Portfolio"}
+                active={activeTab === 'inst-portfolio'}
+                onClick={() => setActiveTab('inst-portfolio')}
               />
             </>
           )}

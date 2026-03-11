@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Hexagon, ArrowRight, Mail, Lock, User, Phone, Eye, EyeOff, UserCheck, Users, ShieldAlert, Sparkles } from 'lucide-react';
+import { Hexagon, ArrowRight, Mail, Lock, User, Phone, Eye, EyeOff, UserCheck, Users, ShieldAlert, Sparkles, GraduationCap } from 'lucide-react';
 import { UserRole } from '../types';
 
 interface AuthProps {
@@ -16,10 +16,11 @@ interface FormData {
 }
 
 // Demo accounts
-const DEMO_ACCOUNTS = {
-  apprenant: { email: 'demo@apprenant.com', password: 'demo123', role: 'apprenant' as UserRole },
-  coach: { email: 'demo@coach.com', password: 'demo123', role: 'coach' as UserRole },
-  admin: { email: 'demo@admin.com', password: 'demo123', role: 'admin' as UserRole }
+const DEMO_ACCOUNTS: Record<string, { email: string; password: string; role: UserRole }> = {
+  apprenant: { email: 'demo@apprenant.com', password: 'demo123', role: 'apprenant' },
+  coach: { email: 'demo@coach.com', password: 'demo123', role: 'coach' },
+  admin: { email: 'demo@admin.com', password: 'demo123', role: 'admin' },
+  institutionnel: { email: 'demo@institutionnel.com', password: 'demo123', role: 'institutionnel' }
 };
 
 const Auth: React.FC<AuthProps> = ({ onLogin }) => {
@@ -87,8 +88,9 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
 
   const handleDemoLogin = (role: UserRole) => {
     const account = DEMO_ACCOUNTS[role];
+    if (!account) return;
     setFormData({ ...formData, email: account.email, password: account.password });
-    // Direct login for demo accounts
+    // Direct login for demo accounts — new user flow only for apprenant
     onLogin(role, role === 'apprenant');
   };
 
@@ -279,11 +281,12 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
             <p className="text-[10px] font-bold uppercase tracking-widest text-center mb-4" style={{ color: 'var(--text-muted)' }}>
               <Sparkles className="w-3 h-3 inline mr-1" /> Comptes Démo
             </p>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-4 gap-2">
               {[
                 { role: 'apprenant' as UserRole, icon: UserCheck, label: 'Apprenant' },
                 { role: 'coach' as UserRole, icon: Users, label: 'Coach' },
-                { role: 'admin' as UserRole, icon: ShieldAlert, label: 'Admin' }
+                { role: 'admin' as UserRole, icon: ShieldAlert, label: 'Admin' },
+                { role: 'institutionnel' as UserRole, icon: GraduationCap, label: 'Institutionnel' }
               ].map((demo) => (
                 <button
                   key={demo.role}
