@@ -161,6 +161,12 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
                 active={activeTab === 'admin-content'}
                 onClick={() => setActiveTab('admin-content')}
               />
+              <SidebarItem
+                icon={GraduationCap}
+                label={isCollapsed ? "" : "Institutionnel"}
+                active={activeTab === 'admin-institutional'}
+                onClick={() => setActiveTab('admin-institutional')}
+              />
             </>
           )}
 

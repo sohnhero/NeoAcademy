@@ -62,9 +62,10 @@ const MOCK_PROJECTS = [
 interface InstitutionalModuleViewProps {
     onBack?: () => void;
     onStartEvaluation?: () => void;
+    onOpenCourse?: () => void;
 }
 
-const InstitutionalModuleView: React.FC<InstitutionalModuleViewProps> = ({ onBack, onStartEvaluation }) => {
+const InstitutionalModuleView: React.FC<InstitutionalModuleViewProps> = ({ onBack, onStartEvaluation, onOpenCourse }) => {
     const [activeTab, setActiveTab] = useState<TabKey>('material');
 
     const statusIcon = (s: string) => {
@@ -150,11 +151,12 @@ const InstitutionalModuleView: React.FC<InstitutionalModuleViewProps> = ({ onBac
                         {MOCK_MATERIAL.map((item, idx) => (
                             <div
                                 key={item.id}
+                                onClick={() => onOpenCourse?.()}
                                 className="border rounded-2xl p-6 flex items-start gap-5 transition-all hover:border-blue-500/30 group cursor-pointer"
                                 style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}
                             >
                                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${item.type === 'video' ? 'bg-violet-500/10' :
-                                        item.type === 'reading' ? 'bg-blue-500/10' : 'bg-green-500/10'
+                                    item.type === 'reading' ? 'bg-blue-500/10' : 'bg-green-500/10'
                                     }`}>
                                     {item.type === 'video' && <Video className="w-5 h-5 text-violet-500" />}
                                     {item.type === 'reading' && <FileText className="w-5 h-5 text-blue-500" />}
@@ -169,7 +171,7 @@ const InstitutionalModuleView: React.FC<InstitutionalModuleViewProps> = ({ onBac
                                     <div className="flex items-center gap-3">
                                         <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>{item.duration}</span>
                                         <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-lg ${item.status === 'completed' ? 'bg-green-500/10 text-green-500' :
-                                                item.status === 'in-progress' ? 'bg-blue-500/10 text-blue-500' : 'bg-slate-500/10 text-slate-500'
+                                            item.status === 'in-progress' ? 'bg-blue-500/10 text-blue-500' : 'bg-slate-500/10 text-slate-500'
                                             }`}>
                                             {item.status === 'completed' ? 'Terminé' : item.status === 'in-progress' ? 'En cours' : 'À faire'}
                                         </span>
@@ -192,7 +194,7 @@ const InstitutionalModuleView: React.FC<InstitutionalModuleViewProps> = ({ onBac
                             >
                                 <div className="flex items-center justify-between mb-3">
                                     <span className={`text-[10px] font-bold uppercase px-2.5 py-1 rounded-lg ${ex.type === 'quiz' ? 'bg-violet-500/10 text-violet-500' :
-                                            ex.type === 'code' ? 'bg-green-500/10 text-green-500' : 'bg-blue-500/10 text-blue-500'
+                                        ex.type === 'code' ? 'bg-green-500/10 text-green-500' : 'bg-blue-500/10 text-blue-500'
                                         }`}>
                                         {ex.type === 'quiz' ? 'Quiz' : ex.type === 'code' ? 'Coding' : 'Analyse'}
                                     </span>
@@ -202,7 +204,7 @@ const InstitutionalModuleView: React.FC<InstitutionalModuleViewProps> = ({ onBac
                                 <p className="text-xs leading-relaxed mb-3" style={{ color: 'var(--text-muted)' }}>{ex.description}</p>
                                 <div className="flex items-center justify-between">
                                     <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-lg ${ex.difficulty === 'Facile' ? 'bg-green-500/10 text-green-500' :
-                                            ex.difficulty === 'Moyen' ? 'bg-amber-500/10 text-amber-500' : 'bg-red-500/10 text-red-500'
+                                        ex.difficulty === 'Moyen' ? 'bg-amber-500/10 text-amber-500' : 'bg-red-500/10 text-red-500'
                                         }`}>
                                         {ex.difficulty}
                                     </span>

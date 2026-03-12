@@ -32,6 +32,9 @@ import InstitutionalModuleView from './components/InstitutionalModuleView';
 import InstitutionalEvaluationView from './components/InstitutionalEvaluationView';
 import StudentProgressAnalytics from './components/StudentProgressAnalytics';
 import InstitutionalPortfolioView from './components/InstitutionalPortfolioView';
+import AdminInstitutionalManager from './components/AdminInstitutionalManager';
+import InstitutionalOnboarding from './components/InstitutionalOnboarding';
+import InstitutionalCourseView from './components/InstitutionalCourseView';
 import AIProcessOverlay from './components/AIProcessOverlay';
 import WelcomeOverlay from './components/WelcomeOverlay';
 import DeadlinePlanningBoard from './components/DeadlinePlanningBoard';
@@ -88,6 +91,9 @@ const App: React.FC = () => {
 
   // Remediation Navigation State
   const [isShowingRemediation, setIsShowingRemediation] = useState(false);
+
+  // Institutional Onboarding State
+  const [showInstitutionalOnboarding, setShowInstitutionalOnboarding] = useState(false);
 
   // Submission Synchronization State
   const [submissionResult, setSubmissionResult] = useState<any>(null);
@@ -244,6 +250,10 @@ const App: React.FC = () => {
       const firstPath = availablePaths.length > 0 ? availablePaths[0] : MOCK_LEARNING_PATHS[0];
       setCurrentLearningPath(firstPath);
       setShowPathFinder(false);
+    } else if (role === 'institutionnel') {
+      // Institutional learner — show onboarding wizard
+      setShowPathFinder(false);
+      setShowInstitutionalOnboarding(true);
     } else {
       // Coach or Admin - no path needed
       setShowPathFinder(false);
@@ -385,6 +395,17 @@ const App: React.FC = () => {
       return <LandingPage onStart={() => setShowLandingPage(false)} />;
     }
     return <Auth onLogin={handleLogin} />;
+  }
+
+  if (showInstitutionalOnboarding && userRole === 'institutionnel') {
+    return (
+      <InstitutionalOnboarding
+        onComplete={() => {
+          setShowInstitutionalOnboarding(false);
+          setActiveTab('dashboard');
+        }}
+      />
+    );
   }
 
   if (showPathFinder && userRole === 'apprenant') {
@@ -722,14 +743,16 @@ const App: React.FC = () => {
       // Admin Specific
       case 'admin-config': return <AdminConfigView />;
       case 'admin-content': return <AdminPathBuilder courses={legacyCourses} onUpdateCourses={setLegacyCourses} />;
+      case 'admin-institutional': return <AdminInstitutionalManager />;
 
       // Institutional Specific
       case 'inst-program': return <CertificationProgramView onNavigateToModule={() => setActiveTab('inst-modules')} onNavigateToCompetencies={() => setActiveTab('inst-competencies')} />;
       case 'inst-competencies': return <CompetencyFrameworkView />;
-      case 'inst-modules': return <InstitutionalModuleView onBack={() => setActiveTab('inst-program')} onStartEvaluation={() => setActiveTab('inst-evaluations')} />;
+      case 'inst-modules': return <InstitutionalModuleView onBack={() => setActiveTab('inst-program')} onStartEvaluation={() => setActiveTab('inst-evaluations')} onOpenCourse={() => setActiveTab('inst-course')} />;
       case 'inst-evaluations': return <InstitutionalEvaluationView onBack={() => setActiveTab('inst-modules')} />;
       case 'inst-analytics': return <StudentProgressAnalytics />;
       case 'inst-portfolio': return <InstitutionalPortfolioView />;
+      case 'inst-course': return <InstitutionalCourseView onBack={() => setActiveTab('inst-modules')} />;
 
       default:
         if (userRole === 'institutionnel') return <InstitutionalDashboard onNavigate={(tab) => setActiveTab(tab)} />;
